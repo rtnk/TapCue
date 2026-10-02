@@ -113,4 +113,7 @@ tasks.named("compileKotlin", KotlinCompilationTask::class.java) {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
+    // Simulator tests (see AGENTS.md) depend on a device, not only on the sources: when one is
+    // named, always run them instead of reusing the last result.
+    outputs.upToDateWhen { System.getenv("MAESTRO_TEST_SIMULATOR_UDID").isNullOrEmpty() }
 }
