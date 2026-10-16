@@ -171,6 +171,7 @@ GitHub Actions `macos-26`), Android na emulatorze API 34 (CI) i CLI/MCP bez siec
 
 ## Unreleased
 
+- CLI: replace the unmaintained jarchivelib with compress4j for zipping apps and unpacking archives
 - Core: report invalid `index`/`point`/scroll `speed` values as test errors instead of infra errors
 - Core: **Breaking** — reject out-of-range scroll `speed` (must be 0–100), out-of-range literal percent points, and negative literal point coordinates, instead of silently falling back to the default
 
