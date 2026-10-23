@@ -50,6 +50,8 @@ Zmiany własne forka. Fork bazuje na upstream `mobile-dev-inc/Maestro` `v2.11.0`
 - CLI (STEP-03): `start-device` nie pobiera brakującego obrazu systemu Android (wcześniej pytał i uruchamiał
   `sdkmanager`) i nie odpytuje zdalnego katalogu `sdkmanager --list`; zamiast tego kończy się komunikatem
   z poleceniem `sdkmanager` do samodzielnego uruchomienia.
+- CLI (STEP-03): plik `analytics.json` (zgoda na analitykę i identyfikator instalacji) pozostawiony przez Maestro
+  w `$XDG_STATE_HOME/maestro` lub `~/.maestro` jest usuwany przy starcie.
 - Android (poprawka): pula wątków I/O klienta devtools (`newAdbIoExecutor`) nie odrzuca już wywołania jako
   „all 16 adb I/O workers are busy”, gdy wolny worker właśnie kończy poprzednie wywołanie; przy 15 workerach
   zawieszonych na urządzeniu zdarzało się to przy niemal każdym kolejnym wywołaniu. Usuwa też niestabilność

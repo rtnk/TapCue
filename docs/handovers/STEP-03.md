@@ -2,7 +2,7 @@
 
 | Pole | Wartość |
 |---|---|
-| Krok | STEP-03 — **zakończony, w review** |
+| Krok | STEP-03 — **scalony** (#6); uzupełnienie (decyzje właściciela, usuwanie `analytics.json`) — osobny PR z gałęzi `step-03-followup-decisions` |
 | PR | PR-03: https://github.com/rtnk/TapCue/pull/6 |
 | Gałąź | `step-03-remove-telemetry` |
 | Gałąź docelowa | `main` |
@@ -27,7 +27,11 @@ N-05, N-06, N-19, N-21, N-24, N-34).
 | `start-device` | `DeviceService.installAndroidSystemImage` i pytanie „Would you like to install it? y/n” usunięte; `resolveSystemImage` przegląda tylko `sdkmanager --list_installed` (wcześniej też `--list`, czyli zdalny katalog Google). Brak obrazu → `CliError` „The required system image … is not installed, and Maestro does not download system images. To install it yourself, run: `<sdkmanager> "<pakiet>"`”; inny zainstalowany obraz dla tego `os` → podpowiedź `--device-os` |
 | Dokumenty | ROADMAP (status, realizacja), NETWORK-AUDIT (wersja 4), LICENSE-AUDIT (wersja 3: posthog), ARCHITECTURE-LOCAL §5, CHANGELOG, komentarz `claimMcpStdout` |
 
-**Katalog stanu:** bez zmian (`~/.maestro`, `$XDG_STATE_HOME/maestro`) — decyzja D-2 nadal otwarta.
+**Katalog stanu:** bez zmian (`~/.maestro`, `$XDG_STATE_HOME/maestro`). Właściciel rozstrzygnął D-2 (oraz D-1, D-3–D-7, D-9)
+w trakcie review PR-03; PR #6 został scalony przed wypchnięciem tej zmiany, więc trafia ona osobnym PR uzupełniającym
+(`step-03-followup-decisions`). Zrealizowane jest tylko usuwanie `analytics.json`: `util/LegacyAnalyticsState`
+przy każdym starcie (`App.main`) kasuje `$XDG_STATE_HOME/maestro/analytics.json` i `~/.maestro/analytics.json`, nie
+ruszając innych plików. Polecenie `tapcue`, `~/.tapcue` i `.tapcue/` w projektach — nowy krok STEP-04B.
 
 **Dodane testy:**
 - `maestro-cli` `NoTelemetryTest` (5): wymuszony wyjątek komendy (`createCommandLine()` + testowa podkomenda
@@ -41,6 +45,8 @@ N-05, N-06, N-19, N-21, N-24, N-34).
   `storage.googleapis.com/mobile.dev`, `get.maestro.mobile.dev`, `cdn.jsdelivr.net` (wyjątek: `CheatSheetTool`, N-15, STEP-04).
 - `maestro-cli` `HtmlTestSuiteReporterTest` „report loads nothing from the network” (+ snapshoty zaktualizowane:
   `<meta charset>`, `<style>` i `<script>` inline zamiast CDN).
+- `maestro-cli` `LegacyAnalyticsStateTest` (2): usuwa `analytics.json` z obu lokalizacji upstream, zostawia inne pliki stanu;
+  brak plików/katalogów nie jest błędem.
 - `maestro-cli` `DeviceCreateUtilTest`: brakujący obraz → komunikat z poleceniem `sdkmanager`, bez tworzenia AVD
   (zastępuje test ścieżki „install prompt”); `DeviceService` nie ma `installAndroidSystemImage`.
 
@@ -63,15 +69,16 @@ przez zaparkowany workflow upstream) i `e2e/update_samples`/`e2e/README.md` opis
 | Test | Komenda | Wynik |
 |---|---|---|
 | Wszystkie testy jednostkowe | `LANG=C.UTF-8 ./gradlew test --continue` | **1265 testów, 1 porażka**: tylko znany T-01 (`IntegrationTest` Case 136, publiczny `eu.httpbin.org`) |
-| ↳ `maestro-cli` | jw. | **PASS**, 121 (STEP-02: 138; −25 usunięte, +5 `NoTelemetryTest`, +1 skan JAR, +1 raport HTML offline, +1 `DeviceCreateUtilTest`) |
+| ↳ `maestro-cli` | jw. | **PASS**, 121 (STEP-02: 138; −25 usunięte, +5 `NoTelemetryTest`, +1 skan JAR, +1 raport HTML offline, +1 `DeviceCreateUtilTest`); po dodaniu `LegacyAnalyticsState`: `./gradlew :maestro-cli:test` **PASS**, 123 |
 | ↳ `maestro-test` | jw. | 223, **1 FAIL** (T-01) |
 | ↳ pozostałe | jw. | **PASS**: `maestro-client` 302 (2 skipped), `maestro-orchestra` 456 (3 skipped), `maestro-orchestra-models` 51, `maestro-ios-driver` 47, `maestro-ios` 2, `maestro-utils` 45, `maestro-web` 18 |
 | Detekt + dystrybucja | `./gradlew :maestro-orchestra:detektMain :maestro-client:detektMain :maestro-cli:installDist :maestro-cli:shadowJar` | **PASS** |
 | Graf zależności | `./gradlew :maestro-cli:dependencies --configuration runtimeClasspath` na `main` i na gałęzi, diff | **PASS**: znika tylko `com.posthog:posthog-server:1.0.3` i `com.posthog:posthog:3.23.1` (pozostałe różnice to ich wiersze żądanych wersji `gson`/`okhttp`, rozwiązywanych i tak do tych samych wersji) |
 | Zawartość archiwów | rozpakowany `maestro-cli-*-all.jar`, `install/maestro/lib` | **PASS**: 0 wpisów `com/posthog/`, `maestro/cli/analytics/`, `maestro/cli/update/`; brak `posthog.com`, `raw.githubusercontent.com/mobile-dev-inc`, `storage.googleapis.com/mobile.dev`, `get.maestro.mobile.dev`, `cdn.jsdelivr.net`; `api.copilot.mobile.dev` tylko w `CheatSheetTool` (N-15) |
 | Strażnik | `scripts/fork/check-no-simulator-server.sh` | **PASS** |
-| Smoke CLI (pusty `HOME`, `strace -f -e trace=connect,sendto,sendmsg`) | `--version`, `--help`, `check-syntax ok.yaml`, `test ok.yaml`, `hierarchy`, `start-device --platform android --device-os android-34` | **PASS**: 0 wywołań `connect`/`send*` do adresów innych niż loopback (jedyne `AF_INET`: próby ADB na `127.0.0.1:5037`/`5555…`); `start-device` bez SDK → `IllegalStateException` + stack trace lokalnie, kod 1. `download-samples` → „Unmatched argument”, kod 2; flow z `assertWithAI` → „AI Command Not Available”, kod 1; `HOME` pozostał pusty |
-| CI GitHub Actions (`ci-baseline.yml`, pełne repo) | PR-03 | wynik w PR |
+| Smoke CLI (`strace -f -e trace=connect,sendto,sendmsg`) | `--version`, `--help`, `check-syntax ok.yaml`, `test ok.yaml`, `hierarchy`, `start-device --platform android --device-os android-34` | **PASS**: 0 wywołań `connect`/`send*` do adresów innych niż loopback (jedyne `AF_INET`: próby ADB na `127.0.0.1:5037`/`5555…`); `start-device` bez SDK → `IllegalStateException` + stack trace lokalnie, kod 1. `download-samples` → „Unmatched argument”, kod 2; flow z `assertWithAI` → „AI Command Not Available”, kod 1; brak `analytics.json` w katalogu stanu. Uwaga: JVM bierze `user.home` z bazy kont, nie z `$HOME`, więc pusty `$HOME` nie izolował katalogu stanu (`~/.maestro` = `/root/.maestro`: tylko `deps`, `tests`, `maestro-iphoneos-driver-build`) |
+| Smoke usuwania `analytics.json` | `maestro --version` z `-Duser.home=<tmp>` i `XDG_STATE_HOME=<tmp>/xdg`, oba pliki zasiane | **PASS**: oba usunięte, pozostałe pliki zostały |
+| CI GitHub Actions (`ci-baseline.yml`, pełne repo) | PR-03 #6, [run 40021830924](https://github.com/rtnk/TapCue/actions/runs/40021830924) na `28435d0` | **PASS**; uzupełnienie — wynik w jego PR |
 | Smoke z urządzeniem, `start-device` z prawdziwym SDK, Swift | — | **NOT RUN**: brak SDK/Xcode/macOS |
 
 Jak powtórzyć:
@@ -100,9 +107,7 @@ scripts/fork/check-no-simulator-server.sh
 
 ## 4. Warunek rozpoczęcia następnego kroku
 
-PR-03 **scalony** do `main`, CI `ci-baseline.yml` zielone na `main`. Decyzje D-3 (polityka `http.*`) i D-4 (platforma
-web) — przeczytane przez właściciela; jeśli nie zostały rozstrzygnięte, STEP-03B realizuje rekomendacje z ROADMAP §2
-i opisuje to w PR.
+PR-03 (#6) i PR uzupełniający **scalone** do `main`, CI `ci-baseline.yml` zielone na `main`. Decyzje D-3, D-4, D-6 rozstrzygnięte (ROADMAP §2).
 
 ## 5. Następny krok
 
@@ -116,19 +121,20 @@ Nie masz pamięci poprzednich sesji. Zanim cokolwiek zmienisz:
 
 1. git fetch origin && git checkout main && git pull origin main. Potwierdź przez GitHub, że PR-03
    („STEP-03: Remove telemetry, error upload and update checks”) jest MERGED. Jeśli nie — zatrzymaj się i zgłoś to.
-2. Przeczytaj: AGENTS.md (nota forka), docs/ROADMAP-0.1.md (§1, §2 — zwłaszcza D-3, D-4, D-6; STEP-03B),
+2. Przeczytaj: AGENTS.md (nota forka), docs/ROADMAP-0.1.md (§1, §2 — decyzje D-3, D-4, D-6 są ROZSTRZYGNIĘTE; STEP-03B),
    docs/handovers/STEP-03.md, docs/NETWORK-AUDIT.md (N-25, N-26, N-28, N-29, N-30, T-01, T-02),
    docs/ARCHITECTURE-LOCAL.md §3–§5, docs/LICENSE-AUDIT.md (selenium-manager, L-03).
 3. Wykonaj WYŁĄCZNIE STEP-03B — Polityka sieci dla funkcji flow — na gałęzi step-03b-flow-network-policy:
-   - JS http.* (maestro-client GraalJsHttp): walidacja hosta PRZED żądaniem wg D-3 (rekomendacja: tylko loopback,
-     RFC 1918, fc00::/7, link-local; rozwiązanie DNS i sprawdzenie każdego adresu; przekierowania — każdy skok
-     sprawdzany albo followRedirects wyłączone dla hostów spoza polityki); inne adresy → jasny błąd flow.
-   - Platforma web wg D-4 (rekomendacja: wyłączona w 0.1.0 z kontrolowanym błędem; selenium/selenium-manager
-     i maestro-web poza runtime classpath CLI, jeśli to możliwe bez dużej przebudowy — inaczej opisz w PR).
+   - JS http.* (maestro-client GraalJsHttp) wg D-3: walidacja hosta PRZED żądaniem — tylko loopback, RFC 1918,
+     fc00::/7, link-local; rozwiązanie DNS i sprawdzenie każdego adresu; każde przekierowanie sprawdzane (albo
+     followRedirects wyłączone); inne adresy → jasny błąd flow. Bez flagi opt-in.
+   - Platforma web wg D-4: WYŁĄCZONA w 0.1.0 z kontrolowanym błędem; selenium/selenium-manager i maestro-web poza
+     runtime classpath CLI, jeśli to możliwe bez dużej przebudowy — inaczej opisz w PR.
    - openLink/launchApp na urządzeniach: udokumentuj jako GRANICA (ruch wykonuje urządzenie).
    - T-01: IntegrationTest „Case 136 - Relative path in http multipart script” przepisz na lokalny MockWebServer.
-   Jeśli właściciel rozstrzygnął D-6 i zlecił to w tym kroku — GraalJS community (bez truffle-enterprise);
-   w przeciwnym razie nie ruszaj.
+   - GraalJS wg D-6 (zlecone w tym kroku): artefakty community (js-community/js-language + polyglot, UPL),
+     wykluczenie truffle-enterprise; zaktualizuj L-03 w LICENSE-AUDIT.
+   Nie realizuj D-1/D-2 (nazwa TapCue, polecenie tapcue, katalogi) — to STEP-04B.
    Nie ruszaj Viewera/cheat_sheet (STEP-04) ani dystrybucji (STEP-05) poza tym, co niezbędne do kompilacji.
 4. Gradle uruchamiaj BEZ flag -x (taski simulator-server/Viewera nie istnieją od STEP-00B). Jeśli środowisko
    blokuje dl.google.com, użyj wariantu analitycznego z docs/handovers/STEP-00.md §3 (bez commitowania; mirror
