@@ -17,15 +17,16 @@ class HtmlTestSuiteReporterTest : TestSuiteReporterTest() {
             summary = testSuccessWithWarning,
             out = sink
         )
-        val resultStr = sink.readUtf8()
+        val resultStr = sink.readUtf8().withInlinedAssetsReplaced()
 
         // Then
         assertThat(resultStr).isEqualTo(
             """
             <html>
               <head>
+                <meta charset="utf-8">
                 <title>Maestro Test Report</title>
-                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>REPORT_CSS</style>
               </head>
               <body>
                 <div class="card mb-4">
@@ -73,7 +74,7 @@ class HtmlTestSuiteReporterTest : TestSuiteReporterTest() {
                       </div>
                     </div>
                   </div>
-                  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
+                  <script>COLLAPSE_SCRIPT</script>
                 </div>
               </body>
             </html>
@@ -93,15 +94,16 @@ class HtmlTestSuiteReporterTest : TestSuiteReporterTest() {
             summary = testSuccessWithError,
             out = sink
         )
-        val resultStr = sink.readUtf8()
+        val resultStr = sink.readUtf8().withInlinedAssetsReplaced()
 
         // Then
         assertThat(resultStr).isEqualTo(
             """
             <html>
               <head>
+                <meta charset="utf-8">
                 <title>Maestro Test Report</title>
-                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>REPORT_CSS</style>
               </head>
               <body>
                 <div class="card mb-4">
@@ -155,7 +157,7 @@ class HtmlTestSuiteReporterTest : TestSuiteReporterTest() {
                       </div>
                     </div>
                   </div>
-                  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
+                  <script>COLLAPSE_SCRIPT</script>
                 </div>
               </body>
             </html>
@@ -319,4 +321,31 @@ class HtmlTestSuiteReporterTest : TestSuiteReporterTest() {
         assertThat(resultStr).doesNotContain("Start Time:")
         assertThat(resultStr).doesNotContain("<time")
     }
+
+    @Test
+    fun `HTML - report loads nothing from the network`() {
+        // Given
+        val testee = HtmlTestSuiteReporter(detailed = true, zoneId = testZoneId)
+        val sink = Buffer()
+
+        // When
+        testee.report(
+            summary = testSuccessWithError,
+            out = sink
+        )
+        val resultStr = sink.readUtf8()
+
+        // Then
+        assertThat(resultStr).doesNotContain("http://")
+        assertThat(resultStr).doesNotContain("https://")
+        assertThat(resultStr).doesNotContain("<link")
+        assertThat(resultStr).doesNotContain("<script src")
+        assertThat(HtmlTestSuiteReporter.REPORT_CSS).contains(".collapse:not(.show)")
+        assertThat(resultStr).contains(HtmlTestSuiteReporter.REPORT_CSS)
+        assertThat(resultStr).contains(HtmlTestSuiteReporter.COLLAPSE_SCRIPT)
+    }
+
+    private fun String.withInlinedAssetsReplaced(): String = this
+        .replace(HtmlTestSuiteReporter.REPORT_CSS, "REPORT_CSS")
+        .replace(HtmlTestSuiteReporter.COLLAPSE_SCRIPT, "COLLAPSE_SCRIPT")
 }

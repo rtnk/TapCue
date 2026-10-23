@@ -28,9 +28,26 @@ class HtmlTestSuiteReporter(
         private val HUMAN_READABLE_TIMESTAMP: DateTimeFormatter =
             DateTimeFormatter.ofPattern("MMM d, yyyy, HH:mm:ss z", Locale.ENGLISH)
 
-        private fun loadPrettyCss(): String {
+        /**
+         * The report is opened from disk, possibly without network access, so it must not load
+         * anything remote: the stylesheet and the collapse behaviour are inlined.
+         */
+        internal val REPORT_CSS: String by lazy { loadResource("/html-report.css") }
+
+        internal const val COLLAPSE_SCRIPT: String =
+            "document.querySelectorAll('[data-bs-toggle=\"collapse\"]').forEach(function (button) {" +
+                "button.addEventListener('click', function () {" +
+                "var target = document.querySelector(button.getAttribute('data-bs-target'));" +
+                "var expanded = target.classList.toggle('show');" +
+                "button.setAttribute('aria-expanded', expanded ? 'true' : 'false');" +
+                "});" +
+                "});"
+
+        private fun loadPrettyCss(): String = loadResource("/html-detailed.css")
+
+        private fun loadResource(path: String): String {
             return HtmlTestSuiteReporter::class.java
-                .getResourceAsStream("/html-detailed.css")
+                .getResourceAsStream(path)
                 ?.bufferedReader()
                 ?.use { it.readText() }
                 ?: ""
@@ -49,11 +66,13 @@ class HtmlTestSuiteReporter(
         return buildString {
             appendHTML().html {
                 head {
+                    meta(charset = "utf-8")
                     title { +"Maestro Test Report" }
-                    link(
-                        rel = "stylesheet",
-                        href = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-                    ) {}
+                    style {
+                        unsafe {
+                            +REPORT_CSS
+                        }
+                    }
                 }
                 body {
                     summary.suites.forEach { suite ->
@@ -222,10 +241,11 @@ class HtmlTestSuiteReporter(
                                     }
                                 }
                             }
-                            script(
-                                src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js",
-                                content = ""
-                            )
+                            script {
+                                unsafe {
+                                    +COLLAPSE_SCRIPT
+                                }
+                            }
                         }
                     }
                 }

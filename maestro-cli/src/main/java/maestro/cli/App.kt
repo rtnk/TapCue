@@ -20,13 +20,9 @@
 package maestro.cli
 
 import maestro.MaestroException
-import maestro.cli.analytics.Analytics
-import maestro.cli.analytics.CliCommandRunEvent
-import maestro.cli.analytics.CommandArgsSanitizer
 import maestro.cli.command.BugReportCommand
 import maestro.cli.command.ChatCommand
 import maestro.cli.command.CheckSyntaxCommand
-import maestro.cli.command.DownloadSamplesCommand
 import maestro.cli.command.DriverCommand
 import maestro.cli.command.ListDevicesCommand
 import maestro.cli.command.McpCommand
@@ -36,10 +32,6 @@ import maestro.cli.command.RecordCommand
 import maestro.cli.command.StartDeviceCommand
 import maestro.cli.command.TestCommand
 import maestro.cli.mcp.claimMcpStdout
-import maestro.cli.update.Updates
-import maestro.cli.util.ChangeLogUtils
-import maestro.cli.util.ErrorReporter
-import maestro.cli.view.box
 import maestro.debuglog.DebugLogStore
 import maestro.debuglog.LogConfig
 import picocli.AutoComplete.GenerateCompletion
@@ -56,7 +48,6 @@ import kotlin.system.exitProcess
         RecordCommand::class,
         PrintHierarchyCommand::class,
         QueryCommand::class,
-        DownloadSamplesCommand::class,
         BugReportCommand::class,
         StartDeviceCommand::class,
         ListDevicesCommand::class,
@@ -108,9 +99,9 @@ private fun printVersion() {
 }
 
 fun main(args: Array<String>) {
-    // Must run before any other init: analytics notices, dependency banners, and
-    // kotlin-logging's first-load message will otherwise land on the MCP JSON-RPC
-    // channel and break the handshake for strict clients like Claude Desktop.
+    // Must run before any other init: dependency banners and kotlin-logging's
+    // first-load message will otherwise land on the MCP JSON-RPC channel and
+    // break the handshake for strict clients like Claude Desktop.
     if (args.firstOrNull() == "mcp") claimMcpStdout()
 
     // Establish a consistent logging baseline for every command before any init
@@ -120,88 +111,60 @@ fun main(args: Array<String>) {
     // litter the state dir; commands that want a maestro.log still opt in via install().
     LogConfig.configure(logFileName = null, printToConsole = args.contains("--verbose"))
 
-    // Capture a sanitized representation of the invocation as a super-property on every
-    // PostHog event. Must run before any analytics event can fire.
-    Analytics.commandString = CommandArgsSanitizer.sanitize(args)
-
     // Disable icon in Mac dock
     // https://stackoverflow.com/a/17544259
-    try {
-        System.setProperty("apple.awt.UIElement", "true")
-        Analytics.warnAndEnableAnalyticsIfNotDisable()
+    System.setProperty("apple.awt.UIElement", "true")
 
-        Dependencies.install()
-        Updates.fetchUpdatesAsync()
+    Dependencies.install()
 
-        val commandLine = CommandLine(App())
-            .setUsageHelpWidth(160)
-            .setCaseInsensitiveEnumValuesAllowed(true)
-            .setExecutionStrategy(DisableAnsiMixin::executionStrategy)
-            .setExecutionExceptionHandler { ex, cmd, cmdParseResult ->
+    val commandLine = createCommandLine()
 
-                runCatching { ErrorReporter.report(ex, cmdParseResult) }
+    val exitCode = commandLine
+        .execute(*args)
 
-                // make errors red
-                println()
-                cmd.colorScheme = CommandLine.Help.ColorScheme.Builder()
-                    .errors(CommandLine.Help.Ansi.Style.fg_red)
-                    .build()
+    DebugLogStore.finalizeRun()
 
-                cmd.err.println(
-                    cmd.colorScheme.errorText(ex.message.orEmpty())
-                )
+    if (commandLine.isVersionHelpRequested) {
+        printVersion()
+        exitProcess(0)
+    }
 
-                if (
-                    ex !is CliError && ex !is MaestroException.UnsupportedJavaVersion
-                    && ex !is MaestroException.MissingAppleTeamId && ex !is MaestroException.IOSDeviceDriverSetupException
-                ) {
-                    cmd.err.println("\nThe stack trace was:")
-                    cmd.err.println(ex.stackTraceToString())
-                }
+    exitProcess(exitCode)
+}
 
-                1
+/**
+ * The CLI's command tree and its error handling. A failing command is reported on stderr only;
+ * nothing about it leaves the machine.
+ */
+internal fun createCommandLine(): CommandLine {
+    val commandLine = CommandLine(App())
+        .setUsageHelpWidth(160)
+        .setCaseInsensitiveEnumValuesAllowed(true)
+        .setExecutionStrategy(DisableAnsiMixin::executionStrategy)
+        .setExecutionExceptionHandler { ex, cmd, _ ->
+            // make errors red
+            println()
+            cmd.colorScheme = CommandLine.Help.ColorScheme.Builder()
+                .errors(CommandLine.Help.Ansi.Style.fg_red)
+                .build()
+
+            cmd.err.println(
+                cmd.colorScheme.errorText(ex.message.orEmpty())
+            )
+
+            if (
+                ex !is CliError && ex !is MaestroException.UnsupportedJavaVersion
+                && ex !is MaestroException.MissingAppleTeamId && ex !is MaestroException.IOSDeviceDriverSetupException
+            ) {
+                cmd.err.println("\nThe stack trace was:")
+                cmd.err.println(ex.stackTraceToString())
             }
 
-        // Track CLI run
-        if (args.isNotEmpty())
-            Analytics.trackEvent(CliCommandRunEvent(command = args[0]))
-
-        val generateCompletionCommand = commandLine.subcommands["generate-completion"]
-        generateCompletionCommand?.commandSpec?.usageMessage()?.hidden(true)
-
-        val exitCode = commandLine
-            .execute(*args)
-
-        DebugLogStore.finalizeRun()
-
-        val newVersion = Updates.checkForUpdates()
-        if (newVersion != null) {
-            Updates.fetchChangelogAsync()
-            System.err.println()
-            val changelog = Updates.getChangelog()
-            val anchor = newVersion.toString().replace(".", "")
-            System.err.println(
-                listOf(
-                    "A new version of the Maestro CLI is available ($newVersion).\n",
-                    "See what's new:",
-                    "https://github.com/mobile-dev-inc/maestro/blob/main/CHANGELOG.md#$anchor",
-                    ChangeLogUtils.print(changelog),
-                    "Upgrade command:",
-                    "curl -Ls \"https://get.maestro.mobile.dev\" | bash",
-                ).joinToString("\n").box()
-            )
+            1
         }
 
-        if (commandLine.isVersionHelpRequested) {
-            printVersion()
-            Analytics.close()
-            exitProcess(0)
-        }
+    val generateCompletionCommand = commandLine.subcommands["generate-completion"]
+    generateCompletionCommand?.commandSpec?.usageMessage()?.hidden(true)
 
-        Analytics.close()
-        exitProcess(exitCode)
-    } catch (e: Throwable) {
-        Analytics.close()
-        throw e
-    }
+    return commandLine
 }

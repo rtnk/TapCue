@@ -44,7 +44,7 @@ private var mcpProtocolOut: PrintStream = System.out
 
 /**
  * Must run before any MCP-adjacent class loads: static init (kotlin-logging banner,
- * first-run analytics notice, third-party println-on-load) writes to whatever stdout
+ * dependency banners, third-party println-on-load) writes to whatever stdout
  * is at that moment and corrupts the JSON-RPC handshake for strict clients like
  * Claude Desktop.
  */

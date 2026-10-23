@@ -1,6 +1,6 @@
 package maestro.cli.driver
 
-import maestro.cli.api.CliVersion
+import maestro.cli.util.CliVersion
 
 data class DriverBuildConfig(
     val teamId: String,

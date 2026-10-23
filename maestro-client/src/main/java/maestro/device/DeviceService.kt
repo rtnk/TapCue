@@ -626,10 +626,14 @@ object DeviceService {
         return false
     }
 
-    /** Picks the sdkmanager package for [os]/[abi], installed images first. Null if nothing matches. */
+    /**
+     * Picks an installed sdkmanager package for [os]/[abi]. Null if nothing installed matches.
+     *
+     * Only installed images are considered: listing the remote catalogue (`sdkmanager --list`)
+     * would contact Google's SDK repository, and installing images is left to the user.
+     */
     fun resolveSystemImage(os: String, abi: CPU_ARCHITECTURE): String? {
-        selectSystemImage(listSystemImagePackages(installedOnly = true), os, abi)?.let { return it }
-        return selectSystemImage(listSystemImagePackages(installedOnly = false), os, abi)
+        return selectSystemImage(listInstalledSystemImagePackages(), os, abi)
     }
 
     // Newest stable minor of [os] (never a beta), google_apis-family tags only, google_apis first, never playstore.
@@ -657,11 +661,11 @@ object DeviceService {
         return inNewest.firstOrNull { tagOf(it) == "google_apis" } ?: inNewest.firstOrNull()
     }
 
-    private fun listSystemImagePackages(installedOnly: Boolean): List<String> {
+    private fun listInstalledSystemImagePackages(): List<String> {
         return try {
             val command = listOf(
                 requireSdkManagerBinary().absolutePath,
-                if (installedOnly) "--list_installed" else "--list",
+                "--list_installed",
             )
             val process = ProcessBuilder(*command.toTypedArray()).start()
             if (!process.waitFor(1, TimeUnit.MINUTES)) throw TimeoutException()
@@ -676,30 +680,6 @@ object DeviceService {
             logger.error("Unable to list Android system images", e)
             emptyList()
         }
-    }
-
-    /**
-     * Uses the Android SDK manager to install android image
-     */
-    fun installAndroidSystemImage(image: String): Boolean {
-        val command = listOf(
-            requireSdkManagerBinary().absolutePath,
-            image
-        )
-        try {
-            val process = ProcessBuilder(*command.toTypedArray())
-                .inheritIO()
-                .start()
-            if (!process.waitFor(120, TimeUnit.MINUTES)) {
-                throw TimeoutException()
-            }
-
-            return process.exitValue() == 0 && isAndroidSystemImageInstalled(image)
-        } catch (e: Exception) {
-            logger.error("Unable to install if SDK package is installed", e)
-        }
-
-        return false
     }
 
     fun getAndroidSystemImageInstallCommand(pkg: String): String {

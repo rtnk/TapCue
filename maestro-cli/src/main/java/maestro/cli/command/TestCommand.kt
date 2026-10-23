@@ -29,13 +29,6 @@ import maestro.cli.App
 import maestro.cli.CliError
 import maestro.cli.DisableAnsiMixin
 import maestro.cli.ShowHelpMixin
-import maestro.cli.analytics.Analytics
-import maestro.cli.analytics.TestRunFailedEvent
-import maestro.cli.analytics.TestRunFinishedEvent
-import maestro.cli.analytics.TestRunStartedEvent
-import maestro.cli.analytics.WorkspaceRunFailedEvent
-import maestro.cli.analytics.WorkspaceRunFinishedEvent
-import maestro.cli.analytics.WorkspaceRunStartedEvent
 import maestro.device.Device
 import maestro.device.DeviceService
 import maestro.cli.model.TestExecutionSummary
@@ -52,7 +45,6 @@ import maestro.cli.util.EnvUtils
 import maestro.cli.util.FileUtils.isWebFlow
 import maestro.cli.util.PrintUtils
 import maestro.cli.view.box
-import maestro.cli.model.FlowStatus
 import maestro.orchestra.error.ValidationError
 import maestro.orchestra.workspace.WorkspaceExecutionPlanner
 import maestro.orchestra.workspace.WorkspaceExecutionPlanner.ExecutionPlan
@@ -263,60 +255,7 @@ class TestCommand : Callable<Int> {
         TestDebugReporter.updateTestOutputDir(resolvedTestOutputDir)
         val debugOutputPath = TestDebugReporter.getDebugOutputPath()
 
-        // Track test execution start
-        val flowCount = executionPlan.flowsToRun.size
-        val platform = parent?.platform ?: "unknown"
-        val deviceCount = getDeviceCount(executionPlan)
-
-        val result = try {
-            handleSessions(debugOutputPath, executionPlan)
-        } catch (e: Exception) {
-            // Track workspace failure for runtime errors
-            if (flowCount > 1) {
-                Analytics.trackEvent(WorkspaceRunFailedEvent(
-                    error = e.message ?: "Unknown error occurred during workspace execution",
-                    flowCount = flowCount,
-                    platform = platform,
-                    deviceCount = deviceCount,
-                ))
-            } else {
-                Analytics.trackEvent(TestRunFailedEvent(
-                    error = e.message ?: "Unknown error occurred during workspace execution",
-                    platform = platform,
-                ))
-            }
-            throw e
-        }
-
-        // Flush analytics events immediately after tracking the upload finished event
-        Analytics.flush()
-
-        return result
-    }
-
-    /**
-     * Get the actual number of devices that will be used for test execution
-     */
-    private fun getDeviceCount(plan: ExecutionPlan): Int {
-        val deviceIds = getDeviceIds(plan)
-        return deviceIds.size
-    }
-
-    /**
-     * Get the list of device IDs that will be used for test execution
-     */
-    private fun getDeviceIds(plan: ExecutionPlan): List<String> {
-        val includeWeb = executionPlanIncludesWebFlow(plan)
-        val connectedDevices = DeviceService.listConnectedDevices(
-            includeWeb = includeWeb,
-            host = parent?.host,
-            port = parent?.port,
-        )
-        val availableDevices = connectedDevices.map { it.instanceId }.toSet()
-        return getPassedOptionsDeviceIds(plan)
-            .filter { device -> device in availableDevices }
-            .ifEmpty { availableDevices }
-            .toList()
+        return handleSessions(debugOutputPath, executionPlan)
     }
 
     private fun resolveTestOutputDir(plan: ExecutionPlan): Path? {
@@ -520,11 +459,6 @@ class TestCommand : Callable<Int> {
                 PlainTextResultView()
             }
 
-        val startTime = System.currentTimeMillis()
-        Analytics.trackEvent(TestRunStartedEvent(
-            platform = device?.platform.toString()
-        ))
-
         val resultSingle = TestRunner.runSingle(
             maestro = maestro,
             device = device,
@@ -534,20 +468,10 @@ class TestCommand : Callable<Int> {
             debugOutputPath = debugOutputPath,
             deviceId = deviceId,
         )
-        val duration = System.currentTimeMillis() - startTime
 
         if (resultSingle == 1) {
             printExitDebugMessage()
         }
-
-
-        Analytics.trackEvent(
-            TestRunFinishedEvent(
-                status = if (resultSingle == 0) FlowStatus.SUCCESS else FlowStatus.ERROR,
-                platform = device?.platform.toString(),
-                durationMs = duration
-            )
-        )
 
         if (!flattenDebugOutput) {
             TestDebugReporter.deleteOldFiles()
@@ -565,14 +489,6 @@ class TestCommand : Callable<Int> {
         debugOutputPath: Path,
         deviceId: String?,
     ): Triple<Int?, Int?, TestExecutionSummary> {
-        val startTime = System.currentTimeMillis()
-        val totalFlowCount = chunkPlans.sumOf { it.flowsToRun.size }
-        Analytics.trackEvent(WorkspaceRunStartedEvent(
-            flowCount = totalFlowCount,
-            platform = parent?.platform.toString(),
-            deviceCount = chunkPlans.size
-        ))
-
         val suiteResult = TestSuiteInteractor(
             maestro = maestro,
             device = device,
@@ -587,21 +503,10 @@ class TestCommand : Callable<Int> {
             deviceId = deviceId,
         )
 
-        val duration = System.currentTimeMillis() - startTime
-
-
         if (!flattenDebugOutput) {
             TestDebugReporter.deleteOldFiles()
         }
 
-        Analytics.trackEvent(
-            WorkspaceRunFinishedEvent(
-                flowCount = totalFlowCount,
-                deviceCount = chunkPlans.size,
-                platform = parent?.platform.toString(),
-                durationMs = duration
-            )
-        )
         return Triple(suiteResult.passedCount, suiteResult.totalTests, suiteResult)
     }
 

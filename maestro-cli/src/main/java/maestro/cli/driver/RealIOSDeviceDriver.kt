@@ -1,7 +1,7 @@
 package maestro.cli.driver
 
 import maestro.MaestroException
-import maestro.cli.api.CliVersion
+import maestro.cli.util.CliVersion
 import maestro.cli.util.EnvUtils
 import maestro.cli.util.PrintUtils.message
 import java.nio.file.Files

@@ -39,6 +39,17 @@ Zmiany własne forka. Fork bazuje na upstream `mobile-dev-inc/Maestro` `v2.11.0`
   `MaestroException.CloudApiKeyNotAvailable`, `OrchestraListener.onAIArtifactGenerated` (katalog `ai-analysis/`
   w paczce artefaktów) i pole `CommandMetadata.aiReasoning` usunięte; `ArtifactKind.AI_ANALYSIS` zostaje w schemacie
   manifestu v1 jako wartość zarezerwowana, której nic nie emituje.
+- CLI (STEP-03): usunięta telemetria — anonimowa analityka PostHog (wraz z komunikatem o zgodzie i plikiem
+  `analytics.json` z identyfikatorem instalacji), wysyłanie raportów błędów (stack trace i linia poleceń) i raportu
+  głębokości hierarchii UI po zamknięciu sesji. Zmienna `MAESTRO_CLI_NO_ANALYTICS` nie jest już potrzebna.
+- CLI (STEP-03): usunięte sprawdzanie aktualizacji i pobieranie changelogu przy każdym uruchomieniu
+  (`MAESTRO_DISABLE_UPDATE_CHECK`, `MAESTRO_API_URL` nie są już czytane) oraz komenda `download-samples`.
+  Błąd komendy jest wypisywany wyłącznie lokalnie: komunikat i stack trace na stderr.
+- Raporty (STEP-03): raport HTML (`--format HTML`, `HTML-DETAILED`) nie ładuje Bootstrapa z CDN — style i zwijanie
+  flow są wbudowane w plik, więc raport otwiera się bez internetu.
+- CLI (STEP-03): `start-device` nie pobiera brakującego obrazu systemu Android (wcześniej pytał i uruchamiał
+  `sdkmanager`) i nie odpytuje zdalnego katalogu `sdkmanager --list`; zamiast tego kończy się komunikatem
+  z poleceniem `sdkmanager` do samodzielnego uruchomienia.
 - Android (poprawka): pula wątków I/O klienta devtools (`newAdbIoExecutor`) nie odrzuca już wywołania jako
   „all 16 adb I/O workers are busy”, gdy wolny worker właśnie kończy poprzednie wywołanie; przy 15 workerach
   zawieszonych na urządzeniu zdarzało się to przy niemal każdym kolejnym wywołaniu. Usuwa też niestabilność

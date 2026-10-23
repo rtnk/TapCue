@@ -1,7 +1,6 @@
 package maestro.cli
 
 import com.google.common.truth.Truth.assertThat
-import maestro.cli.api.ApiClient
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import picocli.CommandLine
@@ -69,11 +68,6 @@ class NoRemoteAiTest {
         assertThat(classLoader.getResource("tailwind.config.js")).isNull()
         assertThat(classLoader.getResource("askForDefects_schema.json")).isNull()
         assertThat(classLoader.getResource("extractText_schema.json")).isNull()
-    }
-
-    @Test
-    fun `ApiClient has no analyze endpoint`() {
-        assertThat(ApiClient::class.java.declaredMethods.map { it.name }).doesNotContain("analyze")
     }
 
     @Test
