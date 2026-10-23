@@ -3,7 +3,7 @@
 | Pole | Wartość |
 |---|---|
 | Krok | STEP-03 — **zakończony, w review** |
-| PR | PR-03 (link w `docs/ROADMAP-0.1.md` §3 i w opisie PR) |
+| PR | PR-03: https://github.com/rtnk/TapCue/pull/6 |
 | Gałąź | `step-03-remove-telemetry` |
 | Gałąź docelowa | `main` |
 | Baza | `main` @ `9182c58` (merge PR #5, po merge PR-02 #4) |
