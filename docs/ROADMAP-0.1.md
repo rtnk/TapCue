@@ -1,6 +1,6 @@
 # ROADMAP 0.1.0 — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Status dokumentu: **STEP-00B — w review ([PR-00B #3](https://github.com/rtnk/TapCue/pull/3))**; STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)) i STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)) scalone 2026-10-23. Ostatnia aktualizacja: 2026-10-23.
+Status dokumentu: **STEP-02 — w review (PR-02)**; STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)) i STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)) scalone 2026-10-23. Ostatnia aktualizacja: 2026-10-23.
 
 ## 0. Punkt wyjścia
 
@@ -52,9 +52,9 @@ Legenda statusu: `TODO` · `IN PROGRESS` · `IN REVIEW` · `MERGED` · `BLOCKED`
 | Krok | PR | Cel | Zależy od | Status | Szacunek |
 |---|---|---|---|---|---|
 | STEP-00 | PR-00 | Baseline, audyty, plan, bazowy CI | — | MERGED ([#1](https://github.com/rtnk/TapCue/pull/1)) | 1 sesja |
-| STEP-00B *(D-8)* | PR-00B | Legal containment: build bez simulator-server i Viewera | PR-00 (wykonany po PR-01) | IN REVIEW ([#3](https://github.com/rtnk/TapCue/pull/3)) | 0,5 sesji |
+| STEP-00B *(D-8)* | PR-00B | Legal containment: build bez simulator-server i Viewera | PR-00 (wykonany po PR-01) | MERGED ([#3](https://github.com/rtnk/TapCue/pull/3)) | 0,5 sesji |
 | STEP-01 | PR-01 | Remove Cloud CLI | PR-00 | MERGED ([#2](https://github.com/rtnk/TapCue/pull/2)) | 1–2 sesje |
-| STEP-02 | PR-02 | Remove Remote AI | PR-01, PR-00B | TODO | 1–2 sesje |
+| STEP-02 | PR-02 | Remove Remote AI | PR-01, PR-00B | IN REVIEW (PR-02) | 1–2 sesje |
 | STEP-03 | PR-03 | Remove telemetry, error upload, update checks, auto-downloads | PR-02 | TODO | 1 sesja |
 | STEP-03B | PR-03B | Polityka sieci dla funkcji flow (JS `http`, web, `openLink`) | PR-03, D-3, D-4 | TODO | 1 sesja |
 | STEP-04 | PR-04 | Local-only MCP, usunięcie Viewera | PR-03B | TODO | 1–2 sesje |
@@ -137,6 +137,15 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
 - **Testy:** regresja parsera (dawne komendy AI → błąd), wykonawcy (`maestro-test` `IntegrationTest`),
   lokalnych asercji (`assertVisible`, `assertTrue`); test grafu: `runtimeClasspath` CLI bez `maestro-ai`.
 - **Wyjście:** paczka i graf runtime nie zawierają zdalnych klientów/modeli AI.
+- **Realizacja (PR-02, szczegóły w `docs/handovers/STEP-02.md`):** zakres jak wyżej. Komunikat błędu jest po
+  angielsku, jak pozostałe błędy parsera: tytuł „AI Command Not Available: <komenda>”, treść „AI commands are not
+  available in Maestro Local …” (`SyntaxError` ⊂ `ValidationError`, w `MaestroFlowParser`). Dodatkowo usunięte
+  (zależne od usuniętych typów): `onCommandGeneratedOutput` w `Orchestra`, `OrchestraListener.onAIArtifactGenerated`
+  i katalog `ai-analysis/` w paczce artefaktów, `CommandMetadata.aiReasoning`, `MaestroException.CloudApiKeyNotAvailable`,
+  `FlowAIOutput`/`saveSuggestions` (pliki `ai-*.json`), `ScreenshotUtils`, `TestAnalysisManager.maybeNotify`
+  (przeniesione z STEP-03), `ApiClient.analyze`. `ArtifactKind.AI_ANALYSIS` zostaje w schemacie manifestu v1 jako
+  wartość zarezerwowana. `maestro-test` dostał jawną zależność testową `kotlinx-coroutines-core` (wcześniej
+  przechodnio przez `maestro-ai`/ktor).
 
 ### STEP-03 — Remove Telemetry, Error Upload and Update Checks (PR-03)
 

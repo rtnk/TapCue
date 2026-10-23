@@ -451,47 +451,6 @@ data class AssertConditionCommand(
     }
 }
 
-data class AssertNoDefectsWithAICommand(
-    override val optional: Boolean = true,
-    override val label: String? = null,
-) : Command {
-    override val originalDescription: String
-        get() = "Assert no defects with AI"
-
-    override fun evaluateScripts(jsEngine: JsEngine): Command = this
-}
-
-data class AssertWithAICommand(
-    val assertion: String,
-    override val optional: Boolean = true,
-    override val label: String? = null,
-) : Command {
-    override val originalDescription: String
-        get() = "Assert with AI: $assertion"
-
-    override fun evaluateScripts(jsEngine: JsEngine): Command {
-        return copy(
-            assertion = assertion.evaluateScripts(jsEngine),
-        )
-    }
-}
-
-data class ExtractTextWithAICommand(
-    val query: String,
-    val outputVariable: String,
-    override val optional: Boolean = true,
-    override val label: String? = null
-) : Command {
-    override val originalDescription: String
-        get() = "Extract text with AI: $query"
-
-    override fun evaluateScripts(jsEngine: JsEngine): Command {
-        return copy(
-            query = query.evaluateScripts(jsEngine),
-        )
-    }
-}
-
 data class AssertScreenshotCommand(
     val path: String,
     val thresholdPercentage: String,

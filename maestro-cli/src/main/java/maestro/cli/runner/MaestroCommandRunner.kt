@@ -22,8 +22,6 @@ package maestro.cli.runner
 import maestro.Maestro
 import maestro.MaestroException
 import maestro.device.Device
-import maestro.cli.report.SingleScreenFlowAIOutput
-import maestro.cli.report.FlowAIOutput
 import maestro.cli.runner.resultview.ResultView
 import maestro.cli.runner.resultview.UiState
 import maestro.cli.util.PrintUtils
@@ -40,7 +38,6 @@ import maestro.utils.CliInsights
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.IdentityHashMap
-import maestro.cli.util.ScreenshotUtils
 import maestro.utils.Insight
 import java.nio.file.Path
 
@@ -60,9 +57,6 @@ object MaestroCommandRunner {
         view: ResultView,
         commands: List<MaestroCommand>,
         debugOutput: FlowDebugOutput,
-        aiOutput: FlowAIOutput,
-        apiKey: String? = null,
-        analyze: Boolean = false,
         artifactsDir: Path? = null
     ): Orchestra.FlowResult {
         val config = YamlCommandReader.getConfig(commands)
@@ -103,9 +97,6 @@ object MaestroCommandRunner {
         val orchestra = Orchestra(
             maestro = maestro,
             artifactsDir = artifactsDir,
-            // --analyze feeds the AI from the bundle: capture a per-step screenshot
-            // for every command so the analysis has the full visual trail.
-            captureFullArtifacts = analyze,
             insights = CliInsights,
             onCommandStart = { _, command ->
                 logger.info("${command.description()} RUNNING")
@@ -176,17 +167,6 @@ object MaestroCommandRunner {
                 debugOutput.commands[command]?.evaluatedCommand = metadata.evaluatedCommand
                 refreshUi()
             },
-            onCommandGeneratedOutput = { command, defects, screenshot ->
-                logger.info("${command.description()} generated output")
-                val screenshotPath = ScreenshotUtils.writeAIscreenshot(screenshot)
-                aiOutput.screenOutputs.add(
-                    SingleScreenFlowAIOutput(
-                        screenshotPath = screenshotPath,
-                        defects = defects,
-                    )
-                )
-            },
-            apiKey = apiKey,    
         )
 
         return orchestra.runFlow(commands)

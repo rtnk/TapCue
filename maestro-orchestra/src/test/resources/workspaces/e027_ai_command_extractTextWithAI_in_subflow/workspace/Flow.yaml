@@ -1,0 +1,6 @@
+appId: com.example
+---
+- launchApp
+- runFlow:
+    commands:
+      - extractTextWithAI: The order number

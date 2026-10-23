@@ -60,7 +60,6 @@ log4j = "2.25.3"
 
 coroutines = "1.8.0"
 kotlinx-html = "0.8.0"
-clikt = "4.2.2"
 gmsLocation = "21.3.0"
 mcpKotlinSdk = "steviec/kotlin-1.8"
 
@@ -112,7 +111,6 @@ junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", vers
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 kotlin-result = { module = "com.michael-bull.kotlin-result:kotlin-result", version.ref = "kotlinResult" }
 kotlin-retry = { module = "com.michael-bull.kotlin-retry:kotlin-retry", version.ref = "kotlinRetry" }
-clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-serial-gson = { module = "io.ktor:ktor-serialization-gson", version.ref = "ktor" }

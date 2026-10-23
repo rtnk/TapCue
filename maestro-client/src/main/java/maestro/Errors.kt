@@ -41,8 +41,6 @@ sealed class MaestroException(override val message: String, cause: Throwable? = 
         cause: Throwable? = null,
     ) : AssertionFailure(message, hierarchyRoot, debugMessage, cause)
 
-    class CloudApiKeyNotAvailable(message: String, cause: Throwable? = null) : MaestroException(message, cause)
-
     class DestinationIsNotWritable(message: String, cause: Throwable? = null) : MaestroException(message, cause)
 
     class UnableToCopyTextFromElement(message: String, cause: Throwable? = null): MaestroException(message, cause)

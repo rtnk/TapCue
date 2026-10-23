@@ -38,9 +38,6 @@ data class MaestroCommand(
     @Deprecated("Use assertConditionCommand") val assertCommand: AssertCommand? = null,
     val assertConditionCommand: AssertConditionCommand? = null,
     val assertScreenshotCommand: AssertScreenshotCommand? = null,
-    val assertNoDefectsWithAICommand: AssertNoDefectsWithAICommand? = null,
-    val assertWithAICommand: AssertWithAICommand? = null,
-    val extractTextWithAICommand: ExtractTextWithAICommand? = null,
     val inputTextCommand: InputTextCommand? = null,
     val inputRandomTextCommand: InputRandomCommand? = null,
     val launchAppCommand: LaunchAppCommand? = null,
@@ -91,9 +88,6 @@ data class MaestroCommand(
         backPressCommand = command as? BackPressCommand,
         assertCommand = command as? AssertCommand,
         assertConditionCommand = command as? AssertConditionCommand,
-        assertNoDefectsWithAICommand = command as? AssertNoDefectsWithAICommand,
-        assertWithAICommand = command as? AssertWithAICommand,
-        extractTextWithAICommand = command as? ExtractTextWithAICommand,
         inputTextCommand = command as? InputTextCommand,
         inputRandomTextCommand = command as? InputRandomCommand,
         assertScreenshotCommand = command as? AssertScreenshotCommand,
@@ -143,9 +137,6 @@ data class MaestroCommand(
         backPressCommand != null -> backPressCommand
         assertCommand != null -> assertCommand
         assertConditionCommand != null -> assertConditionCommand
-        assertNoDefectsWithAICommand != null -> assertNoDefectsWithAICommand
-        assertWithAICommand != null -> assertWithAICommand
-        extractTextWithAICommand != null -> extractTextWithAICommand
         inputTextCommand != null -> inputTextCommand
         inputRandomTextCommand != null -> inputRandomTextCommand
         launchAppCommand != null -> launchAppCommand

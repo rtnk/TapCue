@@ -35,7 +35,6 @@ import maestro.cli.command.QueryCommand
 import maestro.cli.command.RecordCommand
 import maestro.cli.command.StartDeviceCommand
 import maestro.cli.command.TestCommand
-import maestro.cli.insights.TestAnalysisManager
 import maestro.cli.mcp.claimMcpStdout
 import maestro.cli.update.Updates
 import maestro.cli.util.ChangeLogUtils
@@ -174,7 +173,6 @@ fun main(args: Array<String>) {
             .execute(*args)
 
         DebugLogStore.finalizeRun()
-        TestAnalysisManager.maybeNotify()
 
         val newVersion = Updates.checkForUpdates()
         if (newVersion != null) {

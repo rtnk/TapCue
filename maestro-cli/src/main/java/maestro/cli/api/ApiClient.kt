@@ -5,9 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
-import maestro.cli.CliError
 import maestro.cli.analytics.Analytics
-import maestro.cli.insights.AnalysisDebugFiles
 import maestro.cli.util.EnvUtils
 import maestro.utils.HttpClient
 import okhttp3.Interceptor
@@ -88,35 +86,6 @@ class ApiClient(
         return Ok(parsed)
     }
 
-    fun analyze(
-        authToken: String,
-        debugFiles: AnalysisDebugFiles,
-    ): AnalyzeResponse {
-        val mediaType = "application/json; charset=utf-8".toMediaType()
-        val body = JSON.writeValueAsString(debugFiles).toRequestBody(mediaType)
-
-        val url = "$baseUrl/v2/analyze"
-
-        val request = Request.Builder()
-            .header("Authorization", "Bearer $authToken")
-            .url(url)
-            .post(body)
-            .build()
-
-        val response = client.newCall(request).execute()
-
-        response.use {
-            if (!response.isSuccessful) {
-                val errorMessage = response.body?.string().takeIf { it?.isNotEmpty() == true } ?: "Unknown"
-                throw CliError("Analyze request failed (${response.code}): $errorMessage")
-            }
-
-            val parsed = JSON.readValue(response.body?.bytes(), AnalyzeResponse::class.java)
-
-            return parsed;
-        }
-    }
-
     data class ApiException(
         val statusCode: Int?,
     ) : Exception("Request failed. Status code: $statusCode")
@@ -168,14 +137,3 @@ class SystemInformationInterceptor : Interceptor {
         return chain.proceed(newRequest)
     }
 }
-
-data class Insight(
-    val category: String,
-    val reasoning: String,
-)
-
-class AnalyzeResponse(
-    val htmlReport: String?,
-    val output: String,
-    val insights: List<Insight>
-)

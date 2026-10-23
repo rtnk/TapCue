@@ -1,9 +1,7 @@
 package maestro.cli.report
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import maestro.ai.cloud.Defect
 import maestro.orchestra.debug.TestOutputWriter
 import maestro.cli.util.CiUtils
 import maestro.cli.util.EnvUtils
@@ -14,7 +12,6 @@ import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.core.config.Configurator
 import org.slf4j.LoggerFactory
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -42,33 +39,6 @@ object TestDebugReporter {
     private var flattenDebugOutput: Boolean = false
     private var testOutputDir: Path? = null
     private var sessionFolderName: String? = null
-
-    // AI outputs must be saved separately at the end of the flow.
-    fun saveSuggestions(outputs: List<FlowAIOutput>, path: Path) {
-        val outputsWithContent = outputs.filter { it.screenOutputs.isNotEmpty() }
-        if (outputsWithContent.isEmpty()) return
-
-        // This mutates the output.
-        outputsWithContent.forEach { output ->
-            // Write AI screenshots. Paths need to be changed to the final ones.
-            val updatedOutputs = output.screenOutputs.map { newOutput ->
-                val screenshotFilename = newOutput.screenshotPath.name
-                val screenshotFile = File(path.absolutePathString(), screenshotFilename)
-                newOutput.screenshotPath.copyTo(screenshotFile)
-                newOutput.copy(screenshotPath = screenshotFile)
-            }
-
-            output.screenOutputs.clear()
-            output.screenOutputs.addAll(updatedOutputs)
-
-            // Write AI JSON output
-            val jsonFilename = "ai-(${output.flowName.replace("/", "_")}).json"
-            val jsonFile = File(path.absolutePathString(), jsonFilename)
-            mapper.writeValue(jsonFile, output)
-        }
-
-        HtmlAITestSuiteReporter().report(outputsWithContent, path.toFile())
-    }
 
     /**
      * Resolves and creates a flow's own output folder under [destDir], which
@@ -188,14 +158,3 @@ object TestDebugReporter {
         }
     }
 }
-
-data class FlowAIOutput(
-    @JsonProperty("flow_name") val flowName: String,
-    @JsonProperty("flow_file_path") val flowFile: File,
-    @JsonProperty("outputs") val screenOutputs: MutableList<SingleScreenFlowAIOutput> = mutableListOf(),
-)
-
-data class SingleScreenFlowAIOutput(
-    @JsonProperty("screenshot_path") val screenshotPath: File,
-    val defects: List<Defect>,
-)

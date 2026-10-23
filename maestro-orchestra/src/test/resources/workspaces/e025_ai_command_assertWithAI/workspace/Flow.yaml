@@ -1,0 +1,5 @@
+appId: com.example
+---
+- launchApp
+- assertWithAI:
+    assertion: The login button is visible

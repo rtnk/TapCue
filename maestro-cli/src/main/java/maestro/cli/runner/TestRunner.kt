@@ -10,7 +10,6 @@ import kotlinx.coroutines.runBlocking
 import maestro.Maestro
 import maestro.MaestroException
 import maestro.device.Device
-import maestro.cli.report.FlowAIOutput
 import maestro.cli.report.TestDebugReporter
 import maestro.cli.runner.resultview.AnsiResultView
 import maestro.cli.runner.resultview.ResultView
@@ -47,15 +46,9 @@ object TestRunner {
         env: Map<String, String>,
         resultView: ResultView,
         debugOutputPath: Path,
-        analyze: Boolean = false,
-        apiKey: String? = null,
         deviceId: String?,
     ): Int {
         val debugOutput = FlowDebugOutput()
-        var aiOutput = FlowAIOutput(
-            flowName = flowFile.nameWithoutExtension,
-            flowFile = flowFile,
-        )
 
         val updatedEnv = env
             .withInjectedShellEnvVars()
@@ -63,7 +56,6 @@ object TestRunner {
 
         val commands = YamlCommandReader.readCommands(flowFile.toPath()).withEnv(updatedEnv)
         val flowName = YamlCommandReader.getConfig(commands)?.name ?: flowFile.nameWithoutExtension
-        aiOutput = aiOutput.copy(flowName = flowName)
         logger.info("Running flow ${flowFile.name}...")
 
         // Per-flow folder ArtifactsGenerator writes the bundle into (see BundleLayout).
@@ -78,15 +70,10 @@ object TestRunner {
                     view = resultView,
                     commands = commands,
                     debugOutput = debugOutput,
-                    aiOutput = aiOutput,
-                    analyze = analyze,
-                    apiKey = apiKey,
                     artifactsDir = flowDir,
                 )
             }
         }
-
-        TestDebugReporter.saveSuggestions(outputs = listOf(aiOutput), path = debugOutputPath)
 
         debugOutput.exception?.let { printFlowError(it) }
 
@@ -112,8 +99,6 @@ object TestRunner {
         device: Device?,
         flowFile: File,
         env: Map<String, String>,
-        analyze: Boolean = false,
-        apiKey: String? = null,
         deviceId: String?,
     ): Nothing {
         val resultView = AnsiResultView("> Press [ENTER] to restart the Flow\n\n")
@@ -154,13 +139,6 @@ object TestRunner {
                                     view = resultView,
                                     commands = commands,
                                     debugOutput = FlowDebugOutput(),
-                                    // TODO(bartekpacia): make AI outputs work in continuous mode (see #1972)
-                                    aiOutput = FlowAIOutput(
-                                        flowName = "TODO",
-                                        flowFile = flowFile,
-                                    ),
-                                    analyze = analyze,
-                                    apiKey = apiKey,
                                 )
                             }
                         }.get()

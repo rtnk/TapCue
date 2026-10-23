@@ -28,9 +28,7 @@ import maestro.orchestra.AddMediaCommand
 import maestro.orchestra.AssertConditionCommand
 import maestro.orchestra.AssertDarkModeCommand
 import maestro.orchestra.AssertLightModeCommand
-import maestro.orchestra.AssertNoDefectsWithAICommand
 import maestro.orchestra.AssertScreenshotCommand
-import maestro.orchestra.AssertWithAICommand
 import maestro.orchestra.BackPressCommand
 import maestro.orchestra.ClearKeychainCommand
 import maestro.orchestra.ClearStateCommand
@@ -41,7 +39,6 @@ import maestro.orchestra.ElementSelector
 import maestro.orchestra.ElementTrait
 import maestro.orchestra.EraseTextCommand
 import maestro.orchestra.EvalScriptCommand
-import maestro.orchestra.ExtractTextWithAICommand
 import maestro.orchestra.HideKeyboardCommand
 import maestro.orchestra.InputRandomCommand
 import maestro.orchestra.InputRandomType
@@ -100,10 +97,7 @@ data class YamlFluentCommand(
     val assertVisible: YamlElementSelectorUnion? = null,
     val assertNotVisible: YamlElementSelectorUnion? = null,
     val assertTrue: YamlAssertTrue? = null,
-    val assertNoDefectsWithAI: YamlAssertNoDefectsWithAI? = null,
     val assertScreenshot: YamlAssertScreenshot? = null,
-    val assertWithAI: YamlAssertWithAI? = null,
-    val extractTextWithAI: YamlExtractTextWithAI? = null,
     val back: YamlActionBack? = null,
     val clearKeychain: YamlActionClearKeychain? = null,
     val hideKeyboard: YamlActionHideKeyboard? = null,
@@ -202,36 +196,6 @@ data class YamlFluentCommand(
                         ),
                         label = assertTrue.label,
                         optional = assertTrue.optional,
-                    )
-                )
-            )
-
-            assertNoDefectsWithAI != null -> listOf(
-                MaestroCommand(
-                    AssertNoDefectsWithAICommand(
-                        optional = assertNoDefectsWithAI.optional,
-                        label = assertNoDefectsWithAI.label,
-                    )
-                )
-            )
-
-            assertWithAI != null -> listOf(
-                MaestroCommand(
-                    AssertWithAICommand(
-                        assertion = assertWithAI.assertion,
-                        optional = assertWithAI.optional,
-                        label = assertWithAI.label,
-                    )
-                )
-            )
-
-            extractTextWithAI != null -> listOf(
-                MaestroCommand(
-                    ExtractTextWithAICommand(
-                        query = extractTextWithAI.query,
-                        outputVariable = extractTextWithAI.outputVariable,
-                        optional = extractTextWithAI.optional,
-                        label = extractTextWithAI.label,
                     )
                 )
             )

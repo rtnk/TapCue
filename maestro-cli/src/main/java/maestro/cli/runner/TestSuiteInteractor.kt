@@ -5,8 +5,6 @@ import maestro.cli.CliError
 import maestro.device.Device
 import maestro.cli.model.FlowStatus
 import maestro.cli.model.TestExecutionSummary
-import maestro.cli.report.SingleScreenFlowAIOutput
-import maestro.cli.report.FlowAIOutput
 import maestro.cli.report.TestDebugReporter
 import maestro.cli.report.TestSuiteReporter
 import maestro.cli.util.FileUtils.toCwdRelativeOrAbsoluteString
@@ -25,7 +23,6 @@ import java.io.File
 import java.nio.file.Path
 import kotlin.system.measureTimeMillis
 import kotlin.time.Duration.Companion.milliseconds
-import maestro.cli.util.ScreenshotUtils
 import maestro.orchestra.util.Env.withDefaultEnvVars
 import maestro.orchestra.util.Env.withInjectedShellEnvVars
 
@@ -42,7 +39,6 @@ class TestSuiteInteractor(
     private val reporter: TestSuiteReporter,
     private val shardIndex: Int? = null,
     private val captureSteps: Boolean = false,
-    private val captureFullArtifacts: Boolean = false,
 ) {
 
     private val logger = LoggerFactory.getLogger(TestSuiteInteractor::class.java)
@@ -66,7 +62,6 @@ class TestSuiteInteractor(
         PrintUtils.message("${shardPrefix}Waiting for flows to complete...")
 
         var passed = true
-        val aiOutputs = mutableListOf<FlowAIOutput>()
 
         // first run sequence of flows if present
         val flowSequence = executionPlan.sequence
@@ -75,9 +70,8 @@ class TestSuiteInteractor(
             val updatedEnv = env
                 .withInjectedShellEnvVars()
                 .withDefaultEnvVars(flowFile, deviceId, shardIndex)
-            val (result, aiOutput) = runFlow(flowFile, updatedEnv, maestro, debugOutputPath)
+            val result = runFlow(flowFile, updatedEnv, maestro, debugOutputPath)
             flowResults.add(result)
-            aiOutputs.add(aiOutput)
 
             if (result.status == FlowStatus.ERROR) {
                 passed = false
@@ -95,8 +89,7 @@ class TestSuiteInteractor(
             val updatedEnv = env
                 .withInjectedShellEnvVars()
                 .withDefaultEnvVars(flowFile, deviceId, shardIndex)
-            val (result, aiOutput) = runFlow(flowFile, updatedEnv, maestro, debugOutputPath)
-            aiOutputs.add(aiOutput)
+            val result = runFlow(flowFile, updatedEnv, maestro, debugOutputPath)
 
             if (result.status == FlowStatus.ERROR) {
                 passed = false
@@ -147,9 +140,6 @@ class TestSuiteInteractor(
             )
         }
 
-        // TODO(bartekpacia): Should it also be saving to debugOutputPath?
-        TestDebugReporter.saveSuggestions(aiOutputs, debugOutputPath)
-
         return summary
     }
 
@@ -158,18 +148,10 @@ class TestSuiteInteractor(
         env: Map<String, String>,
         maestro: Maestro,
         debugOutputPath: Path,
-    ): Pair<TestExecutionSummary.FlowResult, FlowAIOutput> {
-        // TODO(bartekpacia): merge TestExecutionSummary with AI suggestions
-        //  (i.e. consider them also part of the test output)
-        //  See #1973
-
+    ): TestExecutionSummary.FlowResult {
         var flowStatus: FlowStatus
         var errorMessage: String? = null
 
-        val aiOutput = FlowAIOutput(
-            flowName = flowFile.nameWithoutExtension,
-            flowFile = flowFile,
-        )
         val commands = YamlCommandReader
             .readCommands(flowFile.toPath())
             .withEnv(env)
@@ -189,19 +171,8 @@ class TestSuiteInteractor(
                 val orchestra = Orchestra(
                     maestro = maestro,
                     artifactsDir = flowDir,
-                    captureFullArtifacts = captureFullArtifacts,
                     listeners = listOf(CliConsoleListener(shardPrefix)),
                     onCommandFailed = { _, _, _ -> Orchestra.ErrorResolution.FAIL },
-                    onCommandGeneratedOutput = { command, defects, screenshot ->
-                        logger.info("${shardPrefix}${command.description()} generated output")
-                        val screenshotPath = ScreenshotUtils.writeAIscreenshot(screenshot)
-                        aiOutput.screenOutputs.add(
-                            SingleScreenFlowAIOutput(
-                                screenshotPath = screenshotPath,
-                                defects = defects,
-                            )
-                        )
-                    },
                 )
 
                 val result = orchestra.runFlow(commands)
@@ -214,7 +185,6 @@ class TestSuiteInteractor(
             }
         }
         val flowDuration = flowTimeMillis.milliseconds
-        // FIXME(bartekpacia): Save AI output as well
 
         TestSuiteStatusView.showFlowCompletion(
             TestSuiteViewModel.FlowResult(
@@ -252,24 +222,21 @@ class TestSuiteInteractor(
             emptyList()
         }
 
-        return Pair(
-            first = TestExecutionSummary.FlowResult(
-                name = flowName,
-                fileName = flowFile.nameWithoutExtension,
-                filePath = flowFile.toPath().toCwdRelativeOrAbsoluteString(),
-                status = flowStatus,
-                failure = if (flowStatus == FlowStatus.ERROR) {
-                    TestExecutionSummary.Failure(
-                        message = shardPrefix + (errorMessage ?: debugOutput.exception?.message ?: "Unknown error"),
-                    )
-                } else null,
-                duration = flowDuration,
-                startTime = flowStartTime,
-                properties = maestroConfig?.properties,
-                tags = maestroConfig?.tags,
-                steps = steps,
-            ),
-            second = aiOutput,
+        return TestExecutionSummary.FlowResult(
+            name = flowName,
+            fileName = flowFile.nameWithoutExtension,
+            filePath = flowFile.toPath().toCwdRelativeOrAbsoluteString(),
+            status = flowStatus,
+            failure = if (flowStatus == FlowStatus.ERROR) {
+                TestExecutionSummary.Failure(
+                    message = shardPrefix + (errorMessage ?: debugOutput.exception?.message ?: "Unknown error"),
+                )
+            } else null,
+            duration = flowDuration,
+            startTime = flowStartTime,
+            properties = maestroConfig?.properties,
+            tags = maestroConfig?.tags,
+            steps = steps,
         )
     }
 

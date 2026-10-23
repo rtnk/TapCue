@@ -51,7 +51,6 @@ import maestro.cli.util.isPortAvailable
 import maestro.cli.util.EnvUtils
 import maestro.cli.util.FileUtils.isWebFlow
 import maestro.cli.util.PrintUtils
-import maestro.cli.insights.TestAnalysisManager
 import maestro.cli.view.box
 import maestro.cli.model.FlowStatus
 import maestro.orchestra.error.ValidationError
@@ -178,15 +177,6 @@ class TestCommand : Callable<Int> {
         description = ["(Web only) Set the size of the headless browser. Use the format {Width}x{Height}. Usage is --screen-size 1920x1080"],
     )
     private var screenSize: String? = null
-
-    @Option(
-        names = ["--analyze"],
-        description = ["[Beta] Enhance the test output analysis with AI Insights"],
-    )
-    private var analyze: Boolean = false
-
-    @Option(names = ["--api-key"], description = ["[Beta] API key for --analyze"])
-    private var apiKey: String? = null
 
     @Option(
         names = ["--reinstall-driver"],
@@ -432,7 +422,6 @@ class TestCommand : Callable<Int> {
         suites.mergeSummaries()?.saveReport()
 
         if (effectiveShards > 1) printShardsMessage(passed, total, suites)
-        if (analyze) TestAnalysisManager(apiKey = apiKey).runAnalysis(debugOutputPath)
         if (passed == total) 0 else 1
     }
 
@@ -495,7 +484,6 @@ class TestCommand : Callable<Int> {
                         device,
                         flowFile,
                         env,
-                        analyze = analyze,
                         deviceId = deviceId,
                     )
                 } else {
@@ -544,7 +532,6 @@ class TestCommand : Callable<Int> {
             env = env,
             resultView = resultView,
             debugOutputPath = debugOutputPath,
-            analyze = analyze,
             deviceId = deviceId,
         )
         val duration = System.currentTimeMillis() - startTime
@@ -592,7 +579,6 @@ class TestCommand : Callable<Int> {
             shardIndex = if (chunkPlans.size == 1) null else shardIndex,
             reporter = ReporterFactory.buildReporter(format, testSuiteName),
             captureSteps = format == ReportFormat.HTML_DETAILED,
-            captureFullArtifacts = analyze,
         ).runTestSuite(
             executionPlan = chunkPlans[shardIndex],
             env = env,

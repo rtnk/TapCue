@@ -25,7 +25,6 @@ import maestro.device.Platform
 import maestro.cli.runner.CommandState
 import maestro.orchestra.debug.CommandStatus
 import maestro.device.DeviceSpec
-import maestro.orchestra.AssertWithAICommand
 import maestro.orchestra.ElementSelector
 import maestro.orchestra.LaunchAppCommand
 import maestro.orchestra.MaestroCommand
@@ -308,24 +307,6 @@ fun main() {
                     status = CommandStatus.COMPLETED,
                     subOnStartCommands = listOf(),
                     subOnCompleteCommands = listOf(),
-                ),
-                CommandState(
-                    command = MaestroCommand(
-                        assertWithAICommand = AssertWithAICommand(
-                            assertion = "There are no bananas visible",
-                            optional = true
-                        ),
-                    ),
-                    status = CommandStatus.WARNED,
-                    subOnStartCommands = listOf(),
-                    subOnCompleteCommands = listOf(),
-                    insight = Insight(
-                        message = """
-                        |Assertion is false: There are no bananas visible
-                        |Reasoning: The screen shows a login screen and no images of bananas are present.
-                        """.trimMargin(),
-                        level = Insight.Level.WARNING,
-                    ),
                 ),
                 CommandState(
                     command = MaestroCommand(

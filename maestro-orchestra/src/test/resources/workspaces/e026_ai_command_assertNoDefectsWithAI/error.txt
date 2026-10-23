@@ -1,0 +1,12 @@
+AI Command Not Available: assertNoDefectsWithAI at /tmp/WorkspaceExecutionPlannerErrorsTest_workspace/workspace/Flow.yaml:4:3
+
+       2 | ---
+       3 | - launchApp
+  >    4 | - assertNoDefectsWithAI
+             ^
+       5 | 
+
+  `assertNoDefectsWithAI` is an AI command. AI commands are not available in Maestro Local: they relied on a
+  remote AI service, which this build does not include.
+  
+  Remove the command, or replace it with a local assertion such as `assertVisible` or `assertTrue`.
