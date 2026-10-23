@@ -25,6 +25,7 @@ import ios.devicectl.DeviceControlIOSDevice
 import device.SimctlIOSDevice
 import ios.xctest.XCTestIOSDevice
 import maestro.Maestro
+import maestro.MaestroException
 import maestro.device.Device
 import maestro.cli.CliError
 import maestro.cli.device.PickDeviceInteractor
@@ -67,8 +68,6 @@ object MaestroSessionManager {
         deviceId: String?,
         teamId: String? = null,
         platform: String? = null,
-        isHeadless: Boolean = false,
-        screenSize: String? = null,
         reinstallDriver: Boolean = true,
         deviceIndex: Int? = null,
         executionPlan: WorkspaceExecutionPlanner.ExecutionPlan? = null,
@@ -108,8 +107,6 @@ object MaestroSessionManager {
                 selectedDevice.platform,
                 effectiveDeviceId
             ),
-            isHeadless = isHeadless,
-            screenSize = screenSize,
             driverHostPort = driverHostPort,
             reinstallDriver = reinstallDriver,
             platformConfiguration = executionPlan?.workspaceConfig?.platform
@@ -136,10 +133,7 @@ object MaestroSessionManager {
     ): SelectedDevice {
 
         if (deviceId == "chromium" || platform == Platform.WEB) {
-            return SelectedDevice(
-                platform = Platform.WEB,
-                deviceType = Device.DeviceType.BROWSER
-            )
+            throw MaestroException.WebPlatformNotSupported()
         }
 
         if (host == null) {
@@ -190,8 +184,6 @@ object MaestroSessionManager {
     private fun createMaestro(
         selectedDevice: SelectedDevice,
         connectToExistingSession: Boolean,
-        isHeadless: Boolean,
-        screenSize: String?,
         reinstallDriver: Boolean,
         driverHostPort: Int?,
         platformConfiguration: PlatformConfiguration? = null,
@@ -215,7 +207,7 @@ object MaestroSessionManager {
                         platformConfiguration = platformConfiguration
                     )
 
-                    Platform.WEB -> pickWebDevice(isHeadless, screenSize)
+                    Platform.WEB -> throw MaestroException.WebPlatformNotSupported()
                 },
                 device = selectedDevice.device,
             )
@@ -241,11 +233,6 @@ object MaestroSessionManager {
                     platformConfiguration = platformConfiguration,
                 ),
                 device = null,
-            )
-
-            selectedDevice.platform == Platform.WEB -> MaestroSession(
-                maestro = pickWebDevice(isHeadless, screenSize),
-                device = null
             )
 
             else -> error("Unable to create Maestro session")
@@ -438,10 +425,6 @@ object MaestroSessionManager {
             driver = iosDriver,
             openDriver = openDriver || xcTestDevice.isShutdown(),
         )
-    }
-
-    private fun pickWebDevice(isHeadless: Boolean, screenSize: String?): Maestro {
-        return Maestro.web(isHeadless, screenSize)
     }
 
     private data class SelectedDevice(

@@ -1,6 +1,6 @@
 # ROADMAP 0.1.0 — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Status dokumentu: **STEP-03 scalony ([#6](https://github.com/rtnk/TapCue/pull/6)); uzupełnienie (decyzje właściciela, usuwanie `analytics.json`) w review; następny: STEP-03B**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6)) scalone 2026-10-23. Ostatnia aktualizacja: 2026-10-23.
+Status dokumentu: **STEP-03B w review (PR-03B); następny: STEP-04**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23. Ostatnia aktualizacja: 2026-10-23.
 
 ## 0. Punkt wyjścia
 
@@ -40,10 +40,10 @@ pliku (PR-00).
 |---|---|---|---|
 | D-1 | Nazwa produktu („Maestro” to znak mobile.dev; Apache-2.0 §6 nie daje praw do znaków) | **TapCue**. Opis: „based on Maestro (Apache-2.0), not affiliated with mobile.dev” (README, `--help`, Release) | STEP-04B (nazwa w CLI i komunikatach), STEP-05 (archiwum, NOTICE), STEP-08 |
 | D-2 | Plik wykonywalny i katalogi (upstream: `maestro`, `~/.maestro`, `~/.mobiledev`, `$XDG_STATE_HOME/maestro`, `.maestro/` w projektach) | Polecenie **`tapcue`**, katalog stanu **`~/.tapcue`** (odpowiednio `$XDG_STATE_HOME/tapcue`), katalog w projektach użytkownika **`.tapcue/`** zamiast `.maestro/` (świadomie odbiega od rekomendacji zachowania `.maestro/`; format YAML flow bez zmian). Pozostawiony przez upstream `analytics.json` jest **usuwany** | `analytics.json`: STEP-03 (`LegacyAnalyticsState`, usuwa `$XDG_STATE_HOME/maestro/analytics.json` i `~/.maestro/analytics.json` przy każdym starcie). Reszta: STEP-04B |
-| D-3 | Polityka `http.*` w JavaScript flow (N-25) | **Zgodnie z rekomendacją:** tylko loopback i sieci prywatne (RFC 1918, `fc00::/7`, link-local), sprawdzane po rozwiązaniu DNS i na każdym przekierowaniu; inne adresy → jasny błąd flow. Bez flagi opt-in w 0.1.0 | STEP-03B |
-| D-4 | Platforma `web` (Chrome + Selenium na hoście, N-26…N-30) | **Wyłączona w 0.1.0** — kontrolowany błąd „platforma web nie jest wspierana w 0.1.0”; `selenium`/`selenium-manager`/`maestro-web` poza runtime classpath CLI, jeśli możliwe | STEP-03B |
+| D-3 | Polityka `http.*` w JavaScript flow (N-25) | **Zgodnie z rekomendacją:** tylko loopback i sieci prywatne (RFC 1918, `fc00::/7`, link-local), sprawdzane po rozwiązaniu DNS i na każdym przekierowaniu; inne adresy → jasny błąd flow. Bez flagi opt-in w 0.1.0 | STEP-03B (`LocalNetworkPolicy`) |
+| D-4 | Platforma `web` (Chrome + Selenium na hoście, N-26…N-30) | **Wyłączona w 0.1.0** — kontrolowany błąd „platforma web nie jest wspierana w 0.1.0”; `selenium`/`selenium-manager`/`maestro-web` poza runtime classpath CLI, jeśli możliwe | STEP-03B (sterownik web, `maestro-web` i Selenium usunięte; `WebPlatformNotSupported`) |
 | D-5 | Prekompilowane ZIP-y sterownika iOS z frameworkami Apple (L-04) | **Nie dystrybuować ZIP-ów** — runner XCTest budowany lokalnie ze źródła (`xcodebuild`) przy pierwszym użyciu iOS | STEP-05 (weryfikacja ścieżki „build from source” dla symulatora) |
-| D-6 | GraalJS `truffle-enterprise` (Oracle GFTC, L-03) | **Artefakty community** (UPL: `js-community`/`js-language` + `polyglot`, wykluczenie `truffle-enterprise`) — **już w STEP-03B** | STEP-03B |
+| D-6 | GraalJS `truffle-enterprise` (Oracle GFTC, L-03) | **Artefakty community** (UPL: `js-community`/`js-language` + `polyglot`, wykluczenie `truffle-enterprise`) — **już w STEP-03B** | STEP-03B (`js-community` + `js-language` + `polyglot`) |
 | D-7 | JRE w paczce | **Wymagany systemowy JDK/JRE 17+** (README, launcher sprawdza wersję); paczka nie jest nazywana samowystarczalną | STEP-05 |
 | D-8 | STEP-00B „Legal containment” przed dalszymi krokami | Tak (wykonany po PR-01, scalony jako #3). Flagi `-x downloadSimulatorServer …` zbędne i błędne | — |
 | D-9 | Widoczność repozytorium i koszt runnerów macOS | **Repozytorium może być publiczne już teraz** (zmiana ustawień — po stronie właściciela). W repo publicznym minuty standardowych runnerów (także macOS) są bezpłatne, więc ograniczenie testów macOS do release/`workflow_dispatch` nie jest już wymuszone kosztem | STEP-06/07 (zakres jobów macOS) |
@@ -62,8 +62,8 @@ Legenda statusu: `TODO` · `IN PROGRESS` · `IN REVIEW` · `MERGED` · `BLOCKED`
 | STEP-00B *(D-8)* | PR-00B | Legal containment: build bez simulator-server i Viewera | PR-00 (wykonany po PR-01) | MERGED ([#3](https://github.com/rtnk/TapCue/pull/3)) | 0,5 sesji |
 | STEP-01 | PR-01 | Remove Cloud CLI | PR-00 | MERGED ([#2](https://github.com/rtnk/TapCue/pull/2)) | 1–2 sesje |
 | STEP-02 | PR-02 | Remove Remote AI | PR-01, PR-00B | MERGED ([#4](https://github.com/rtnk/TapCue/pull/4)) | 1–2 sesje |
-| STEP-03 | PR-03 | Remove telemetry, error upload, update checks, auto-downloads | PR-02 | MERGED ([#6](https://github.com/rtnk/TapCue/pull/6)) + uzupełnienie w review | 1 sesja |
-| STEP-03B | PR-03B | Polityka sieci dla funkcji flow (JS `http`, web, `openLink`) + GraalJS community | PR-03, D-3, D-4, D-6 | TODO | 1 sesja |
+| STEP-03 | PR-03 | Remove telemetry, error upload, update checks, auto-downloads | PR-02 | MERGED ([#6](https://github.com/rtnk/TapCue/pull/6), uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) | 1 sesja |
+| STEP-03B | PR-03B | Polityka sieci dla funkcji flow (JS `http`, web, `openLink`) + GraalJS community | PR-03, D-3, D-4, D-6 | IN REVIEW | 1 sesja |
 | STEP-04 | PR-04 | Local-only MCP, usunięcie Viewera | PR-03B | TODO | 1–2 sesje |
 | STEP-04B | PR-04B | TapCue: nazwa, polecenie `tapcue`, katalogi `~/.tapcue` i `.tapcue/` | PR-04, D-1, D-2 | TODO | 1–2 sesje |
 | STEP-05 | PR-05 | Dystrybucja lokalna macOS arm64 + audyt licencji | PR-04B, D-5, D-7 | TODO | 2 sesje |
@@ -195,6 +195,18 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
 - **Testy:** `http.get("http://127.0.0.1:<mock>")` działa; `http.get("https://example.com")` → błąd bez
   próby połączenia; przekierowanie na host publiczny → błąd.
 - **Wyjście:** brak ścieżki, w której host CLI wykonuje żądanie do publicznego internetu z treści flow.
+- **Realizacja (PR-03B, szczegóły w `docs/handovers/STEP-03B.md`):** `maestro.js.LocalNetworkPolicy` sprawdza URL przed
+  przekazaniem do OkHttp, a klient skryptów (także przekazany z zewnątrz) dostaje `Dns` z tą samą regułą, gniazda
+  odrzucające niedozwolony adres przed `connect` i `Proxy.NO_PROXY` — przekierowania zostają włączone, każdy skok jest
+  sprawdzany. Platforma web: usunięte `CdpWebDriver`, `WebDriver`, `Maestro.web`, moduł `maestro-web`, `WebInteractor`,
+  zależności Selenium (z `selenium-manager`) i wpisy `selenium*`/`ktor-serial-json`/`ktor-client-content-negotiation`
+  w `libs.versions.toml`; model danych (`Platform.WEB`, `DeviceSpec.Web`, `WebLocale`) zostaje, żeby istniejące pliki
+  i konfiguracje dalej się parsowały. Wszystkie wejścia (flow z `url:` w `test`/`record`, `--platform web`, urządzenie
+  `chromium`, `start-device`, MCP) → `MaestroException.WebPlatformNotSupported` (bez stack trace). `--headless`
+  i `--screen-size` zostają jako ukryte no-op. `maestro-client` deklaruje teraz `kotlinx-coroutines-core` jawnie
+  (wcześniej przechodnio przez `maestro-web`/ktor). GraalJS: `js-community` + `js-language` + `polyglot`, bez
+  `truffle-enterprise` i nieużywanego `js-scriptengine`; interpreter bez JIT, ostrzeżenie wyłączone. T-01: Case 136
+  na `MockWebServer`. `openLink`/`launchApp` na urządzeniach — GRANICA (`ARCHITECTURE-LOCAL.md` §4).
 
 ### STEP-04 — Local-only MCP i usunięcie zamkniętego Viewera (PR-04)
 
@@ -302,7 +314,7 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
 |---|---|---|---|
 | R-1 | Licencja simulator-server (L-01) | bloker Release | STEP-00B/04, test zawartości |
 | R-2 | Frameworki Apple w prekompilowanych ZIP iOS (L-04) | bloker Release (iOS) | D-5: build lokalny z źródła |
-| R-3 | GraalJS `truffle-enterprise` GFTC (L-03) | bloker do decyzji | D-6: artefakty community |
+| R-3 | GraalJS `truffle-enterprise` GFTC (L-03) | bloker do decyzji | D-6: artefakty community — zrealizowane w STEP-03B |
 | R-4 | Brak urządzeń w CI → fałszywie zielone testy | jakość | jawne `skipped`, testy z `FakeDriver`, testy ręczne opisane w handover |
 | R-5 | Rozjazd z upstream (cherry-pick poprawek sterowników) | utrzymanie | baza = tag; przyszłe merge z upstream przez osobne PR „sync upstream vX.Y.Z” z ponownym audytem |
 | R-6 | Kolizja z oficjalną instalacją Maestro (`maestro`, `~/.maestro`) | UX/bezpieczeństwo | D-2: `tapcue`, `~/.tapcue`, `.tapcue/` (STEP-04B) |

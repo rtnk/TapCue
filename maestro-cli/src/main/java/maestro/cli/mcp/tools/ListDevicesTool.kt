@@ -18,7 +18,7 @@ object ListDevicesTool {
             )
         ) { _ ->
             try {
-                val availableDevices = DeviceService.listAvailableForLaunchDevices(includeWeb = true)
+                val availableDevices = DeviceService.listAvailableForLaunchDevices()
                 val connectedDevices = DeviceService.listConnectedDevices()
                 
                 val allDevices = buildJsonArray {

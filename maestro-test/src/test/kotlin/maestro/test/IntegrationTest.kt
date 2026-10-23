@@ -49,6 +49,8 @@ import maestro.js.JsEngine
 import maestro.js.GraalJsEngine
 import maestro.orchestra.util.Env.withDefaultEnvVars
 import maestro.orchestra.util.Env.withEnv
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
 import maestro.orchestra.yaml.YamlCommandReader
 import maestro.test.drivers.FakeDriver
 import maestro.test.drivers.FakeDriver.Event
@@ -4590,14 +4592,29 @@ class IntegrationTest {
 
     @Test
     fun `Case 136 - Relative path in http multipart script`() {
-        // Flow running a JS file which is using multipartForm which has an image as relative path from script
-        val commands = readCommands("136_js_http_multi_part_requests")
-        val driver = driver {}
-
-        Maestro(driver).use {
-            runBlocking {
-                orchestra(it).runFlow(commands)
+        // Flow running a JS file which is using multipartForm which has an image as relative path from script.
+        // The upload goes to a local server (it used to go to the public eu.httpbin.org, T-01).
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody("{}"))
+            val commands = readCommands("136_js_http_multi_part_requests") {
+                mapOf("UPLOAD_URL" to server.url("/anything").toString())
             }
+            val driver = driver {}
+
+            Maestro(driver).use {
+                runBlocking {
+                    orchestra(it).runFlow(commands)
+                }
+            }
+
+            val request = server.takeRequest()
+            assertThat(request.method).isEqualTo("POST")
+            assertThat(request.path).isEqualTo("/anything")
+            assertThat(request.getHeader("Content-Type")).startsWith("multipart/form-data")
+            val body = request.body.readUtf8()
+            assertThat(body).contains("name=\"imagefile\"; filename=\"abc.png\"")
+            assertThat(body).contains("name=\"name\"")
+            assertThat(body).contains("logo")
         }
     }
 

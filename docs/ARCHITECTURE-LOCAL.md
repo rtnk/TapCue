@@ -20,7 +20,7 @@ Wersja: **0 (STEP-00)** — opis stanu wyjściowego (upstream `v2.11.0`) i archi
 | `maestro-orchestra-models` | modele komend (w tym `AssertWithAICommand`, `AssertNoDefectsWithAICommand`, `ExtractTextWithAICommand`) | zostaje bez komend AI |
 | `maestro-orchestra` | interpretacja komend (`Orchestra.kt`), parser YAML, planowanie workspace; `api(project(":maestro-ai"))` | zostaje bez AI |
 | `maestro-ai` | klienci OpenAI/Anthropic/Cloud AI | **usunięty** (STEP-02) |
-| `maestro-web` | CDP/Selenium | zostaje warunkowo (decyzja D-4) |
+| `maestro-web` | CDP/Selenium | **usunięty** (STEP-03B, D-4: platforma web wyłączona) |
 | `maestro-cli` | CLI (picocli), serwer MCP (STDIO), raporty, nagrywanie, Viewer | zostaje bez Cloud/AI/telemetrii/Viewera |
 | `maestro-test` | testy integracyjne z `FakeDriver` | zostaje; rozbudowany o testy offline |
 
@@ -68,8 +68,9 @@ Zasady architektoniczne:
 - **Kontrolowane błędy dla usuniętych funkcji.** Usunięte komendy CLI — standardowy błąd picocli
   „Unknown command” (zero żądań). Usunięte komendy YAML (`assertWithAI` itd.) — błąd walidacji
   parsera z komunikatem, że funkcja nie istnieje w Maestro Local (zero żądań).
-- **Sieć tylko lokalna.** Dozwolone: loopback, ADB, gniazda urządzeń. JS `http.*` i sterownik web
-  — patrz polityka w STEP-03B (domyślnie loopback/prywatne, inne adresy → jawny błąd).
+- **Sieć tylko lokalna.** Dozwolone: loopback, ADB, gniazda urządzeń. JS `http.*` w flow — tylko loopback,
+  sieci prywatne (RFC 1918, `fc00::/7`) i link-local, sprawdzane przed żądaniem, przy każdym przekierowaniu
+  i przy łączeniu gniazda (`LocalNetworkPolicy`, D-3); inne adresy → błąd skryptu. Sterownika web nie ma (D-4).
 - **Odrębny stan od oficjalnego Maestro.** Upstream używa `~/.maestro` (sesje, deps, logi),
   `~/.mobiledev/authtoken`, `$XDG_STATE_HOME/maestro`. Fork zainstalowany obok oficjalnego Maestro
   nie powinien współdzielić tych katalogów ani nazwy pliku wykonywalnego `maestro` (decyzja D-2).
@@ -84,8 +85,9 @@ Zasady architektoniczne:
 |---|---|---|
 | Sterowanie urządzeniem (ADB, XCTest na loopback, gRPC przez forward) | CLI | dozwolony |
 | Backend testowanej aplikacji, WebView, przeglądarka w urządzeniu, `openLink` na urządzeniu | urządzenie/aplikacja | poza zakresem; dokumentujemy, nie mockujemy |
-| `http.*` w skryptach JS flow | CLI (JVM hosta) | ograniczony (STEP-03B) |
-| Platforma web (Chrome na hoście) | CLI + Chrome | decyzja D-4 |
+| `http.*` w skryptach JS flow | CLI (JVM hosta) | tylko loopback, RFC 1918, `fc00::/7`, link-local; nazwa hosta rozwiązywana przez systemowy resolver i **każdy** adres musi być dozwolony; każdy skok przekierowania sprawdzany; bez proxy; inne → błąd skryptu (STEP-03B, D-3) |
+| Platforma web (Chrome na hoście) | — | usunięta w 0.1.0: flow z `url:`, `--platform web`, `chromium` → `WebPlatformNotSupported` (STEP-03B, D-4) |
+| `openLink`, `launchApp` z linkiem, deep linki na Android/iOS | urządzenie/symulator (CLI przekazuje tylko URL przez ADB `am start` / `simctl openurl`) | **GRANICA**: ruch wykonuje urządzenie, fork go nie ogranicza ani nie obserwuje; z hosta CLI nie wychodzi żadne żądanie (N-29) |
 | `sdkmanager`, `xcodebuild`, `simctl` | narzędzia systemowe | CLI nie wywołuje ich w celu pobierania bez jawnego polecenia |
 
 ## 5. Stan bieżący
@@ -126,3 +128,11 @@ Zasady architektoniczne:
   `$XDG_STATE_HOME/maestro`), ale pozostawiony przez upstream `analytics.json` jest usuwany przy starcie
   (`LegacyAnalyticsState`, D-2); przejście na `tapcue`/`~/.tapcue`/`.tapcue/` — STEP-04B. Pozostałe ruchy zewnętrzne hosta: `cheat_sheet` (N-15, STEP-04),
   JS `http.*` i platforma web (STEP-03B).
+- STEP-03B (Network policy for flow features): JS `http.*` (`GraalJsHttp`) przechodzi przez
+  `maestro.js.LocalNetworkPolicy` — sprawdzenie URL przed OkHttp, `Dns` z tą samą regułą na każdym skoku przekierowania,
+  gniazda odrzucające niedozwolony adres przed `connect` (literały IP), `Proxy.NO_PROXY`; polityka obejmuje także klienta
+  przekazanego do `GraalJsEngine`/`Orchestra`. Platforma web usunięta: brak `CdpWebDriver`, `WebDriver`, `Maestro.web`,
+  modułu `maestro-web` i Selenium; graf: `maestro-client → {maestro-proto, maestro-ios-driver, maestro-ios, maestro-utils}`.
+  Modele `Platform.WEB`/`DeviceSpec.Web`/`WebLocale` zostają (parsowanie istniejących plików), a każde wejście w platformę
+  web kończy się `MaestroException.WebPlatformNotSupported`. GraalJS z artefaktów community (UPL) bez `truffle-enterprise`
+  (D-6). Pozostałe ruchy zewnętrzne hosta: `cheat_sheet` (N-15) i link `docs.maestro.dev` w instrukcjach MCP (N-17) — STEP-04.

@@ -1,4 +1,5 @@
-const response = http.post('https://eu.httpbin.org/anything', {
+// UPLOAD_URL points at a local MockWebServer started by IntegrationTest (Case 136).
+const response = http.post(UPLOAD_URL, {
     multipartForm: {
         imagefile: {
             filePath: "../media/abc.png",

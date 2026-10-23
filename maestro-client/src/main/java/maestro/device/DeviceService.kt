@@ -1,12 +1,12 @@
 package maestro.device
 
 import maestro.DeviceConnectionException
+import maestro.MaestroException
 import maestro.android.AndroidDeviceConnection
 import maestro.device.util.AndroidEnvUtils
 import maestro.device.util.AvdDevice
 import maestro.device.util.PrintUtils
 import maestro.drivers.AndroidDriver
-import maestro.drivers.CdpWebDriver
 import maestro.utils.MaestroTimer
 import maestro.utils.TempFileHandler
 import okio.buffer
@@ -143,65 +143,28 @@ object DeviceService {
                 }
             }
 
-            Platform.WEB -> {
-                PrintUtils.message("Launching Web...")
-                CdpWebDriver(isHeadless = false, screenSize = null).open()
-
-                return Device.Connected(
-                    instanceId = "chromium",
-                    description = "Chromium Web Browser",
-                    platform = device.platform,
-                    deviceType = device.deviceType,
-                    deviceSpec = device.deviceSpec,
-                )
-            }
+            Platform.WEB -> throw MaestroException.WebPlatformNotSupported()
         }
     }
 
     fun listConnectedDevices(
-        includeWeb: Boolean = false,
         host: String? = null,
         port: Int? = null,
     ): List<Device.Connected> {
-        return listDevices(includeWeb = includeWeb, host, port)
+        return listDevices(host, port)
             .filterIsInstance<Device.Connected>()
     }
 
     fun <T : Device> List<T>.withPlatform(platform: Platform?) =
         filter { platform == null || it.platform == platform }
 
-    fun listAvailableForLaunchDevices(includeWeb: Boolean = false): List<Device.AvailableForLaunch> {
-        return listDevices(includeWeb = includeWeb)
+    fun listAvailableForLaunchDevices(): List<Device.AvailableForLaunch> {
+        return listDevices()
             .filterIsInstance<Device.AvailableForLaunch>()
     }
 
-     fun listDevices(includeWeb: Boolean, host: String? = null, port: Int? = null): List<Device> {
-        return listAndroidDevices(host, port) +
-                listIOSDevices() +
-                if (includeWeb) {
-                    listWebDevices()
-                } else {
-                    listOf()
-                }
-    }
-
-    fun listWebDevices(): List<Device> {
-        return listOf(
-            Device.Connected(
-                platform = Platform.WEB,
-                description = "Chromium Web Browser",
-                instanceId = "chromium",
-                deviceType = Device.DeviceType.BROWSER,
-                deviceSpec = DeviceSpec.Web.DEFAULT
-            ),
-            Device.AvailableForLaunch(
-                modelId = "chromium",
-                description = "Chromium Web Browser",
-                platform = Platform.WEB,
-                deviceType = Device.DeviceType.BROWSER,
-                deviceSpec = DeviceSpec.Web.DEFAULT
-            )
-        )
+    fun listDevices(host: String? = null, port: Int? = null): List<Device> {
+        return listAndroidDevices(host, port) + listIOSDevices()
     }
 
     fun listAndroidDevices(host: String? = null, port: Int? = null): List<Device> {

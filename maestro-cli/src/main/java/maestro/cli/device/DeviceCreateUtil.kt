@@ -1,5 +1,6 @@
 package maestro.cli.device
 
+import maestro.MaestroException
 import maestro.device.DeviceService
 import maestro.device.Device
 import maestro.device.Platform
@@ -16,13 +17,7 @@ object DeviceCreateUtil {
     ): Device.AvailableForLaunch = when (deviceSpec) {
         is DeviceSpec.Android -> getOrCreateAndroidDevice(deviceSpec, forceCreate, shardIndex)
         is DeviceSpec.Ios     -> getOrCreateIosDevice(deviceSpec, forceCreate, shardIndex)
-        is DeviceSpec.Web     -> Device.AvailableForLaunch(
-            platform = Platform.WEB,
-            description = "Chromium Desktop Browser (Experimental)",
-            modelId = deviceSpec.model,
-            deviceType = Device.DeviceType.BROWSER,
-            deviceSpec = deviceSpec,
-        )
+        is DeviceSpec.Web     -> throw MaestroException.WebPlatformNotSupported()
     }
 
     fun getOrCreateIosDevice(

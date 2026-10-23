@@ -1,5 +1,6 @@
 package maestro.cli.command
 
+import maestro.MaestroException
 import maestro.cli.App
 import maestro.cli.CliError
 import maestro.cli.ShowHelpMixin
@@ -12,7 +13,6 @@ import maestro.device.DeviceSpec
 import maestro.device.Platform
 import maestro.device.locale.AndroidLocale
 import maestro.device.locale.IosLocale
-import maestro.device.locale.WebLocale
 import picocli.CommandLine
 import java.util.concurrent.Callable
 
@@ -34,7 +34,7 @@ class StartDeviceCommand : Callable<Int> {
         order = 0,
         names = ["--platform"],
         required = true,
-        description = ["Platforms: android, ios, web"],
+        description = ["Platforms: android, ios"],
     )
     private lateinit var platform: String
 
@@ -109,14 +109,7 @@ class StartDeviceCommand : Callable<Int> {
                 locale = deviceLocale?.let { IosLocale.fromString(it) } ?: default.locale,
             )
         }
-        Platform.WEB -> {
-            val default = DeviceSpec.Web.DEFAULT
-            DeviceSpec.Web(
-                model = deviceModel ?: default.model,
-                os = deviceOs ?: osVersion ?: default.os,
-                locale = deviceLocale?.let { WebLocale.fromString(it) } ?: default.locale,
-            )
-        }
+        Platform.WEB -> throw MaestroException.WebPlatformNotSupported()
     }
 
     override fun call(): Int {

@@ -3,16 +3,27 @@ package maestro.js
 import maestro.utils.FileAccessScope
 import maestro.utils.HttpUtils.toMultipartBody
 import okhttp3.Headers
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.graalvm.polyglot.HostAccess.Export
 import org.graalvm.polyglot.proxy.ProxyObject
+import java.net.Proxy
 
 class GraalJsHttp(
-    private val httpClient: OkHttpClient,
+    httpClient: OkHttpClient,
     private val scope: FileAccessScope = FileAccessScope.everything,
+    private val networkPolicy: LocalNetworkPolicy = LocalNetworkPolicy(),
 ) {
+    // Whatever client is passed in, scripts only get one that applies the policy on every hop
+    // and connects directly: a proxy would make the connection on the script's behalf.
+    private val httpClient = httpClient.newBuilder()
+        .proxy(Proxy.NO_PROXY)
+        .dns(networkPolicy.dns)
+        .socketFactory(networkPolicy.socketFactory)
+        .build()
+
     @Volatile
     private var currentScriptDir: java.io.File? = null
 
@@ -76,8 +87,11 @@ class GraalJsHttp(
         method: String,
         params: Map<String, Any>?,
     ): Any {
+        val httpUrl = url.toHttpUrl()
+        networkPolicy.check(httpUrl)
+
         val requestBuilder = Request.Builder()
-            .url(url)
+            .url(httpUrl)
 
         val body = params?.get("body") as? String
         val multipartForm = params?.get("multipartForm") as? Map<*, *>

@@ -1,5 +1,6 @@
 package maestro.cli.device
 
+import maestro.MaestroException
 import maestro.cli.CliError
 import maestro.device.DeviceService
 import maestro.device.DeviceService.withPlatform
@@ -31,7 +32,7 @@ object PickDeviceInteractor {
                     when (result.deviceSpec.platform) {
                         Platform.ANDROID -> PrintUtils.message("Launching Android emulator...")
                         Platform.IOS -> PrintUtils.message("Launching iOS simulator...")
-                        Platform.WEB -> PrintUtils.message("Launching ${result.description}")
+                        Platform.WEB -> throw MaestroException.WebPlatformNotSupported()
                     }
 
                     // Snapshot already-connected devices so the freshly launched one can be told

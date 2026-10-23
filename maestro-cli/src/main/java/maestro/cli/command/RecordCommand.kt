@@ -20,6 +20,7 @@
 package maestro.cli.command
 
 import kotlinx.coroutines.runBlocking
+import maestro.MaestroException
 import maestro.cli.App
 import maestro.cli.CliError
 import maestro.cli.DisableAnsiMixin
@@ -101,11 +102,10 @@ class RecordCommand : Callable<Int> {
         TestDebugReporter.install(debugOutputPathAsString = debugOutput, printToConsole = parent?.verbose == true)
         val path = TestDebugReporter.getDebugOutputPath()
 
-        val deviceId = if (flowFile.isWebFlow()) {
-            throw CliError("'record' command does not support web flows yet.")
-        } else {
-            parent?.deviceId
+        if (flowFile.isWebFlow()) {
+            throw MaestroException.WebPlatformNotSupported()
         }
+        val deviceId = parent?.deviceId
 
         val plan = WorkspaceExecutionPlanner.plan(
             input = setOf(flowFile.toPath()),

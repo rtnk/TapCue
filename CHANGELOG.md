@@ -52,6 +52,21 @@ Zmiany własne forka. Fork bazuje na upstream `mobile-dev-inc/Maestro` `v2.11.0`
   z poleceniem `sdkmanager` do samodzielnego uruchomienia.
 - CLI (STEP-03): plik `analytics.json` (zgoda na analitykę i identyfikator instalacji) pozostawiony przez Maestro
   w `$XDG_STATE_HOME/maestro` lub `~/.maestro` jest usuwany przy starcie.
+- Flow (STEP-03B): JavaScript `http.get/post/put/delete/request` łączy się wyłącznie z adresami loopback, sieci prywatnych
+  (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, `fc00::/7`) i link-local. Nazwa hosta jest rozwiązywana i każdy jej adres
+  musi należeć do tych zakresów; to samo dotyczy każdego przekierowania. Żądanie poza nimi kończy skrypt błędem
+  „Blocked request to …” bez nawiązywania połączenia. Skrypty łączą się bezpośrednio, z pominięciem skonfigurowanego proxy.
+- Flow/CLI (STEP-03B): platforma web (Chrome sterowany przez Selenium na hoście) nie jest wspierana w 0.1.0. Flow z
+  nagłówkiem `url:`, `--platform web`, urządzenie `chromium` i `start-device --platform web` kończą się komunikatem
+  „The web platform is not supported in Maestro Local 0.1.0”; `list-devices` i MCP `list_devices` nie pokazują już
+  przeglądarki. Opcje `maestro test --headless` i `--screen-size` są akceptowane i ignorowane. Selenium (z Selenium
+  Manager, który potrafił pobierać przeglądarki i sterowniki) nie jest już częścią CLI.
+- Biblioteka (STEP-03B): moduł `maestro-web`, `maestro.drivers.CdpWebDriver`, `maestro.drivers.WebDriver`, `Maestro.web`
+  i `MaestroException.UnsupportedJavaVersion` usunięte; `DeviceService.listDevices`/`listConnectedDevices`/
+  `listAvailableForLaunchDevices` bez parametru `includeWeb`; nowe `MaestroException.WebPlatformNotSupported`,
+  `maestro.js.LocalNetworkPolicy` i parametr `networkPolicy` w `GraalJsEngine`/`GraalJsHttp`.
+- Licencje (STEP-03B): GraalJS z artefaktów community (`js-community`, `js-language`, `polyglot`, UPL) zamiast
+  `org.graalvm.js:js`, który dokładał `truffle-enterprise` na licencji Oracle GFTC. Skrypty działają w trybie interpretera.
 - Android (poprawka): pula wątków I/O klienta devtools (`newAdbIoExecutor`) nie odrzuca już wywołania jako
   „all 16 adb I/O workers are busy”, gdy wolny worker właśnie kończy poprzednie wywołanie; przy 15 workerach
   zawieszonych na urządzeniu zdarzało się to przy niemal każdym kolejnym wywołaniu. Usuwa też niestabilność

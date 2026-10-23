@@ -1,5 +1,6 @@
 package maestro.cli.device
 
+import maestro.MaestroException
 import maestro.cli.CliError
 import maestro.cli.util.PrintUtils
 import maestro.device.Device
@@ -23,7 +24,7 @@ object PickDeviceView {
     }
 
     fun requestDeviceOptions(platform: Platform? = null): DeviceSpec {
-        PrintUtils.message("Please specify a device platform [android, ios, web]:")
+        PrintUtils.message("Please specify a device platform [android, ios]:")
         val selectedPlatform = platform
             ?: (readlnOrNull()?.lowercase()?.let {
                 Platform.fromString(it)
@@ -32,7 +33,7 @@ object PickDeviceView {
         return when (selectedPlatform) {
             Platform.ANDROID -> DeviceSpec.Android.DEFAULT
             Platform.IOS -> DeviceSpec.Ios.DEFAULT
-            Platform.WEB -> DeviceSpec.Web.DEFAULT
+            Platform.WEB -> throw MaestroException.WebPlatformNotSupported()
         }
     }
 

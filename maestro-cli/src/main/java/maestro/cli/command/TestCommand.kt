@@ -25,6 +25,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import maestro.Maestro
+import maestro.MaestroException
 import maestro.cli.App
 import maestro.cli.CliError
 import maestro.cli.DisableAnsiMixin
@@ -158,16 +159,14 @@ class TestCommand : Callable<Int> {
     )
     private var excludeTags: List<String> = emptyList()
 
-    @Option(
-        names = ["--headless"],
-        description = ["(Web only) Run the tests in headless mode"],
-    )
+    // Web-only options. The web platform is not supported in Maestro Local 0.1.0; they are still accepted
+    // (and ignored) so existing scripts that pass them for mobile runs keep working.
+    @Suppress("unused")
+    @Option(names = ["--headless"], hidden = true)
     private var headless: Boolean = false
 
-    @Option(
-        names = ["--screen-size"],
-        description = ["(Web only) Set the size of the headless browser. Use the format {Width}x{Height}. Usage is --screen-size 1920x1080"],
-    )
+    @Suppress("unused")
+    @Option(names = ["--screen-size"], hidden = true)
     private var screenSize: String? = null
 
     @Option(
@@ -208,10 +207,6 @@ class TestCommand : Callable<Int> {
                plan.sequence.flows.any { it.toFile().isWebFlow() }
     }
 
-    internal fun allFlowsAreWebFlow(plan: ExecutionPlan): Boolean {
-        if(plan.flowsToRun.isEmpty() && plan.sequence.flows.isEmpty()) return false
-        return (plan.flowsToRun.all { it.toFile().isWebFlow() } && plan.sequence.flows.all { it.toFile().isWebFlow() })
-    }
   
     override fun call(): Int {
         TestDebugReporter.install(
@@ -234,10 +229,6 @@ class TestCommand : Callable<Int> {
             throw CliError("The config file ${configFile?.absolutePath} does not exist.")
         }
 
-        if (screenSize != null && !screenSize!!.matches(Regex("\\d+x\\d+"))) {
-            throw CliError("Invalid screen size format. Please use the format {Width}x{Height}, e.g. 1920x1080.")
-        }
-
         val executionPlan = try {
             WorkspaceExecutionPlanner.plan(
                 input = flowFiles.map { it.toPath().toAbsolutePath() }.toSet(),
@@ -247,6 +238,10 @@ class TestCommand : Callable<Int> {
             )
         } catch (e: ValidationError) {
             throw CliError(e.message)
+        }
+
+        if (executionPlanIncludesWebFlow(executionPlan)) {
+            throw MaestroException.WebPlatformNotSupported()
         }
 
         val resolvedTestOutputDir = resolveTestOutputDir(executionPlan)
@@ -276,19 +271,12 @@ class TestCommand : Callable<Int> {
         }
 
         val onlySequenceFlows = plan.sequence.flows.isNotEmpty() && plan.flowsToRun.isEmpty() // An edge case
-        val includeWeb = executionPlanIncludesWebFlow(plan);
-
-        if (includeWeb) {
-          PrintUtils.warn("Web support is in Beta. We would appreciate your feedback!\n")
-        }
-
         val connectedDevices = DeviceService.listConnectedDevices(
-            includeWeb = includeWeb,
             host = parent?.host,
             port = parent?.port,
         )
         val availableDevicesIds = connectedDevices.map { it.instanceId }.toSet()
-        val deviceIds = getPassedOptionsDeviceIds(plan)
+        val deviceIds = getPassedOptionsDeviceIds()
             .filter { device ->
                 if (device !in availableDevicesIds) {
                     throw CliError("Device $device was requested, but it is not connected.")
@@ -384,8 +372,6 @@ class TestCommand : Callable<Int> {
             driverHostPort = driverHostPort,
             deviceId = deviceId,
             platform = platform ?: parent?.platform,
-            isHeadless = headless,
-            screenSize = screenSize,
             reinstallDriver = reinstallDriver,
             executionPlan = executionPlan
         ) { session ->
@@ -526,11 +512,8 @@ class TestCommand : Callable<Int> {
             }
     }
 
-    private fun getPassedOptionsDeviceIds(plan: ExecutionPlan): List<String> {
-      val arguments = if (allFlowsAreWebFlow(plan)) {
-        "chromium"
-      } else deviceId ?: parent?.deviceId
-      val deviceIds = arguments
+    private fun getPassedOptionsDeviceIds(): List<String> {
+      val deviceIds = (deviceId ?: parent?.deviceId)
         .orEmpty()
         .split(",")
         .map { it.trim() }

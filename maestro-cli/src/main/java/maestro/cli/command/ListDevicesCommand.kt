@@ -27,7 +27,7 @@ class ListDevicesCommand : Callable<Int> {
 
     @CommandLine.Option(
         names = ["--platform"],
-        description = ["Filter by platform: android, ios, web"],
+        description = ["Filter by platform: android, ios"],
     )
     private var platform: String? = null
 
@@ -41,7 +41,7 @@ class ListDevicesCommand : Callable<Int> {
         PrintUtils.info("Local Devices", bold = true)
         println("─".repeat(SEPARATOR_WIDTH))
 
-        val devices = DeviceService.listDevices(includeWeb = true)
+        val devices = DeviceService.listDevices()
         val platforms = if (platformFilter != null) listOf(platformFilter) else Platform.entries
         val sections = platforms.map { p -> p to devices.filter { it.platform == p }.groupedByModel() }
             .filter { it.second.isNotEmpty() }
