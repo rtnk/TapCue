@@ -2,7 +2,7 @@
 
 | Pole | Wartość |
 |---|---|
-| Krok | STEP-03 — **zakończony, w review** |
+| Krok | STEP-03 — **scalony** (#6); uzupełnienie (decyzje właściciela, usuwanie `analytics.json`) — osobny PR z gałęzi `step-03-followup-decisions` |
 | PR | PR-03: https://github.com/rtnk/TapCue/pull/6 |
 | Gałąź | `step-03-remove-telemetry` |
 | Gałąź docelowa | `main` |
@@ -28,7 +28,8 @@ N-05, N-06, N-19, N-21, N-24, N-34).
 | Dokumenty | ROADMAP (status, realizacja), NETWORK-AUDIT (wersja 4), LICENSE-AUDIT (wersja 3: posthog), ARCHITECTURE-LOCAL §5, CHANGELOG, komentarz `claimMcpStdout` |
 
 **Katalog stanu:** bez zmian (`~/.maestro`, `$XDG_STATE_HOME/maestro`). Właściciel rozstrzygnął D-2 (oraz D-1, D-3–D-7, D-9)
-w trakcie review PR-03 — w tym PR zrealizowane jest tylko usuwanie `analytics.json`: `util/LegacyAnalyticsState`
+w trakcie review PR-03; PR #6 został scalony przed wypchnięciem tej zmiany, więc trafia ona osobnym PR uzupełniającym
+(`step-03-followup-decisions`). Zrealizowane jest tylko usuwanie `analytics.json`: `util/LegacyAnalyticsState`
 przy każdym starcie (`App.main`) kasuje `$XDG_STATE_HOME/maestro/analytics.json` i `~/.maestro/analytics.json`, nie
 ruszając innych plików. Polecenie `tapcue`, `~/.tapcue` i `.tapcue/` w projektach — nowy krok STEP-04B.
 
@@ -77,7 +78,7 @@ przez zaparkowany workflow upstream) i `e2e/update_samples`/`e2e/README.md` opis
 | Strażnik | `scripts/fork/check-no-simulator-server.sh` | **PASS** |
 | Smoke CLI (`strace -f -e trace=connect,sendto,sendmsg`) | `--version`, `--help`, `check-syntax ok.yaml`, `test ok.yaml`, `hierarchy`, `start-device --platform android --device-os android-34` | **PASS**: 0 wywołań `connect`/`send*` do adresów innych niż loopback (jedyne `AF_INET`: próby ADB na `127.0.0.1:5037`/`5555…`); `start-device` bez SDK → `IllegalStateException` + stack trace lokalnie, kod 1. `download-samples` → „Unmatched argument”, kod 2; flow z `assertWithAI` → „AI Command Not Available”, kod 1; brak `analytics.json` w katalogu stanu. Uwaga: JVM bierze `user.home` z bazy kont, nie z `$HOME`, więc pusty `$HOME` nie izolował katalogu stanu (`~/.maestro` = `/root/.maestro`: tylko `deps`, `tests`, `maestro-iphoneos-driver-build`) |
 | Smoke usuwania `analytics.json` | `maestro --version` z `-Duser.home=<tmp>` i `XDG_STATE_HOME=<tmp>/xdg`, oba pliki zasiane | **PASS**: oba usunięte, pozostałe pliki zostały |
-| CI GitHub Actions (`ci-baseline.yml`, pełne repo) | PR-03 | wynik w PR |
+| CI GitHub Actions (`ci-baseline.yml`, pełne repo) | PR-03 #6, [run 40021830924](https://github.com/rtnk/TapCue/actions/runs/40021830924) na `28435d0` | **PASS**; uzupełnienie — wynik w jego PR |
 | Smoke z urządzeniem, `start-device` z prawdziwym SDK, Swift | — | **NOT RUN**: brak SDK/Xcode/macOS |
 
 Jak powtórzyć:
@@ -106,7 +107,7 @@ scripts/fork/check-no-simulator-server.sh
 
 ## 4. Warunek rozpoczęcia następnego kroku
 
-PR-03 **scalony** do `main`, CI `ci-baseline.yml` zielone na `main`. Decyzje D-3, D-4, D-6 rozstrzygnięte (ROADMAP §2).
+PR-03 (#6) i PR uzupełniający **scalone** do `main`, CI `ci-baseline.yml` zielone na `main`. Decyzje D-3, D-4, D-6 rozstrzygnięte (ROADMAP §2).
 
 ## 5. Następny krok
 
