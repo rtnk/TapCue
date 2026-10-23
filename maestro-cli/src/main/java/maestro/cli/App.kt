@@ -32,6 +32,7 @@ import maestro.cli.command.RecordCommand
 import maestro.cli.command.StartDeviceCommand
 import maestro.cli.command.TestCommand
 import maestro.cli.mcp.claimMcpStdout
+import maestro.cli.util.LegacyAnalyticsState
 import maestro.debuglog.DebugLogStore
 import maestro.debuglog.LogConfig
 import picocli.AutoComplete.GenerateCompletion
@@ -116,6 +117,7 @@ fun main(args: Array<String>) {
     System.setProperty("apple.awt.UIElement", "true")
 
     Dependencies.install()
+    LegacyAnalyticsState.remove()
 
     val commandLine = createCommandLine()
 

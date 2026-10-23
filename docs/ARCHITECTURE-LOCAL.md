@@ -123,5 +123,6 @@ Zasady architektoniczne:
   `com.posthog:posthog-server`. Raport HTML ma CSS i skrypt inline (otwiera się offline). `start-device` nie pobiera
   obrazów systemu Android (tylko zainstalowane; brak obrazu → komunikat z poleceniem `sdkmanager`). Lokalne logi
   (`maestro.log`, `DebugLogStore`) i raporty bez zmian. Katalog stanu bez zmian (`~/.maestro` /
-  `$XDG_STATE_HOME/maestro`) — D-2 nierozstrzygnięta. Pozostałe ruchy zewnętrzne hosta: `cheat_sheet` (N-15, STEP-04),
+  `$XDG_STATE_HOME/maestro`), ale pozostawiony przez upstream `analytics.json` jest usuwany przy starcie
+  (`LegacyAnalyticsState`, D-2); przejście na `tapcue`/`~/.tapcue`/`.tapcue/` — STEP-04B. Pozostałe ruchy zewnętrzne hosta: `cheat_sheet` (N-15, STEP-04),
   JS `http.*` i platforma web (STEP-03B).
