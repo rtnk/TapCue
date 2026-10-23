@@ -97,7 +97,8 @@ Nowy przypadek błędu parsera: `GENERATE_ERRORS=true ./gradlew :maestro-orchest
   jako biblioteki muszą się dostosować (w repo dostosowane wszystkie wywołania).
 - `MaestroCommand` zserializowany przez upstream z polami `assertWithAICommand` itp. nie zdeserializuje się
   do komendy (pole nieznane) — w forku nie ma takiego wejścia (brak Cloud).
-- `AdbSocketTimeoutTest` (upstream, `maestro-client`) bywa niestabilny na runnerach (PR-01).
+- `AdbSocketTimeoutTest` (upstream, `maestro-client`) bywał niestabilny na runnerach (PR-01, CI `main` po #3) —
+  przyczyna (wyścig przy przekazaniu zadania w pełnej puli `newAdbIoExecutor`) poprawiona osobnym PR po STEP-02.
 - T-01 (`IntegrationTest` Case 136) pada bez internetu — do przepisania w STEP-03B.
 
 ## 4. Warunek rozpoczęcia następnego kroku

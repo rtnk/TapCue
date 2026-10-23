@@ -39,6 +39,10 @@ Zmiany własne forka. Fork bazuje na upstream `mobile-dev-inc/Maestro` `v2.11.0`
   `MaestroException.CloudApiKeyNotAvailable`, `OrchestraListener.onAIArtifactGenerated` (katalog `ai-analysis/`
   w paczce artefaktów) i pole `CommandMetadata.aiReasoning` usunięte; `ArtifactKind.AI_ANALYSIS` zostaje w schemacie
   manifestu v1 jako wartość zarezerwowana, której nic nie emituje.
+- Android (poprawka): pula wątków I/O klienta devtools (`newAdbIoExecutor`) nie odrzuca już wywołania jako
+  „all 16 adb I/O workers are busy”, gdy wolny worker właśnie kończy poprzednie wywołanie; przy 15 workerach
+  zawieszonych na urządzeniu zdarzało się to przy niemal każdym kolejnym wywołaniu. Usuwa też niestabilność
+  `AdbSocketTimeoutTest` w CI.
 
 ## Upstream Maestro
 
