@@ -3,7 +3,7 @@
 | Pole | Wartość |
 |---|---|
 | Krok | STEP-03B — w review |
-| PR | PR-03B (link w `docs/ROADMAP-0.1.md` §3 po utworzeniu; tytuł „STEP-03B: Network policy for flow features”) |
+| PR | PR-03B: https://github.com/rtnk/TapCue/pull/8 |
 | Gałąź | `step-03b-flow-network-policy` |
 | Gałąź docelowa | `main` |
 | Baza | `main` @ `3b71500` (merge PR #7 — uzupełnienie STEP-03) |
@@ -73,7 +73,7 @@ przez zaparkowany workflow upstream) — STEP-06. `maestro-web.js` w zasobach `m
 | Zawartość archiwów | rozpakowany `maestro-cli-*-all.jar`, `install/maestro/lib` | **PASS**: 0 wpisów `org/openqa/`, `maestro/web/`, `com/oracle/truffle/enterprise/`, `io/opentelemetry/`, `maestro/drivers/CdpWebDriver*`, `maestro/drivers/WebDriver*`, `maestro/cli/web/`, `selenium-manager`; `lib/` ma `js-language`, `polyglot`, `truffle-api`, `truffle-runtime`, `truffle-compiler` 24.2.0, bez `truffle-enterprise`, `nativebridge`, `selenium*` |
 | Strażnik | `scripts/fork/check-no-simulator-server.sh` (w kopii z wynikami builda) | **PASS** |
 | Smoke CLI (`strace -f -e trace=connect`) | `test webflow.yaml`, `record webflow.yaml`, `start-device --platform web`, `--platform web hierarchy`, `list-devices` | **PASS**: pierwsze cztery → komunikat „The web platform is not supported in Maestro Local 0.1.0 …”, kod 1, bez stack trace; `test`/`record`/`start-device` — 0 wywołań `connect` `AF_INET*`; `hierarchy` i `list-devices` — tylko loopback (próby ADB na 127.0.0.1), 0 adresów innych; `list-devices` → „No devices found”, kod 0 |
-| CI GitHub Actions (`ci-baseline.yml`, pełne repo) | PR-03B | wynik w PR |
+| CI GitHub Actions (`ci-baseline.yml`, pełne repo) | PR-03B [#8](https://github.com/rtnk/TapCue/pull/8) | wynik w PR |
 | Smoke z urządzeniem (flow z `runScript` + `http.*`), Swift | — | **NOT RUN**: brak SDK/Xcode/urządzeń; ścieżka JS jest ta sama co w `IntegrationTest`/`JsHttpNetworkPolicyTest` |
 
 Jak powtórzyć:
