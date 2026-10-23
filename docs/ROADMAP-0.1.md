@@ -1,6 +1,6 @@
 # ROADMAP 0.1.0 — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Status dokumentu: **STEP-00B — w review (PR-00B, gałąź `step-00b-legal-containment`)**; STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)) i STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)) scalone 2026-10-23. Ostatnia aktualizacja: 2026-10-23.
+Status dokumentu: **STEP-00B — w review ([PR-00B #3](https://github.com/rtnk/TapCue/pull/3))**; STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)) i STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)) scalone 2026-10-23. Ostatnia aktualizacja: 2026-10-23.
 
 ## 0. Punkt wyjścia
 
@@ -52,7 +52,7 @@ Legenda statusu: `TODO` · `IN PROGRESS` · `IN REVIEW` · `MERGED` · `BLOCKED`
 | Krok | PR | Cel | Zależy od | Status | Szacunek |
 |---|---|---|---|---|---|
 | STEP-00 | PR-00 | Baseline, audyty, plan, bazowy CI | — | MERGED ([#1](https://github.com/rtnk/TapCue/pull/1)) | 1 sesja |
-| STEP-00B *(D-8)* | PR-00B | Legal containment: build bez simulator-server i Viewera | PR-00 (wykonany po PR-01) | IN REVIEW | 0,5 sesji |
+| STEP-00B *(D-8)* | PR-00B | Legal containment: build bez simulator-server i Viewera | PR-00 (wykonany po PR-01) | IN REVIEW ([#3](https://github.com/rtnk/TapCue/pull/3)) | 0,5 sesji |
 | STEP-01 | PR-01 | Remove Cloud CLI | PR-00 | MERGED ([#2](https://github.com/rtnk/TapCue/pull/2)) | 1–2 sesje |
 | STEP-02 | PR-02 | Remove Remote AI | PR-01, PR-00B | TODO | 1–2 sesje |
 | STEP-03 | PR-03 | Remove telemetry, error upload, update checks, auto-downloads | PR-02 | TODO | 1 sesja |

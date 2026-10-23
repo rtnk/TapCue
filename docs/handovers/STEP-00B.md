@@ -3,7 +3,7 @@
 | Pole | Wartość |
 |---|---|
 | Krok | STEP-00B — **zakończony, w review** |
-| PR | PR-00B: „STEP-00B: Legal containment (no simulator-server in build)” (link w ROADMAP) |
+| PR | PR-00B: https://github.com/rtnk/TapCue/pull/3 |
 | Gałąź | `step-00b-legal-containment` |
 | Gałąź docelowa | `main` |
 | Baza | `main` @ `27e8b55` (merge PR-01 #2) |
