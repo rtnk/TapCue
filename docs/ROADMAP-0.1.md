@@ -1,6 +1,6 @@
 # ROADMAP 0.1.0 — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Status dokumentu: **STEP-01 — w review (PR-01, gałąź `step-01-remove-cloud-cli`)**; STEP-00 scalony ([PR-00 #1](https://github.com/rtnk/TapCue/pull/1), 2026-10-23). Ostatnia aktualizacja: 2026-10-23.
+Status dokumentu: **STEP-01 — w review ([PR-01 #2](https://github.com/rtnk/TapCue/pull/2))**; STEP-00 scalony ([PR-00 #1](https://github.com/rtnk/TapCue/pull/1), 2026-10-23). Ostatnia aktualizacja: 2026-10-23.
 
 ## 0. Punkt wyjścia
 
@@ -53,7 +53,7 @@ Legenda statusu: `TODO` · `IN PROGRESS` · `IN REVIEW` · `MERGED` · `BLOCKED`
 |---|---|---|---|---|---|
 | STEP-00 | PR-00 | Baseline, audyty, plan, bazowy CI | — | MERGED ([#1](https://github.com/rtnk/TapCue/pull/1)) | 1 sesja |
 | STEP-00B *(propozycja, D-8)* | PR-00B | Legal containment: build bez simulator-server i Viewera | PR-00 | TODO (nie poprzedził STEP-01, D-8) | 0,5 sesji |
-| STEP-01 | PR-01 | Remove Cloud CLI | PR-00 (+PR-00B) | IN REVIEW | 1–2 sesje |
+| STEP-01 | PR-01 | Remove Cloud CLI | PR-00 (+PR-00B) | IN REVIEW ([#2](https://github.com/rtnk/TapCue/pull/2)) | 1–2 sesje |
 | STEP-02 | PR-02 | Remove Remote AI | PR-01 | TODO | 1–2 sesje |
 | STEP-03 | PR-03 | Remove telemetry, error upload, update checks, auto-downloads | PR-02 | TODO | 1 sesja |
 | STEP-03B | PR-03B | Polityka sieci dla funkcji flow (JS `http`, web, `openLink`) | PR-03, D-3, D-4 | TODO | 1 sesja |

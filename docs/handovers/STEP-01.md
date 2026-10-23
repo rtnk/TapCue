@@ -3,7 +3,7 @@
 | Pole | Wartość |
 |---|---|
 | Krok | STEP-01 — **zakończony, w review** |
-| PR | PR-01: „STEP-01: Remove Cloud CLI” (link w PR / ROADMAP) |
+| PR | PR-01: https://github.com/rtnk/TapCue/pull/2 |
 | Gałąź | `step-01-remove-cloud-cli` |
 | Gałąź docelowa | `main` |
 | Baza | `main` @ `4f0425d` (merge PR-00 #1) |
