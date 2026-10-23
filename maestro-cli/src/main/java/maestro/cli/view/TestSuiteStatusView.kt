@@ -1,16 +1,11 @@
 package maestro.cli.view
 
-import maestro.cli.api.UploadStatus
 import maestro.cli.model.FlowStatus
 import maestro.cli.util.PrintUtils
 import maestro.cli.util.TimeUtils
 import maestro.cli.view.TestSuiteStatusView.TestSuiteViewModel.FlowResult
-import maestro.cli.view.TestSuiteStatusView.uploadUrl
 import org.jline.jansi.Ansi
-import java.util.UUID
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 object TestSuiteStatusView {
 
@@ -18,7 +13,7 @@ object TestSuiteStatusView {
         val shardPrefix = result.shardIndex?.let { "[shard ${it + 1}] " }.orEmpty()
         print(Ansi.ansi().fgCyan().render(shardPrefix).fgDefault())
 
-        printStatus(result.status, result.cancellationReason)
+        printStatus(result.status)
 
         val durationString = result.duration?.let { " (${TimeUtils.forDisplay(it)})" }.orEmpty()
         print(" ${result.name}$durationString")
@@ -34,10 +29,7 @@ object TestSuiteStatusView {
         println()
     }
 
-    fun showSuiteResult(
-        suite: TestSuiteViewModel,
-        uploadUrl: String,
-    ) {
+    fun showSuiteResult(suite: TestSuiteViewModel) {
         val hasError = suite.flows.find { it.status == FlowStatus.ERROR } != null
         val canceledFlows = suite.flows
             .filter { it.status == FlowStatus.CANCELED }
@@ -76,15 +68,9 @@ object TestSuiteStatusView {
             }
         }
         println()
-
-        if (suite.uploadDetails != null) {
-            PrintUtils.info("==== View Details on Maestro Cloud ====")
-            PrintUtils.info(uploadUrl.cyan())
-            println()
-        }
     }
 
-    private fun printStatus(status: FlowStatus, cancellationReason: UploadStatus.CancellationReason?) {
+    private fun printStatus(status: FlowStatus) {
         val color = when (status) {
             FlowStatus.SUCCESS,
             FlowStatus.WARNING -> Ansi.Color.GREEN
@@ -101,14 +87,7 @@ object TestSuiteStatusView {
             FlowStatus.STOPPED -> "Stopped"
             FlowStatus.PREPARING -> "Preparing Device"
             FlowStatus.INSTALLING -> "Installing App"
-            FlowStatus.CANCELED -> when (cancellationReason) {
-                UploadStatus.CancellationReason.TIMEOUT -> "Timeout"
-                UploadStatus.CancellationReason.OVERLAPPING_BENCHMARK -> "Skipped"
-                UploadStatus.CancellationReason.BENCHMARK_DEPENDENCY_FAILED -> "Skipped"
-                UploadStatus.CancellationReason.CANCELED_BY_USER -> "Canceled by user"
-                UploadStatus.CancellationReason.RUN_EXPIRED -> "Run expired"
-                else -> "Canceled (unknown reason)"
-            }
+            FlowStatus.CANCELED -> "Canceled"
         }
 
         print(
@@ -119,27 +98,6 @@ object TestSuiteStatusView {
         )
     }
 
-    private fun projectBaseUrl(projectId: String, domain: String): String {
-        val host = if (domain.contains("localhost")) "http://localhost:3000" else "https://app.maestro.dev"
-        return "$host/project/$projectId/maestro-test"
-    }
-
-    fun uploadUrl(
-        projectId: String,
-        appId: String,
-        uploadId: String,
-        domain: String = ""
-    ): String = "${projectBaseUrl(projectId, domain)}/app/$appId/upload/$uploadId"
-
-    fun flowUrl(
-        projectId: String,
-        runId: String,
-        domain: String = ""
-    ): String = "${projectBaseUrl(projectId, domain)}/flow/$runId"
-
-    /** Project overview, for when we have no upload id to point at. */
-    fun projectUrl(projectId: String, domain: String = ""): String = projectBaseUrl(projectId, domain)
-
     private fun flowWord(count: Int) = if (count == 1) "Flow" else "Flows"
 
     data class TestSuiteViewModel(
@@ -147,7 +105,6 @@ object TestSuiteStatusView {
         val flows: List<FlowResult>,
         val duration: Duration? = null,
         val shardIndex: Int? = null,
-        val uploadDetails: UploadDetails? = null,
     ) {
 
         data class FlowResult(
@@ -156,79 +113,7 @@ object TestSuiteStatusView {
             val duration: Duration? = null,
             val error: String? = null,
             val shardIndex: Int? = null,
-            val cancellationReason: UploadStatus.CancellationReason? = null
         )
-
-        data class UploadDetails(
-            val uploadId: String,
-            val appId: String,
-            val domain: String,
-        )
-
-        companion object {
-
-            fun UploadStatus.toViewModel(
-                uploadDetails: UploadDetails
-            ) = TestSuiteViewModel(
-                uploadDetails = uploadDetails,
-                status = FlowStatus.from(status),
-                flows = flows.map {
-                    it.toViewModel()
-                }
-            )
-
-            fun UploadStatus.FlowResult.toViewModel() = FlowResult(
-                name = name,
-                status = status,
-                error = errors.firstOrNull(),
-                cancellationReason = cancellationReason,
-                duration = totalTime?.milliseconds
-            )
-        }
-
     }
 
-}
-
-// Helper launcher to play around with presentation
-fun main() {
-    val uploadDetails = TestSuiteStatusView.TestSuiteViewModel.UploadDetails(
-        uploadId = UUID.randomUUID().toString(),
-        appId = "appid",
-        domain = "mobile.dev",
-    )
-    val status = TestSuiteStatusView.TestSuiteViewModel(
-        uploadDetails = uploadDetails,
-        status = FlowStatus.CANCELED,
-        flows = listOf(
-            FlowResult(
-                name = "A",
-                status = FlowStatus.SUCCESS,
-                duration = 42.seconds,
-            ),
-            FlowResult(
-                name = "B",
-                status = FlowStatus.SUCCESS,
-                duration = 231.seconds,
-            ),
-            FlowResult(
-                name = "C",
-                status = FlowStatus.CANCELED,
-            )
-        ),
-        duration = 273.seconds,
-    )
-
-    status.flows
-        .forEach {
-            TestSuiteStatusView.showFlowCompletion(it)
-        }
-
-    val uploadUrl = uploadUrl(
-        uploadDetails.uploadId.toString(),
-        "teamid",
-        uploadDetails.appId,
-        uploadDetails.domain,
-    )
-    TestSuiteStatusView.showSuiteResult(status, uploadUrl)
 }

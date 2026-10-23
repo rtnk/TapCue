@@ -1,6 +1,6 @@
 # ROADMAP 0.1.0 — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Status dokumentu: **STEP-00 — w review ([PR-00 #1](https://github.com/rtnk/TapCue/pull/1))**. Ostatnia aktualizacja: 2026-10-23.
+Status dokumentu: **STEP-01 — w review (PR-01, gałąź `step-01-remove-cloud-cli`)**; STEP-00 scalony ([PR-00 #1](https://github.com/rtnk/TapCue/pull/1), 2026-10-23). Ostatnia aktualizacja: 2026-10-23.
 
 ## 0. Punkt wyjścia
 
@@ -42,7 +42,7 @@ objęte licencją L-01 w CI forka. Commit bootstrap jedynie przenosi pliki (wery
 | D-5 | Prekompilowane ZIP-y sterownika iOS zawierają frameworki Apple z Xcode (`XCTest.framework`, `XCUIAutomation.framework`, `XCTestCore`, `XCUnit`, `libXCTestSwiftSupport.dylib`, `libswift_Concurrency.dylib` …) — redystrybucja podlega licencji Xcode/SDK (L-04). | Nie dystrybuować prekompilowanych ZIP; budować runner lokalnie z dołączonego źródła (`xcodebuild`, ścieżka już istnieje w `DriverBuilder`/`LocalXCTestInstaller`) przy pierwszym użyciu iOS. Xcode i tak jest wymagany dla symulatora. Wymaga weryfikacji, że ścieżka „build from source” działa dla symulatora. | STEP-05 |
 | D-6 | GraalJS: `org.graalvm.js:js:24.2.0` dociąga `org.graalvm.truffle:truffle-enterprise` na licencji Oracle GFTC (L-03). | Przejść na artefakty community (UPL): `js-community`/`js-language` + `polyglot`, z wykluczeniem `truffle-enterprise`; regresja testów JS (`GraalJsEngineTest`, `IntegrationTest`). | STEP-05 (najpóźniej); może wejść do STEP-03B |
 | D-7 | JRE w paczce. | 0.1.0: wymagany systemowy JDK/JRE 17+ (jasno w README, launcher sprawdza wersję — mechanizm już istnieje). Paczka **nie** jest nazywana samowystarczalną. Bundle JRE (jlink) — po 0.1.0. | STEP-05 |
-| D-8 | Czy przyjąć proponowany **STEP-00B „Legal containment”** (usunięcie `downloadSimulatorServer`/Viewer z builda przed STEP-01)? | **Tak** — dziś każdy `./gradlew build/test/run` modułu CLI na `main` pobiera i pakuje binaria L-01. | kolejność kroków |
+| D-8 | Czy przyjąć proponowany **STEP-00B „Legal containment”** (usunięcie `downloadSimulatorServer`/Viewer z builda przed STEP-01)? | **Tak** — dziś każdy `./gradlew build/test/run` modułu CLI na `main` pobiera i pakuje binaria L-01. **Stan:** właściciel zlecił STEP-01 bezpośrednio po PR-00 (2026-10-23), więc STEP-00B nie poprzedza STEP-01; sam STEP-00B pozostaje otwarty (do wykonania przed STEP-02 albo w ramach STEP-04 — decyzja właściciela). Do tego czasu Gradle wyłącznie z `-x downloadSimulatorServer -x installMcpViewerDeps -x buildMcpViewer`. | kolejność kroków |
 | D-9 | Widoczność repozytorium przy wydaniu i koszty runnerów macOS (w repo prywatnym minuty macOS liczone są z mnożnikiem). | Testy macOS arm64 tylko w `release.yml` i ręcznym `workflow_dispatch`; PR-y — Linux. Decyzja o upublicznieniu przed STEP-08. | STEP-06/07/08 |
 
 ## 3. Kroki
@@ -51,9 +51,9 @@ Legenda statusu: `TODO` · `IN PROGRESS` · `IN REVIEW` · `MERGED` · `BLOCKED`
 
 | Krok | PR | Cel | Zależy od | Status | Szacunek |
 |---|---|---|---|---|---|
-| STEP-00 | PR-00 | Baseline, audyty, plan, bazowy CI | — | IN REVIEW | 1 sesja |
-| STEP-00B *(propozycja, D-8)* | PR-00B | Legal containment: build bez simulator-server i Viewera | PR-00 | TODO | 0,5 sesji |
-| STEP-01 | PR-01 | Remove Cloud CLI | PR-00 (+PR-00B) | TODO | 1–2 sesje |
+| STEP-00 | PR-00 | Baseline, audyty, plan, bazowy CI | — | MERGED ([#1](https://github.com/rtnk/TapCue/pull/1)) | 1 sesja |
+| STEP-00B *(propozycja, D-8)* | PR-00B | Legal containment: build bez simulator-server i Viewera | PR-00 | TODO (nie poprzedził STEP-01, D-8) | 0,5 sesji |
+| STEP-01 | PR-01 | Remove Cloud CLI | PR-00 (+PR-00B) | IN REVIEW | 1–2 sesje |
 | STEP-02 | PR-02 | Remove Remote AI | PR-01 | TODO | 1–2 sesje |
 | STEP-03 | PR-03 | Remove telemetry, error upload, update checks, auto-downloads | PR-02 | TODO | 1 sesja |
 | STEP-03B | PR-03B | Polityka sieci dla funkcji flow (JS `http`, web, `openLink`) | PR-03, D-3, D-4 | TODO | 1 sesja |
@@ -110,6 +110,12 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
   `TestCommand` da się skonstruować bez `HOME/.mobiledev` i bez sieci; istniejące testy `maestro-cli` zielone
   (testy dotyczące usuniętych klas usunięte razem z nimi — wymienione w PR).
 - **Wyjście:** lokalny test nie konstruuje klienta Cloud i nie potrzebuje konta ani sieci.
+- **Realizacja (PR-01, szczegóły w `docs/handovers/STEP-01.md`):** zakres jak wyżej, plus — bo ich zaplecze
+  (`ApiKey`, metody Cloud `ApiClient`, `CloudInteractor`) zostało usunięte — narzędzia MCP `list_cloud_devices`,
+  `run_on_cloud`, `get_cloud_run_status`, `describe_cloud_run` i sekcja Cloud w instrukcjach MCP (przeniesione
+  z STEP-04), metadane Cloud w raportach JUnit/HTML (`cloud.*`), parametr `isStudio` w sterownikach web.
+  `--local` w `record` zostaje jako ukryty no-op. `TestRunner` dostaje `apiKey = null`; `--analyze`/`--api-key`
+  zostają do STEP-02 (token wyłącznie z jawnego `--api-key`, bez `~/.mobiledev`).
 
 ### STEP-02 — Remove Remote AI (PR-02)
 
@@ -159,13 +165,13 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
 
 - **Zachować (zweryfikowane nazwy w `v2.11.0`):** `list_devices`, `inspect_screen`, `take_screenshot`, `run`
   (`RunTool.TOOL_NAME = "run"`), `cheat_sheet`.
-- **Usunąć:** `run_on_cloud`, `get_cloud_run_status`, `describe_cloud_run`, `list_cloud_devices`,
-  `open_maestro_viewer`; pakiet `mcp/viewer/` (zależności w `RunTool` i `McpMaestroSessionManager` →
+- **Usunąć:** `open_maestro_viewer` (narzędzia Cloud `run_on_cloud`, `get_cloud_run_status`,
+  `describe_cloud_run`, `list_cloud_devices` usunięto już w STEP-01); pakiet `mcp/viewer/` (zależności w `RunTool` i `McpMaestroSessionManager` →
   zwykły `Orchestra`); katalog `maestro-cli/mcp-viewer/`; `Dependencies.installSimulatorServer`,
   `Unpacker.unpackTree` (jeśli nieużywane); opcje `--no-viewer`/`--viewer-port`.
 - **`cheat_sheet`:** treść jako wersjonowany zasób w JAR (`resources/mcp/cheat-sheet.md`), napisana dla forka
   na podstawie dokumentacji w repozytorium (bez kopiowania treści o nieznanej licencji z `docs.maestro.dev`).
-- **Instrukcje serwera** (`McpServer.kt`): bez Cloud i bez linku do `docs.maestro.dev`.
+- **Instrukcje serwera** (`McpServer.kt`): bez linku do `docs.maestro.dev` (sekcję Cloud usunięto w STEP-01).
 - **Testy:** test JSON-RPC na STDIO (proces CLI lub serwer in-process): `initialize` → `tools/list` (dokładnie
   zachowane narzędzia) → `tools/call cheat_sheet` → `list_devices` bez urządzeń (kontrolowany wynik) →
   zamknięcie STDIN kończy proces; stdout zawiera wyłącznie ramki JSON-RPC. Testy z urządzeniem — jeśli dostępne.

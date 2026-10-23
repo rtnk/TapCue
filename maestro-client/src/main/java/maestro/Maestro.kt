@@ -812,7 +812,6 @@ class Maestro(
         }
 
         fun web(
-            isStudio: Boolean,
             isHeadless: Boolean,
             screenSize: String?,
         ): Maestro {
@@ -828,7 +827,6 @@ class Maestro(
             }
 
             val driver = CdpWebDriver(
-                isStudio = isStudio,
                 isHeadless = isHeadless,
                 screenSize = screenSize,
             )

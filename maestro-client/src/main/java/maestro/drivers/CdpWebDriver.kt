@@ -53,7 +53,6 @@ import java.util.logging.Logger
 private const val SYNTHETIC_COORDINATE_SPACE_OFFSET = 100000
 
 class CdpWebDriver(
-    val isStudio: Boolean,
     private val isHeadless: Boolean = false,
     private val screenSize: String?
 ) : Driver {
@@ -91,10 +90,6 @@ class CdpWebDriver(
             // Swallow the exception to avoid crashing the whole process.
             // Some implementations of Selenium do not support DevTools
             // and do not fail gracefully.
-        }
-
-        if (isStudio) {
-            seleniumDriver?.get("https://maestro.mobile.dev")
         }
     }
 
@@ -871,7 +866,7 @@ class CdpWebDriver(
 }
 
 fun main() {
-    val driver = CdpWebDriver(isStudio = false, isHeadless = false, screenSize = null)
+    val driver = CdpWebDriver(isHeadless = false, screenSize = null)
     driver.open()
 
     try {

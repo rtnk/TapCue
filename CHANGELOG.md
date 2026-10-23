@@ -11,6 +11,17 @@ Zmiany własne forka. Fork bazuje na upstream `mobile-dev-inc/Maestro` `v2.11.0`
 - CI: bazowy workflow `ci-baseline.yml` — testy jednostkowe bez pobierania simulator-server i bez budowania Viewera, ze strażnikiem `scripts/fork/check-no-simulator-server.sh`.
 - Dokumentacja: plan `docs/ROADMAP-0.1.md`, audyty `docs/NETWORK-AUDIT.md` i `docs/LICENSE-AUDIT.md`,
   `docs/ARCHITECTURE-LOCAL.md`, szkic `docs/RELEASING.md`, handover `docs/handovers/STEP-00.md`.
+- CLI (STEP-01): usunięte komendy Maestro Cloud i Studio: `cloud`, `login`, `logout`, `list-cloud-devices`,
+  `studio`. `maestro test` nie odczytuje już tokenu Cloud (`~/.mobiledev/authtoken`, `MAESTRO_CLOUD_API_KEY`),
+  nie ma opcji `--api-url` i nie wyświetla promocji Cloud; `--analyze` (do usunięcia w STEP-02) wymaga
+  jawnego `--api-key`.
+- CLI (STEP-01): `maestro record` zawsze renderuje wideo lokalnie (wcześniej domyślnie wysyłał nagranie
+  na serwer renderujący); `--local` jest akceptowane jako ukryty no-op.
+- MCP (STEP-01): usunięte narzędzia `list_cloud_devices`, `run_on_cloud`, `get_cloud_run_status`,
+  `describe_cloud_run` i sekcja Cloud w instrukcjach serwera.
+- Raporty (STEP-01): JUnit bez właściwości `cloud.*`, HTML bez linków do Maestro Cloud.
+- Biblioteka (STEP-01): `maestro.auth.ApiKey` i `maestro.mockserver.MockInteractor` usunięte z `maestro-client`;
+  `CdpWebDriver`/`WebDriver`/`Maestro.web` bez parametru `isStudio`.
 
 ## Upstream Maestro
 

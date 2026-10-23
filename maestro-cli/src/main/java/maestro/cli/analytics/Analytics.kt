@@ -5,8 +5,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.posthog.server.PostHog
 import com.posthog.server.PostHogConfig
 import com.posthog.server.PostHogInterface
-import maestro.auth.ApiKey
-import maestro.cli.api.ApiClient
 import maestro.cli.util.EnvUtils
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
@@ -19,7 +17,6 @@ object Analytics : AutoCloseable {
     private const val POSTHOG_HOST: String = "https://us.i.posthog.com"
     private const val DISABLE_ANALYTICS_ENV_VAR = "MAESTRO_CLI_NO_ANALYTICS"
     private val JSON = jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    private val apiClient = ApiClient(EnvUtils.BASE_API_URL)
     private val posthog: PostHogInterface = PostHog.with(
         PostHogConfig.builder(POSTHOG_API_KEY)
             .host(POSTHOG_HOST)
@@ -58,11 +55,9 @@ object Analytics : AutoCloseable {
      *
      * This effectively attaches `commandStringUsed` to every event the CLI fires today:
      * - `maestro_cli_command_run`
-     * - `cloud_upload_triggered`, `cloud_upload_started`, `cloud_upload_succeeded`
-     * - `cloud_run_finished`
      * - `test_run_started`, `test_run_failed`, `test_run_finished`
      * - `workspace_run_started`, `workspace_run_failed`, `workspace_run_finished`
-     * - Auth and record events (harmless; filter out in PostHog queries if undesired).
+     * - record events (harmless; filter out in PostHog queries if undesired).
      */
     @Volatile
     var commandString: String? = null
@@ -79,52 +74,6 @@ object Analytics : AutoCloseable {
     }
 
     /**
-     * Identify user in PostHog and update local state.
-     *
-     * This function:
-     * 1. Sends user identification to PostHog analytics
-     * 2. Updates local analytics state with user info
-     * 3. Tracks login event for analytics
-     *
-     * Should only be called when user identity changes (login/logout).
-     */
-    fun identifyAndUpdateState(token: String) {
-        try {
-            val user = apiClient.getUser(token)
-            val org =  apiClient.getOrg(token)
-
-            // Update local state with user info
-            val updatedAnalyticsState = analyticsStateManager.updateState(token, user, org)
-            val identifyProperties = UserProperties.fromAnalyticsState(updatedAnalyticsState).toMap()
-
-            // Send identification to PostHog
-            posthog.identify(analyticsStateManager.getState().uuid, identifyProperties)
-            // Track user authentication event
-            val isFirstAuth = analyticsStateManager.getState().cachedToken == null
-            trackEvent(UserAuthenticatedEvent(
-                isFirstAuth = isFirstAuth,
-                authMethod = "oauth"
-            ))
-        } catch (e: Exception) {
-            // Analytics failures should never break CLI functionality or show errors to users
-            logger.trace("Failed to identify user: ${e.message}", e)
-        }
-    }
-
-    /**
-     * Conditionally identify user based on current and cashed token
-     */
-    fun identifyUserIfNeeded() {
-        // No identification needed if token is null
-        val token = ApiKey.getToken() ?: return
-        val cachedToken = analyticsStateManager.getState().cachedToken
-        // No identification needed if token is same as cachedToken
-        if (!cachedToken.isNullOrEmpty() && (token == cachedToken)) return
-        // Else Update identification
-        identifyAndUpdateState(token)
-    }
-
-    /**
      * Track events asynchronously to prevent blocking CLI operations
      * Use this for important events like authentication, errors, test results, etc.
      * This method is "fire and forget" - it will never block the calling thread
@@ -133,8 +82,6 @@ object Analytics : AutoCloseable {
         executor.submit {
             try {
                 if (!analyticsStateManager.getState().enabled || analyticsDisabledWithEnvVar) return@submit
-
-                identifyUserIfNeeded()
 
                 // Include super properties in each event since PostHog Java client doesn't have register
                 val eventData = convertEventToEventData(event)

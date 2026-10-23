@@ -145,7 +145,7 @@ object DeviceService {
 
             Platform.WEB -> {
                 PrintUtils.message("Launching Web...")
-                CdpWebDriver(isStudio = false, isHeadless = false, screenSize = null).open()
+                CdpWebDriver(isHeadless = false, screenSize = null).open()
 
                 return Device.Connected(
                     instanceId = "chromium",
