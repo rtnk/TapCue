@@ -31,6 +31,7 @@ dependencies {
     implementation(libs.square.okio)
 
     testImplementation(libs.junit.jupiter.api)
+    testImplementation(libs.kotlinx.coroutines.core)
     testRuntimeOnly(libs.junit.jupiter.engine)
 
     testImplementation(libs.wiremock.jre8)

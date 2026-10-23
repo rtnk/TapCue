@@ -18,7 +18,6 @@ detekt {
 dependencies {
     api(project(":maestro-orchestra-models"))
     implementation(project(":maestro-client"))
-    api(project(":maestro-ai"))
     api(project(":maestro-utils"))
 
     api(libs.square.okio)

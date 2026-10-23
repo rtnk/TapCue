@@ -27,6 +27,18 @@ Zmiany własne forka. Fork bazuje na upstream `mobile-dev-inc/Maestro` `v2.11.0`
   simulator-server pozwala na jego użycie tylko w oficjalnych wydaniach Maestro). CI bez flag `-x …`.
 - MCP (STEP-00B): `maestro mcp` nie uruchamia Maestro Viewera; narzędzie `open_maestro_viewer` usunięte;
   `--no-viewer` i `--viewer-port` są akceptowane i ignorowane.
+- Flow (STEP-02): komendy AI `assertWithAI`, `assertNoDefectsWithAI`, `extractTextWithAI` usunięte.
+  Flow, który ich używa, kończy się błędem walidacji „AI Command Not Available” jeszcze przed uruchomieniem
+  (wcześniej komendy wysyłały zrzut ekranu urządzenia do Maestro Cloud). Zamiennik: lokalne asercje
+  (`assertVisible`, `assertTrue`, `assertScreenshot`).
+- CLI (STEP-02): usunięte opcje `maestro test --analyze` i `--api-key` (analiza AI wysyłała zrzuty ekranu
+  i logi na serwer), raport AI (`ai-*.json`, HTML z CDN Tailwind) i podpowiedź o `--analyze` wyświetlana
+  po komendach.
+- Biblioteka (STEP-02): moduł `maestro-ai` (klienci OpenAI, Anthropic i Maestro Cloud AI) usunięty;
+  `Orchestra` bez parametrów `apiKey`, `AIPredictionEngine`, `onCommandGeneratedOutput`;
+  `MaestroException.CloudApiKeyNotAvailable`, `OrchestraListener.onAIArtifactGenerated` (katalog `ai-analysis/`
+  w paczce artefaktów) i pole `CommandMetadata.aiReasoning` usunięte; `ArtifactKind.AI_ANALYSIS` zostaje w schemacie
+  manifestu v1 jako wartość zarezerwowana, której nic nie emituje.
 
 ## Upstream Maestro
 

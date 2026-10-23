@@ -108,3 +108,9 @@ Zasady architektoniczne:
   ani `mcp-viewer/**`. `maestro mcp` nie startuje Viewera (punkt nr 5 rozcięty; `--no-viewer`/`--viewer-port`
   ukryte no-op), `open_maestro_viewer` niezarejestrowane. Kod Viewera (`mcp/viewer/` — nadal używany przez
   `RunTool`/`McpMaestroSessionManager` jako wrapper `Orchestra`/`Driver`; `maestro-cli/mcp-viewer/`) — STEP-04.
+- STEP-02 (Remove Remote AI): moduł `maestro-ai` usunięty z builda; graf: `maestro-cli → maestro-orchestra →
+  {maestro-client, maestro-orchestra-models, maestro-utils}`. Punkt styku nr 2 z §2 usunięty w całości: brak
+  `apiKey`/`AIPredictionEngine` w `Orchestra`, brak komend AI w modelach i parserze (dawne nazwy → `SyntaxError`
+  „AI Command Not Available” w `MaestroFlowParser`, przed wykonaniem flow), brak `--analyze`/`--api-key`,
+  `TestAnalysisManager`, raportu AI i `ApiClient.analyze` w CLI. `ChatCommand` (ukryte `maestro chat`, w upstream
+  już wyłącznie komunikat bez sieci) zostaje bez zmian.

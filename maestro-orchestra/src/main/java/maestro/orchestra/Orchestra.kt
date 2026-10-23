@@ -38,9 +38,6 @@ import maestro.ScreenRecording
 import maestro.UiElement
 import maestro.UiElement.Companion.toUiElementOrNull
 import maestro.ViewHierarchy
-import maestro.ai.cloud.Defect
-import maestro.ai.CloudAIPredictionEngine
-import maestro.ai.AIPredictionEngine
 import maestro.js.GraalJsEngine
 import maestro.js.JsEngine
 import maestro.orchestra.ArtifactKind
@@ -149,9 +146,6 @@ class Orchestra(
     private val onCommandReset: (MaestroCommand) -> Unit = {},
     private val onCommandMetadataUpdate: (MaestroCommand, CommandMetadata) -> Unit = { _, _ -> },
     private val onStepScreenshotCaptured: (sequenceNumber: Int, relativePath: String) -> Unit = { _, _ -> },
-    private val onCommandGeneratedOutput: (command: Command, defects: List<Defect>, screenshot: Buffer) -> Unit = { _, _, _ -> },
-    private val apiKey: String? = null,
-    private val AIPredictionEngine: AIPredictionEngine? = apiKey?.let { CloudAIPredictionEngine(it) },
     private val flowController: FlowController = DefaultFlowController(),
     internal val jsEngineFactory: (MaestroConfig?) -> JsEngine = { config ->
         // Defense-in-depth: WorkspaceValidator is the primary gate for `jsEngine: rhino`,
@@ -412,9 +406,6 @@ class Orchestra(
             is AssertCommand -> assertCommand(command)
             is AssertScreenshotCommand -> assertScreenshotCommand(command)
             is AssertConditionCommand -> assertConditionCommand(command)
-            is AssertNoDefectsWithAICommand -> assertNoDefectsWithAICommand(command, maestroCommand)
-            is AssertWithAICommand -> assertWithAICommand(command, maestroCommand)
-            is ExtractTextWithAICommand -> extractTextWithAICommand(command, maestroCommand)
             is InputTextCommand -> inputTextCommand(command)
             is InputRandomCommand -> inputTextRandomCommand(command)
             is LaunchAppCommand -> launchAppCommand(command)
@@ -530,106 +521,6 @@ class Orchestra(
                 debugMessage = debugMessage
             )
         }
-
-        return false
-    }
-
-    private suspend fun assertNoDefectsWithAICommand(
-        command: AssertNoDefectsWithAICommand,
-        maestroCommand: MaestroCommand
-    ): Boolean {
-        if (AIPredictionEngine == null) {
-            throw MaestroException.CloudApiKeyNotAvailable("`MAESTRO_CLOUD_API_KEY` is not available. Did you export MAESTRO_CLOUD_API_KEY?")
-        }
-
-        val metadata = getMetadata(maestroCommand)
-
-        val imageData = Buffer()
-        maestro.takeScreenshot(imageData, compressed = false)
-
-        val defects = AIPredictionEngine.findDefects(
-            screen = imageData.copy().readByteArray(),
-        )
-
-        if (defects.isNotEmpty()) {
-            dispatch("onAIArtifactGenerated") { it.onAIArtifactGenerated(imageData.copy(), defects.size) }
-            onCommandGeneratedOutput(command, defects, imageData)
-
-            val word = if (defects.size == 1) "defect" else "defects"
-            val reasoning =
-                "Found ${defects.size} possible $word:\n${defects.joinToString("\n") { "- ${it.reasoning}" }}"
-
-            updateMetadata(maestroCommand, metadata.copy(aiReasoning = reasoning))
-
-
-            throw MaestroException.AssertionFailure(
-                message = """
-                    |$reasoning
-                    |
-                    """.trimMargin(),
-                hierarchyRoot = maestro.viewHierarchy().root,
-                debugMessage = "AI-powered visual defect detection failed. Check the UI and screenshots in debug artifacts to verify if there are actual visual issues that were missed or if the AI detection needs adjustment."
-            )
-        }
-
-        return false
-    }
-
-    private suspend fun assertWithAICommand(command: AssertWithAICommand, maestroCommand: MaestroCommand): Boolean {
-        if (AIPredictionEngine == null) {
-            throw MaestroException.CloudApiKeyNotAvailable("`MAESTRO_CLOUD_API_KEY` is not available. Did you export MAESTRO_CLOUD_API_KEY?")
-        }
-
-        val metadata = getMetadata(maestroCommand)
-
-        val imageData = Buffer()
-        maestro.takeScreenshot(imageData, compressed = false)
-        val defect = AIPredictionEngine.performAssertion(
-            screen = imageData.copy().readByteArray(),
-            assertion = command.assertion,
-        )
-
-        if (defect != null) {
-            dispatch("onAIArtifactGenerated") { it.onAIArtifactGenerated(imageData.copy(), 1) }
-            onCommandGeneratedOutput(command, listOf(defect), imageData)
-
-            val reasoning = "Assertion \"${command.assertion}\" failed:\n${defect.reasoning}"
-            updateMetadata(maestroCommand, metadata.copy(aiReasoning = reasoning))
-
-            throw MaestroException.AssertionFailure(
-                message = """
-                    |$reasoning
-                    """.trimMargin(),
-                hierarchyRoot = maestro.viewHierarchy().root,
-            debugMessage = "AI-powered assertion failed. Check the UI and screenshots in debug artifacts to verify if there are actual visual issues that were missed or if the AI detection needs adjustment.")
-        }
-
-        return false
-    }
-
-    private suspend fun extractTextWithAICommand(
-        command: ExtractTextWithAICommand,
-        maestroCommand: MaestroCommand
-    ): Boolean {
-        if (AIPredictionEngine == null) {
-            throw MaestroException.CloudApiKeyNotAvailable("`MAESTRO_CLOUD_API_KEY` is not available. Did you export MAESTRO_CLOUD_API_KEY?")
-        }
-
-        val metadata = getMetadata(maestroCommand)
-
-        val imageData = Buffer()
-        maestro.takeScreenshot(imageData, compressed = false)
-        val text = AIPredictionEngine.extractText(
-            screen = imageData.copy().readByteArray(),
-            query = command.query,
-        )
-
-        updateMetadata(
-            maestroCommand, metadata.copy(
-                aiReasoning = "Query: \"${command.query}\"\nExtracted text: $text"
-            )
-        )
-        jsEngine.putEnv(command.outputVariable, text)
 
         return false
     }
@@ -1840,7 +1731,6 @@ class Orchestra(
         val evaluatedCommand: MaestroCommand? = null,
         val logMessages: List<String> = emptyList(),
         val insight: Insight = Insight("", Insight.Level.NONE),
-        val aiReasoning: String? = null,
         val labeledCommand: String? = null
     )
 

@@ -2,7 +2,7 @@
 
 | Pole | Wartość |
 |---|---|
-| Krok | STEP-00B — **zakończony, w review** |
+| Krok | STEP-00B — **zakończony, scalony** (PR-00B #3, 2026-10-23) |
 | PR | PR-00B: https://github.com/rtnk/TapCue/pull/3 |
 | Gałąź | `step-00b-legal-containment` |
 | Gałąź docelowa | `main` |

@@ -8,7 +8,6 @@ import maestro.cli.util.EnvUtils
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
@@ -120,27 +119,6 @@ class TestDebugReporterTest {
         } finally {
             unmockkObject(EnvUtils)
         }
-    }
-
-    @Test
-    fun `saveSuggestions should not write ai files when flow has no ai outputs`() {
-        val outputDir = Files.createDirectories(tempDir.resolve("debug-output"))
-
-        val outputs = listOf(
-            FlowAIOutput(
-                flowName = "login_test",
-                flowFile = File("flows/login_test.yaml"),
-            ),
-            FlowAIOutput(
-                flowName = "signup_test",
-                flowFile = File("flows/signup_test.yaml"),
-            ),
-        )
-
-        TestDebugReporter.saveSuggestions(outputs, outputDir)
-
-        val files = outputDir.toFile().listFiles()?.map { it.name } ?: emptyList()
-        assertThat(files.filter { it.startsWith("ai-") }).isEmpty()
     }
 
     @Test

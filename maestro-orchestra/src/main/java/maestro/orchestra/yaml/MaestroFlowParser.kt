@@ -175,10 +175,24 @@ internal val stringCommands = mapOf<String, (YamlFluentCommand) -> YamlFluentCom
     "toggleDarkMode" to { it.copy(toggleDarkMode = YamlToggleDarkMode()) },
     "assertDarkMode" to { it.copy(assertDarkMode = YamlAssertDarkMode()) },
     "assertLightMode" to { it.copy(assertLightMode = YamlAssertLightMode()) },
-    "assertNoDefectsWithAI" to { it.copy(assertNoDefectsWithAI = YamlAssertNoDefectsWithAI()) },
 )
 
 private val allCommands = (stringCommands.keys + objectCommands).distinct()
+
+// Maestro Local has no AI backend: these commands sent screenshots to Maestro Cloud. They are rejected
+// at parse time, so a flow that uses one fails validation before anything runs or connects anywhere.
+private val removedAiCommands = setOf("assertWithAI", "assertNoDefectsWithAI", "extractTextWithAI")
+
+private fun aiCommandNotAvailable(location: JsonLocation, commandName: String) = ParseException(
+    location = location,
+    title = "AI Command Not Available: $commandName",
+    errorMessage = """
+        |`$commandName` is an AI command. AI commands are not available in Maestro Local: they relied on a
+        |remote AI service, which this build does not include.
+        |
+        |Remove the command, or replace it with a local assertion such as `assertVisible` or `assertTrue`.
+    """.trimMargin("|"),
+)
 
 private const val DOCS_FIRST_FLOW = "https://docs.maestro.dev/getting-started/writing-your-first-flow"
 private const val DOCS_COMMANDS = "https://docs.maestro.dev/api-reference/commands"
@@ -381,6 +395,7 @@ private object YamlCommandDeserializer : JsonDeserializer<YamlFluentCommand>() {
         // full scalar range.
         val commandLocation = parser.currentTokenLocation()
         val commandText = parser.text
+        if (commandText in removedAiCommands) throw aiCommandNotAvailable(commandLocation, commandText)
         val command = stringCommands[commandText]
         if (command != null) {
             val end = parser.currentLocation()
@@ -412,6 +427,7 @@ private object YamlCommandDeserializer : JsonDeserializer<YamlFluentCommand>() {
     private fun parseObjectCommand(parser: JsonParser, ctxt: DeserializationContext, ctx: ParseContext): YamlFluentCommand {
         val commandLocation = parser.currentTokenLocation()
         val commandName = parser.nextFieldName()
+        if (commandName != null && commandName in removedAiCommands) throw aiCommandNotAvailable(parser.currentLocation(), commandName)
         val commandParameter = yamlFluentCommandParameters.firstOrNull { it.name == commandName }
         if (commandParameter == null) {
             throw ParseException(
