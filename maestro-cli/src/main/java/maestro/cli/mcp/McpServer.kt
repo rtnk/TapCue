@@ -16,8 +16,6 @@ import maestro.cli.mcp.tools.TakeScreenshotTool
 import maestro.cli.mcp.tools.RunTool
 import maestro.cli.mcp.tools.InspectScreenTool
 import maestro.cli.mcp.tools.CheatSheetTool
-import maestro.cli.mcp.tools.OpenMaestroViewerTool
-import maestro.cli.mcp.viewer.withViewerHint
 import maestro.cli.util.WorkingDirectory
 import java.io.PrintStream
 
@@ -55,7 +53,7 @@ internal fun claimMcpStdout() {
     System.setOut(System.err)
 }
 
-fun runMaestroMcpServer(viewerUrl: String? = null) {
+fun runMaestroMcpServer() {
     // LogConfig silences log4j; the stdout redirect in `claimMcpStdout` catches
     // everything else. Keep both; they cover different noise sources.
     LogConfig.configure(logFileName = null, printToConsole = false)
@@ -81,8 +79,6 @@ fun runMaestroMcpServer(viewerUrl: String? = null) {
         RunTool.create(sessionManager),
         InspectScreenTool.create(sessionManager),
         CheatSheetTool.create(),
-    ).withViewerHint(viewerUrl) + listOf(
-        OpenMaestroViewerTool.create(viewerUrl),
     ))
 
     val transport = StdioServerTransport(

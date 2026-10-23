@@ -1,6 +1,6 @@
 # Audyt ruchu sieciowego — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Wersja: **1 (STEP-01, Remove Cloud CLI)**. Baseline: upstream `mobile-dev-inc/Maestro` tag `v2.11.0`
+Wersja: **2 (STEP-00B, legal containment)**. Baseline: upstream `mobile-dev-inc/Maestro` tag `v2.11.0`
 (`c8c361be1cc89b2e742f185466a302a22778be6b`); numery linii w kolumnie „Źródło” odnoszą się do baseline.
 
 Historia zmian statusów:
@@ -9,6 +9,9 @@ Historia zmian statusów:
   N-17, N-22, N-34, N-35 (szczegóły w kolumnie „Status”). Dowód: testy `maestro-cli`
   `LocalOnlyCliTest` (komendy Cloud nieznane, brak klas Cloud na classpath, `TestCommand` nie odczytuje
   tokenu i nie wykonuje żądań przy konstrukcji) oraz `McpServerTest`.
+- **STEP-00B** — usunięte: B-01, B-02 (build bez simulator-server i npm); częściowo: N-18. Dowód:
+  `CliJarContentsTest` (JAR i classpath bez `deps/simulator-server/**`, `mcp-viewer/**`), strażnik
+  `scripts/fork/check-no-simulator-server.sh`, smoke `maestro mcp` przez STDIO bez `mcp_viewer_ready`.
 
 Dokument jest rejestrem *wszystkich* znanych ścieżek, którymi narzędzie (CLI, MCP, build) może
 nawiązać połączenie sieciowe. Każdy kolejny krok aktualizuje kolumnę **Status** i dopisuje dowody.
@@ -64,7 +67,7 @@ status `OGRANICZ`.
 | N-15 | `mcp/tools/CheatSheetTool.kt:30` | narzędzie MCP `cheat_sheet` | `api.copilot.mobile.dev/v2/bot/maestro-cheat-sheet` | IP | — | Potwierdzone | LOKALNIE (wersjonowany zasób w JAR) | 04 |
 | N-16 | `mcp/tools/RunOnCloudTool.kt`, `GetCloudRunStatusTool.kt`, `DescribeCloudRunTool.kt`, `ListCloudDevicesTool.kt` | narzędzia MCP `run_on_cloud`, `get_cloud_run_status`, `describe_cloud_run`, `list_cloud_devices` | `api.copilot.mobile.dev` | aplikacja, flow, token | — | **USUNIĘTE (STEP-01)** — narzędzia usunięte razem z zapleczem (`ApiKey`, metody Cloud `ApiClient`); przeniesione z STEP-04 | USUŃ | 01 |
 | N-17 | `mcp/McpServer.kt:29-49` (instrukcje serwera) | handshake MCP | — (tekst kieruje agenta do `docs.maestro.dev/llms.txt` i Maestro Cloud) | — | — | **CZĘŚCIOWO (STEP-01)** — sekcja „Cloud workflow” i wzmianki o `maestro login`/`MAESTRO_CLOUD_API_KEY` usunięte; link `docs.maestro.dev` — STEP-04 | USUŃ wzmianki / LOKALNIE | 04 |
-| N-18 | `command/McpCommand.kt:43`, `mcp/viewer/McpViewerServer.kt:253` | `maestro mcp` (Viewer startuje **domyślnie**, `--no-viewer` wyłącza) | serwer HTTP na `127.0.0.1:<port>`; uruchamia binarium **simulator-server** | — (lokalnie), ale patrz bloker licencyjny L-01 | `--no-viewer` | Potwierdzone | USUŃ (licencja) | 00B/04 |
+| N-18 | `command/McpCommand.kt:43`, `mcp/viewer/McpViewerServer.kt:253` | `maestro mcp` (Viewer startuje **domyślnie**, `--no-viewer` wyłącza) | serwer HTTP na `127.0.0.1:<port>`; uruchamia binarium **simulator-server** | — (lokalnie), ale patrz bloker licencyjny L-01 | `--no-viewer` | **CZĘŚCIOWO (STEP-00B)** — `maestro mcp` nie startuje Viewera ani simulator-server (`--no-viewer`/`--viewer-port` = ukryte no-op), `open_maestro_viewer` niezarejestrowane; pakiet `mcp/viewer/` (nieosiągalny) — STEP-04 | USUŃ (licencja) | 00B/04 |
 | N-19 | `command/DownloadSamplesCommand.kt:90` | `maestro download-samples` | `storage.googleapis.com/mobile.dev/samples/samples.zip` | IP | opt-in | Potwierdzone | USUŃ | 03 |
 | N-20 | `command/StudioCommand.kt`, `util/StudioDownload.kt:6` | `maestro studio` | wyświetla link `studio.maestro.dev` (bez żądania) | — | — | **USUNIĘTE (STEP-01)** — `StudioCommand`, `util/StudioDownload.kt`; komunikat w `QueryCommand` bez linku | USUŃ (zależność od oficjalnego Studio) | 01 |
 | N-21 | `report/HtmlTestSuiteReporter.kt:55` | otwarcie raportu HTML w przeglądarce | `cdn.jsdelivr.net` (Bootstrap CSS/JS) | IP, Referer przeglądarki | — | Potwierdzone | LOKALNIE (inline CSS) | 03 |
@@ -87,8 +90,8 @@ status `OGRANICZ`.
 
 | ID | Źródło | Cel | Uwagi | Status | Decyzja | Krok |
 |---|---|---|---|---|---|---|
-| B-01 | `maestro-cli/build.gradle.kts:232-306,325` (`downloadSimulatorServer`, wpięty w `processResources`) | `github.com/mobile-dev-inc/simulator-server-releases` | pobiera i **pakuje do JAR** binaria objęte restrykcyjną licencją (L-01). Uruchamia się przy każdym `./gradlew build`/`test`/`run` modułu CLI | Potwierdzone | USUŃ (bloker prawny) | 00B |
-| B-02 | `maestro-cli/build.gradle.kts` (`installMcpViewerDeps`, `buildMcpViewer`) | `registry.npmjs.org` (npm) | buduje frontend Viewera (zależny od simulator-server) | Potwierdzone | USUŃ | 00B/04 |
+| B-01 | `maestro-cli/build.gradle.kts:232-306,325` (`downloadSimulatorServer`, wpięty w `processResources`) | `github.com/mobile-dev-inc/simulator-server-releases` | pobiera i **pakuje do JAR** binaria objęte restrykcyjną licencją (L-01). Uruchamia się przy każdym `./gradlew build`/`test`/`run` modułu CLI | **USUNIĘTE (STEP-00B)** — task i jego wpięcie w `processResources` usunięte; `CliJarContentsTest`, strażnik w CI | USUŃ (bloker prawny) | 00B |
+| B-02 | `maestro-cli/build.gradle.kts` (`installMcpViewerDeps`, `buildMcpViewer`) | `registry.npmjs.org` (npm) | buduje frontend Viewera (zależny od simulator-server) | **USUNIĘTE (STEP-00B)** — taski npm usunięte z builda; źródła `maestro-cli/mcp-viewer/` — STEP-04 | USUŃ | 00B/04 |
 | B-03 | `settings.gradle.kts` (`google()`, `mavenCentral()`, `gradlePluginPortal()`), wrapper `services.gradle.org` | repozytoria Maven | dozwolone w CI. W sesji STEP-00 `dl.google.com` było zablokowane polityką sieci środowiska — patrz wyniki testów w handover | Potwierdzone | ZACHOWAJ (CI) | 06 |
 | B-04 | `jreleaser` w `maestro-cli/build.gradle.kts` | GitHub `mobile-dev-inc/maestro`, `mobile-dev-inc/homebrew-tap` | publikacja upstream | Potwierdzone | USUŃ / zastąpić `release.yml` | 05/07 |
 | B-05 | `scripts/install.sh` | `github.com/mobile-dev-inc/maestro/releases` | instalator upstream | Potwierdzone | USUŃ / zastąpić | 05 |

@@ -6,8 +6,9 @@
 > `docs/handovers/STEP-XX.md`; they take precedence over this file where they conflict. In particular:
 >
 > - Work happens one roadmap step per PR; never merge automatically.
-> - Never run, download or package `simulator-server` (`docs/LICENSE-AUDIT.md` L-01). Run Gradle with
->   `-x downloadSimulatorServer -x installMcpViewerDeps -x buildMcpViewer` until STEP-00B/04 removes those tasks.
+> - Never run, download or package `simulator-server` (`docs/LICENSE-AUDIT.md` L-01). Since STEP-00B the build
+>   no longer has the `downloadSimulatorServer`, `installMcpViewerDeps` and `buildMcpViewer` tasks; do not
+>   reintroduce them, and do not pass `-x` for them (Gradle fails on unknown tasks).
 > - The `release` and `bump-android-version` skills in `.claude/skills/`, root `RELEASING.md` and
 >   `.github/upstream-workflows-disabled/` describe upstream processes (Maestro Cloud, Maven Central,
 >   Homebrew, GCS) and do not apply here. Fork releases: `docs/RELEASING.md`.

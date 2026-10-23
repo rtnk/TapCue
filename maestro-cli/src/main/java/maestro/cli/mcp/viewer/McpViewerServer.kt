@@ -33,7 +33,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import maestro.cli.Dependencies
 import maestro.cli.util.getFreePort
 import maestro.device.Device
 import maestro.device.DeviceService
@@ -250,24 +249,9 @@ private class DeviceStream(
         setState(DeviceStreamState(status = "starting", platform = platform, deviceId = deviceId))
 
         runCatching {
-            Dependencies.installSimulatorServer()
-            val p = ProcessBuilder(
-                Dependencies.simulatorServerBinary().absolutePath,
-                deviceType.wire, "--id", deviceId,
-            ).redirectErrorStream(false).start()
-            process = p
-            stdinWriter = OutputStreamWriter(p.outputStream)
-            // Drain stderr so the child's pipe never fills, and surface its output for debugging.
-            Thread({
-                runCatching { BufferedReader(InputStreamReader(p.errorStream)).forEachLine { System.err.println("[simulator-server] $it") } }
-            }, "mcp-viewer-simulator-stderr").apply { isDaemon = true }.start()
-            val streamUrl = awaitStreamReady(p)
-            setState(DeviceStreamState(
-                status = "streaming",
-                platform = platform,
-                deviceId = deviceId,
-                streamUrl = streamUrl,
-            ))
+            // simulator-server may only run in official Maestro releases (docs/LICENSE-AUDIT.md L-01),
+            // so it is neither built into nor started by this fork. The Viewer itself goes in STEP-04.
+            error("Device streaming is not available: simulator-server is not shipped with this build.")
         }.onFailure { error ->
             cleanupProcess()
             setState(DeviceStreamState(

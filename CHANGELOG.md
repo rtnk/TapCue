@@ -22,6 +22,11 @@ Zmiany własne forka. Fork bazuje na upstream `mobile-dev-inc/Maestro` `v2.11.0`
 - Raporty (STEP-01): JUnit bez właściwości `cloud.*`, HTML bez linków do Maestro Cloud.
 - Biblioteka (STEP-01): `maestro.auth.ApiKey` i `maestro.mockserver.MockInteractor` usunięte z `maestro-client`;
   `CdpWebDriver`/`WebDriver`/`Maestro.web` bez parametru `isStudio`.
+- Build (STEP-00B): usunięte taski `downloadSimulatorServer`, `installMcpViewerDeps`, `buildMcpViewer`
+  i wersja `simulatorServer`; JAR CLI nie zawiera simulator-server ani frontendu Viewera (licencja
+  simulator-server pozwala na jego użycie tylko w oficjalnych wydaniach Maestro). CI bez flag `-x …`.
+- MCP (STEP-00B): `maestro mcp` nie uruchamia Maestro Viewera; narzędzie `open_maestro_viewer` usunięte;
+  `--no-viewer` i `--viewer-port` są akceptowane i ignorowane.
 
 ## Upstream Maestro
 
