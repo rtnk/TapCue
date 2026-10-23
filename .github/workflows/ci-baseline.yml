@@ -1,0 +1,67 @@
+# Baseline CI for the fork (STEP-00). Replaced by ci.yml in STEP-06.
+#
+# Runs the upstream unit test suite without ever fetching or packaging
+# simulator-server (docs/LICENSE-AUDIT.md L-01) and without building the
+# Viewer frontend that drives it. iOS Swift/XCTest jobs from upstream are
+# not run here: they need macOS runners (see docs/ROADMAP-0.1.md D-9).
+name: CI baseline
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-test:
+    name: Unit tests (JDK 17, no simulator-server)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+
+      - name: Set up Java
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: zulu
+          java-version: 17
+          cache: gradle
+
+      - name: Detekt (flow path resolution guard)
+        run: ./gradlew :maestro-orchestra:detektMain :maestro-client:detektMain
+
+      - name: Unit tests
+        run: >-
+          ./gradlew test --continue
+          -x downloadSimulatorServer
+          -x installMcpViewerDeps
+          -x buildMcpViewer
+
+      - name: Guard - no simulator-server or Viewer in build outputs
+        if: always()
+        run: scripts/fork/check-no-simulator-server.sh
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unit-test-reports
+          path: |
+            **/build/reports/tests/test
+            **/build/test-results/test
+          retention-days: 7
+          if-no-files-found: warn

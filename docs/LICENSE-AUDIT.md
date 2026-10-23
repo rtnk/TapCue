@@ -1,0 +1,87 @@
+# Audyt licencji — Maestro Local (repozytorium `rtnk/TapCue`)
+
+Wersja: **0 (STEP-00, baseline)**. Stan kodu: upstream `v2.11.0` (`c8c361be`).
+Status audytu: **OTWARTY — Release zablokowany** (gate G-3 w `ROADMAP-0.1.md`).
+
+> Ten dokument jest analizą techniczną wykonaną na potrzeby projektu, a nie poradą prawną.
+> Pozycje oznaczone jako wymagające decyzji prawnej powinny zostać ocenione przez właściciela
+> projektu (ew. z prawnikiem) przed publikacją.
+
+## Legenda
+
+- **Potwierdzone** — tekst licencji odczytany ze źródła (podano skąd i SHA-256 pobranego tekstu)
+  lub z metadanych POM w cache Gradle.
+- **Hipoteza** — wymaga sprawdzenia (np. brak pliku licencji w artefakcie, zawartość binarium).
+- **Decyzja:** `OK` (redystrybucja zgodna z warunkami, wymaga tylko not), `ZAKAZ` (nie wolno
+  pakować/uruchamiać), `DECYZJA` (wymaga decyzji właściciela, patrz D-x w roadmapie), `NIE DOTYCZY`
+  (nie trafia do paczki).
+
+## 1. Projekt główny
+
+| Element | Licencja | Status | Obowiązki |
+|---|---|---|---|
+| Kod upstream `mobile-dev-inc/Maestro` | Apache-2.0 (`LICENSE` w repo; nagłówki „Copyright (c) 2022 mobile.dev inc.” w plikach) | Potwierdzone | zachować `LICENSE`, nagłówki copyright; oznaczyć zmienione pliki (§4(b)); dołączyć `NOTICE` forka; nie używać znaków towarowych (§6, D-1) |
+| Plik `NOTICE` upstream | **nie istnieje** w `v2.11.0` | Potwierdzone | fork doda własny `NOTICE` (STEP-05) z atrybucją upstream |
+
+## 2. Binaria i artefakty natywne w drzewie źródłowym / buildzie
+
+| ID | Artefakt | Skąd | Licencja | Status | Decyzja |
+|---|---|---|---|---|---|
+| **L-01** | **simulator-server** (darwin-universal, linux-x86_64, windows-x86_64; wersja `10dae08e` w `gradle/libs.versions.toml`) | pobierany przez task `downloadSimulatorServer` (`maestro-cli/build.gradle.kts:232-306`) z `github.com/mobile-dev-inc/simulator-server-releases` i pakowany do JAR jako `deps/simulator-server/**`; uruchamiany przez Viewer (`McpViewerServer.kt:253`) | „Simulator Server Binary License”, © 2026 Software Mansion S.A. — uruchamianie i dystrybucja **wyłącznie** w oficjalnych wydaniach Maestro od mobile.dev; zakaz użycia w narzędziach budujących na Maestro, zakaz redystrybucji w utworach zależnych, zakaz RE. Tekst: `https://raw.githubusercontent.com/mobile-dev-inc/simulator-server-releases/main/LICENSE`, SHA-256 `37835d52ee41c919bb337ea39761a1559bf68f0f5cbd8c9883fb5d6fdcb754d8` (pobrany 2026-10-23) | Potwierdzone | **ZAKAZ** — usunąć task, wywołania i Viewer (STEP-00B/04); test zawartości paczki (STEP-05/06). Binarium **nie zostało pobrane** w STEP-00 (testy uruchamiano z `-x downloadSimulatorServer`). Historia git upstream nie zawiera tych binariów (sprawdzone `git rev-list --all --objects`). |
+| L-02 | `maestro-cli/src/main/resources/deps/applesimutils` (Mach-O universal x86_64+arm64, AppleSimulatorUtils 0.9.10, dodany w upstream `c1a9f5a8`) | zatwierdzony w repo, rozpakowywany do `~/.maestro/deps` (`Dependencies.kt`) | MIT, © 2017 Wix.com. Tekst: `https://raw.githubusercontent.com/wix/AppleSimulatorUtils/master/LICENSE`, SHA-256 `b9c6cf767b922ff04cc2ea2a8cdd4e3a42a61cb6d32251f7c8eb7de5a7b9108a` | Potwierdzone (licencja); Hipoteza (że binarium odpowiada niezmodyfikowanemu wydaniu 0.9.10 — do porównania SHA z oficjalnym wydaniem w STEP-05) | **OK** z notą MIT w `THIRD-PARTY-NOTICES` |
+| **L-03** | `org.graalvm.truffle:truffle-enterprise:24.2.0` | przechodnio z `org.graalvm.js:js:24.2.0` (`libs.graaljs`, `maestro-client/build.gradle.kts:56`) | GraalVM Free Terms and Conditions (GFTC) — licencja własnościowa Oracle z warunkami redystrybucji (m.in. bez opłat) — nie Apache/UPL | Potwierdzone (POM) | **DECYZJA D-6** — rekomendacja: przejść na `js-community`/`js-language` (UPL) bez `truffle-enterprise` |
+| **L-04** | Prekompilowane ZIP-y sterownika iOS: `maestro-ios-driver/src/main/resources/driver-iPhoneSimulator/Debug-iphonesimulator/*.zip`, `driver-iphoneos/Debug-iphoneos/*.zip` | zbudowane przez CI upstream z `maestro-ios-xctest-runner` (źródło Apache-2.0) | zawierają kod forka (Apache-2.0), FlyingFox (MIT) **oraz frameworki Apple skopiowane z Xcode**: `XCTest.framework`, `XCTestCore.framework`, `XCTestSupport.framework`, `XCTAutomationSupport.framework`, `XCUIAutomation.framework`, `XCUnit.framework`, `Testing.framework`, `libXCTestSwiftSupport.dylib`, `libswift_Concurrency.dylib` — redystrybucja podlega licencji Xcode/Apple SDK | Potwierdzone (zawartość ZIP), Hipoteza (zakres zgody Apple na redystrybucję) | **DECYZJA D-5** — rekomendacja: nie dystrybuować ZIP-ów; budować runner lokalnie z dołączonego źródła |
+| L-05 | `maestro-client/src/main/resources/maestro-app.apk`, `maestro-server.apk` (+ `maestro-android-source.sha256`) | zbudowane z `maestro-android` (Apache-2.0) | kod forka + biblioteki AndroidX/uiautomator, gRPC, protobuf (Apache-2.0 / BSD-3) wkompilowane w APK | Potwierdzone (pochodzenie), Hipoteza (pełna lista bibliotek w APK — wymaga drzewa zależności `maestro-android`, niedostępnego w sesji STEP-00 z powodu blokady `dl.google.com`) | **OK** po skompletowaniu not (STEP-05) |
+| L-06 | FlyingFox 0.22.0 (`swhitty/FlyingFox`, SwiftPM pin w `project.xcworkspace/xcshareddata/swiftpm/Package.resolved`) | wkompilowany w runner iOS | MIT, © 2022 Simon Whitty. SHA-256 tekstu `d108595341bd18bb218ee3bad7eb5bdeee07c7c55e89e4488392449f84f2eef0` | Potwierdzone | **OK** z notą |
+| L-07 | `maestro-cli/jvm-version.jar` | zatwierdzony; kopiowany do `bin/` dystrybucji przez `startScripts` | źródło opisane w komentarzu `maestro-cli/build.gradle.kts` (klasa `JvmVersion`, część projektu → Apache-2.0) | Potwierdzone (opis), Hipoteza (zgodność binarium z opisem — dekompilacja w STEP-05) | OK |
+| L-08 | `gradle/wrapper/gradle-wrapper.jar` | build | Apache-2.0 | Potwierdzone | NIE DOTYCZY paczki; walidacja `wrapper-validation` w CI |
+| L-09 | `debug.keystore` | podpis APK sterownika | klucz debug (bez licencji) | Potwierdzone | NIE DOTYCZY paczki; ryzyko R-8 |
+| L-10 | `maestro-cli/mcp-viewer/` (frontend React/Vite, zależności npm) | build Viewera | MIT/ISC itd. (npm) | Hipoteza | NIE DOTYCZY — usuwany razem z Viewerem |
+| L-11 | Fixture'y testowe (`maestro-cli/src/test/resources/apps/test-ios.zip`, `e2e/apps/*`, `flow.zip`, `short_media.mov`) | testy | do oceny | Hipoteza | NIE DOTYCZY paczki (sprawdzić w `verify-dist.sh`) |
+
+## 3. Zależności runtime CLI (Maven)
+
+Pełna, wygenerowana tabela (186 artefaktów zewnętrznych): [`docs/audit/runtime-dependencies-v2.11.0.md`](audit/runtime-dependencies-v2.11.0.md).
+
+Podsumowanie licencji wg POM: Apache-2.0 (zdecydowana większość), MIT, UPL-1.0 (GraalVM community),
+BSD-2/BSD-3/FreeBSD (`jcodec`, `jline`, `HdrHistogram`), ISC (`kotlin-result`), Unicode/ICU (`icu4j` shadowed),
+CC0 (`LatencyUtils`), EPL-1.0/Apache (`alpn-api`), CDDL+GPLv2-CPE (`javax.annotation-api`),
+LGPL-2.1/Apache-2.0 dual (`jna`, `jna-platform` — wybieramy Apache-2.0), **GFTC (`truffle-enterprise`) — L-03**.
+
+Artefakty z bibliotekami natywnymi (do listy dozwolonych w `verify-dist.sh`):
+
+| Artefakt | Natywne | Licencja |
+|---|---|---|
+| `org.jetbrains.skiko:skiko-awt-runtime-{macos,linux,windows}-*:0.8.18` | `libskiko-*.dylib/.so/.dll` (Skia) | Apache-2.0 (Skia: BSD-3 — dodać notę) |
+| `org.fusesource.jansi:jansi:2.4.1` | `libjansi.*` | Apache-2.0 |
+| `org.jline:jline-native`, `org.jline:jansi:3.30.6` | `libjlinenative.*` | BSD-3 |
+| `net.java.dev.jna:jna:5.14.0` | `jnidispatch` | Apache-2.0 / LGPL-2.1 |
+| `org.graalvm.truffle:truffle-api:24.2.0` | `libtruffleattach.*` | UPL-1.0 |
+| `org.seleniumhq.selenium:selenium-manager:4.43.0` | binaria `selenium-manager` (Linux/macOS/Windows) — **potrafią pobierać przeglądarki i sterowniki** (N-26) | Apache-2.0 — decyzja D-4 (usunąć z runtime, jeśli web wyłączony) |
+
+Do usunięcia razem z funkcjami (nie wejdą do paczki 0.1.0): `com.posthog:posthog-server`, `com.posthog:posthog`
+(STEP-03), moduł `maestro-ai` (STEP-02), komponenty Viewera/simulator-server (STEP-00B/04).
+
+Wariant platformowy paczki macOS arm64: skiko ładuje bibliotekę dla bieżącej platformy; usunięcie artefaktów
+`skiko-*` innych platform z paczki jest opcjonalne (rozmiar) — decyzja w STEP-05.
+
+## 4. Lista artefaktów zakazanych / kontrolowanych w paczce (wejście do `verify-dist.sh`)
+
+| Wzorzec | Powód | Od kroku |
+|---|---|---|
+| `deps/simulator-server/**`, `simulator-server*`, pliki o nazwach z `simulator-server-releases` | L-01 | 00B |
+| `mcp-viewer/**` | Viewer zależny od L-01 | 00B |
+| `com/posthog/**` | telemetria | 03 |
+| `maestro/ai/**` | zdalne AI | 02 |
+| `truffle-enterprise*.jar`, `com/oracle/truffle/enterprise/**` (wzorzec do potwierdzenia) | L-03 (do decyzji D-6) | 05 |
+| `driver-iPhoneSimulator/**/*.zip`, `driver-iphoneos/**/*.zip` | L-04 (do decyzji D-5) | 05 |
+| `selenium-manager*` | N-26 (do decyzji D-4) | 03B |
+
+## 5. Otwarte zadania audytu
+
+1. STEP-05: wygenerować `THIRD-PARTY-NOTICES.md` z pełną listą z §3 (z tekstami licencji MIT/BSD/ISC/UPL
+   i notami Apache NOTICE, jeśli artefakt je zawiera w `META-INF/NOTICE*`).
+2. STEP-05: drzewo zależności `maestro-android` (APK) i noty dla L-05.
+3. STEP-05: porównać SHA-256 `applesimutils` z oficjalnym wydaniem AppleSimulatorUtils 0.9.10.
+4. D-5, D-6: decyzje i ich implementacja z testami regresji.
+5. STEP-06: automatyczny skan licencji w CI (porównanie z listą dozwolonych licencji; nowa licencja → fail).
