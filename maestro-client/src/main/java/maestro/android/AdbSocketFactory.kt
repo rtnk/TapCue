@@ -76,6 +76,13 @@ class AdbSocketFactory private constructor(
 internal const val ADB_IO_POOL_MAX = 16
 private val adbIoThreadCount = AtomicInteger()
 
+// A worker that has just finished a call still counts against the cap until it polls the handoff
+// queue again, so at the cap a plain SynchronousQueue handoff rejects a call although that worker is
+// about to be free (e.g. 15 workers parked on a wedged device and the 16th between two calls). The
+// rejection handler waits this long for a worker to take the call; only a pool whose workers all stay
+// busy past it is saturated, and that still fails fast.
+internal const val ADB_IO_HANDOFF_GRACE_MILLIS = 100L
+
 // One bounded worker pool per devtools client, created here and shut down in the client's close().
 internal fun newAdbIoExecutor(): ExecutorService = ThreadPoolExecutor(
     0,
@@ -83,9 +90,17 @@ internal fun newAdbIoExecutor(): ExecutorService = ThreadPoolExecutor(
     60L,
     TimeUnit.SECONDS,
     SynchronousQueue(),
-) { runnable ->
-    Thread(runnable, "AdbSocketIo-${adbIoThreadCount.incrementAndGet()}").apply { isDaemon = true }
-}
+    { runnable -> Thread(runnable, "AdbSocketIo-${adbIoThreadCount.incrementAndGet()}").apply { isDaemon = true } },
+    { runnable, pool ->
+        val handedOff = try {
+            !pool.isShutdown && pool.queue.offer(runnable, ADB_IO_HANDOFF_GRACE_MILLIS, TimeUnit.MILLISECONDS)
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            false
+        }
+        if (!handedOff) throw RejectedExecutionException("All $ADB_IO_POOL_MAX adb I/O workers are busy")
+    },
+)
 
 // Submits one blocking dadb call to the client's capped pool. Pool exhaustion fails fast instead
 // of queueing: every worker is parked against a wedged transport (see newAdbIoExecutor).

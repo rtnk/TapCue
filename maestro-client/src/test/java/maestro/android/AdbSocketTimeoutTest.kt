@@ -369,6 +369,32 @@ class AdbSocketTimeoutTest {
     }
 
     @Test
+    fun `back-to-back calls on the last free worker are not rejected while the others are parked`() {
+        // A worker that just finished a call counts against the cap until it polls for the next one,
+        // so with every other worker parked the next call used to race it and fail as "busy".
+        val entered = CountDownLatch(ADB_IO_POOL_MAX - 1)
+        val park = InterruptProofLatch()
+        repeat(ADB_IO_POOL_MAX - 1) {
+            pool.execute {
+                entered.countDown()
+                park.awaitUninterruptibly()
+            }
+        }
+
+        try {
+            assertWithMessage("the parked workers never started")
+                .that(entered.await(10, TimeUnit.SECONDS)).isTrue()
+
+            val completed = assertTimeoutPreemptively<Int>(Duration.ofSeconds(30)) {
+                (1..500).sumOf { boundedAdbCall(pool, timeoutMillis = 5_000, operation = "Probe") { 1 } }
+            }
+            assertThat(completed).isEqualTo(500)
+        } finally {
+            park.release()
+        }
+    }
+
+    @Test
     fun `a saturated pool does not starve bounded calls on a separate pool`() {
         // The bounded pool is owned per client (per device): a wedged client that saturates its own
         // pool must not reject calls another client makes on its own pool, or one hung device would
