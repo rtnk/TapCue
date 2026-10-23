@@ -56,7 +56,7 @@ Kod produktu **nie został zmieniony**.
 | Porażka: `AdbSocketTimeoutTest.close fallback threads…` (`maestro-client`) | jw. | FAIL w pierwszym przebiegu, **PASS** przy ponowieniu — test czasowy, niestabilny |
 | Porażka: `ApiClientUploadRetryTest.failing before the request lands…` (`maestro-cli`) | jw. (również ponowiony z UTF-8) | FAIL stabilnie w tym środowisku (`Broken pipe` na lokalnym serwerze testowym); test dotyczy uploadu Cloud — zostanie usunięty w STEP-01 |
 | Strażnik simulator-server | `scripts/fork/check-no-simulator-server.sh` na wynikach builda | PASS; test negatywny (sztuczny JAR z `deps/simulator-server/`) → FAIL zgodnie z oczekiwaniem |
-| `ci-baseline.yml` na GitHub Actions | PR-00 | wynik w PR (uruchamiany pierwszy raz przez ten PR) |
+| `ci-baseline.yml` na GitHub Actions (`ubuntu-latest`, JDK 17 Zulu, pełne repo z `maestro-android`) | PR-00, [run 39979260063](https://github.com/rtnk/TapCue/actions/runs/39979260063) na `5e5b190e` | **PASS** — detekt, `./gradlew test --continue -x …` `BUILD SUCCESSFUL`, strażnik: „OK: no simulator-server or mcp-viewer artifacts”. Wszystkie 4 lokalne porażki z sesji nie występują na runnerze (internet, UTF-8). Push `main` nie uruchomił żadnego workflowu upstream |
 | Smoke Android/iOS | — | **NOT RUN** — brak SDK/Xcode/urządzeń w środowisku |
 | Swift (`MaestroDriverLib`, XCTest runner) | — | **NOT RUN** — wymaga macOS (D-9) |
 
