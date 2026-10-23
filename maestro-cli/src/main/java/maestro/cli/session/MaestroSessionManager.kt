@@ -68,7 +68,6 @@ object MaestroSessionManager {
         deviceId: String?,
         teamId: String? = null,
         platform: String? = null,
-        isStudio: Boolean = false,
         isHeadless: Boolean = false,
         screenSize: String? = null,
         reinstallDriver: Boolean = true,
@@ -105,16 +104,11 @@ object MaestroSessionManager {
 
         val session = createMaestro(
             selectedDevice = selectedDevice,
-            connectToExistingSession = if (isStudio) {
-                false
-            } else {
-                SessionStore.default.hasActiveSessionForDevice(
-                    sessionId,
-                    selectedDevice.platform,
-                    effectiveDeviceId
-                )
-            },
-            isStudio = isStudio,
+            connectToExistingSession = SessionStore.default.hasActiveSessionForDevice(
+                sessionId,
+                selectedDevice.platform,
+                effectiveDeviceId
+            ),
             isHeadless = isHeadless,
             screenSize = screenSize,
             driverHostPort = driverHostPort,
@@ -198,7 +192,6 @@ object MaestroSessionManager {
     private fun createMaestro(
         selectedDevice: SelectedDevice,
         connectToExistingSession: Boolean,
-        isStudio: Boolean,
         isHeadless: Boolean,
         screenSize: String?,
         reinstallDriver: Boolean,
@@ -224,7 +217,7 @@ object MaestroSessionManager {
                         platformConfiguration = platformConfiguration
                     )
 
-                    Platform.WEB -> pickWebDevice(isStudio, isHeadless, screenSize)
+                    Platform.WEB -> pickWebDevice(isHeadless, screenSize)
                 },
                 device = selectedDevice.device,
             )
@@ -253,7 +246,7 @@ object MaestroSessionManager {
             )
 
             selectedDevice.platform == Platform.WEB -> MaestroSession(
-                maestro = pickWebDevice(isStudio, isHeadless, screenSize),
+                maestro = pickWebDevice(isHeadless, screenSize),
                 device = null
             )
 
@@ -449,8 +442,8 @@ object MaestroSessionManager {
         )
     }
 
-    private fun pickWebDevice(isStudio: Boolean, isHeadless: Boolean, screenSize: String?): Maestro {
-        return Maestro.web(isStudio, isHeadless, screenSize)
+    private fun pickWebDevice(isHeadless: Boolean, screenSize: String?): Maestro {
+        return Maestro.web(isHeadless, screenSize)
     }
 
     private data class SelectedDevice(

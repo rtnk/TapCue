@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 class CdpWebDriverTest {
 
-    private fun makeDriver() = CdpWebDriver(isStudio = false, isHeadless = false, screenSize = null)
+    private fun makeDriver() = CdpWebDriver(isHeadless = false, screenSize = null)
 
     private fun target(id: String, type: String, url: String) =
         CdpTarget(id = id, title = id, url = url, type = type, webSocketDebuggerUrl = "ws://$id")

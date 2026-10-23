@@ -26,19 +26,14 @@ import maestro.cli.analytics.CommandArgsSanitizer
 import maestro.cli.command.BugReportCommand
 import maestro.cli.command.ChatCommand
 import maestro.cli.command.CheckSyntaxCommand
-import maestro.cli.command.CloudCommand
 import maestro.cli.command.DownloadSamplesCommand
 import maestro.cli.command.DriverCommand
-import maestro.cli.command.ListCloudDevicesCommand
 import maestro.cli.command.ListDevicesCommand
-import maestro.cli.command.LoginCommand
-import maestro.cli.command.LogoutCommand
 import maestro.cli.command.McpCommand
 import maestro.cli.command.PrintHierarchyCommand
 import maestro.cli.command.QueryCommand
 import maestro.cli.command.RecordCommand
 import maestro.cli.command.StartDeviceCommand
-import maestro.cli.command.StudioCommand
 import maestro.cli.command.TestCommand
 import maestro.cli.insights.TestAnalysisManager
 import maestro.cli.mcp.claimMcpStdout
@@ -59,18 +54,13 @@ import kotlin.system.exitProcess
     name = "maestro",
     subcommands = [
         TestCommand::class,
-        CloudCommand::class,
         RecordCommand::class,
         PrintHierarchyCommand::class,
         QueryCommand::class,
         DownloadSamplesCommand::class,
-        LoginCommand::class,
-        LogoutCommand::class,
         BugReportCommand::class,
-        StudioCommand::class,
         StartDeviceCommand::class,
         ListDevicesCommand::class,
-        ListCloudDevicesCommand::class,
         GenerateCompletion::class,
         ChatCommand::class,
         CheckSyntaxCommand::class,

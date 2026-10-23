@@ -22,7 +22,6 @@ class WebDriverTest {
     private fun makeDriver(): WebDriver {
         val seleniumDriver = mockk<SeleniumWebDriver>(relaxed = true)
         return WebDriver(
-            isStudio = false,
             isHeadless = true,
             screenSize = null,
             seleniumFactory = object : SeleniumFactory {
@@ -48,7 +47,6 @@ class WebDriverTest {
         }
 
         val driver = WebDriver(
-            isStudio = false,
             isHeadless = true,
             screenSize = null,
             seleniumFactory = factory,
@@ -96,7 +94,6 @@ class WebDriverTest {
             override fun create(): SeleniumWebDriver = seleniumDriver
         }
         val driver = WebDriver(
-            isStudio = false,
             isHeadless = true,
             screenSize = null,
             seleniumFactory = factory,
@@ -170,7 +167,6 @@ class WebDriverTest {
         )
 
         val driver = WebDriver(
-            isStudio = false,
             isHeadless = true,
             screenSize = null,
             seleniumFactory = object : SeleniumFactory {
@@ -212,7 +208,6 @@ class WebDriverTest {
         )
 
         val driver = WebDriver(
-            isStudio = false,
             isHeadless = true,
             screenSize = null,
             seleniumFactory = object : SeleniumFactory {

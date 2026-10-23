@@ -92,3 +92,14 @@ Zasady architektoniczne:
 
 - STEP-00: brak zmian w kodzie produktu. `main` = upstream `v2.11.0` + commit bootstrap
   `6592abd3` (zaparkowane workflowy upstream).
+- STEP-01 (Remove Cloud CLI): CLI nie ma komend `cloud`, `login`, `logout`, `list-cloud-devices`,
+  `studio` (picocli: „Unmatched argument”). Usunięte: `CloudInteractor`, `auth/Auth.kt`,
+  `maestro.auth.ApiKey` (token `~/.mobiledev/authtoken` / `MAESTRO_CLOUD_API_KEY` nie jest już nigdzie
+  czytany), `MockInteractor`, `RemoteVideoRenderer` (`record` renderuje lokalnie), `PromotionStateManager`,
+  metody Cloud w `ApiClient`, narzędzia MCP Cloud, linki Cloud w widoku wyników i raportach,
+  `isStudio` w sterownikach web. Punkt styku nr 2 z §2 jest rozcięty po stronie CLI: `TestCommand`
+  nie tworzy klienta API i przekazuje `apiKey = null` do `TestRunner` → `Orchestra` (komendy AI
+  kończą się lokalnym `CloudApiKeyNotAvailable` bez żądania). Pozostają do kolejnych kroków:
+  `--analyze`/`--api-key` i parametr `apiKey` w `TestRunner`/`Orchestra` (STEP-02), analityka,
+  `ErrorReporter`, `ScreenReporter`, sprawdzanie wersji i reszta `ApiClient` (STEP-03), Viewer
+  i `cheat_sheet` (STEP-04).

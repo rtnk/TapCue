@@ -6,14 +6,16 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.romankh3.image.comparison.ImageComparisonUtil
+import maestro.cli.CliError
 import maestro.cli.api.ApiClient
-import maestro.cli.cloud.CloudInteractor
+import maestro.cli.report.HtmlInsightsAnalysisReporter
 import maestro.cli.util.CiUtils
 import maestro.cli.util.EnvUtils
 import maestro.cli.util.PrintUtils
 import maestro.cli.view.box
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Locale
 import java.util.stream.Collectors
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
@@ -36,9 +38,9 @@ data class AnalysisDebugFiles(
     val commands: List<AnalysisLog>,
 )
 
-class TestAnalysisManager(private val apiUrl: String, private val apiKey: String?) {
+class TestAnalysisManager(private val apiKey: String?) {
     private val apiClient by lazy {
-        ApiClient(apiUrl)
+        ApiClient(EnvUtils.BASE_API_URL)
     }
 
     fun runAnalysis(debugOutputPath: Path): Int {
@@ -48,15 +50,33 @@ class TestAnalysisManager(private val apiUrl: String, private val apiKey: String
             return 0;
         }
 
-        return CloudInteractor(
-            client = apiClient,
-            appFileValidator = { null },
-            workspaceValidator = maestro.orchestra.validation.WorkspaceValidator(),
-        ).analyze(
-            apiKey = apiKey,
-            debugFiles = debugFiles,
-            debugOutputPath = debugOutputPath
-        )
+        // Only an explicit --api-key is used: the stored Cloud login (~/.mobiledev) is gone.
+        val authToken = apiKey ?: throw CliError("--analyze requires --api-key")
+
+        PrintUtils.info("\n\uD83D\uDD0E Analyzing Flow(s)...")
+
+        try {
+            val response = apiClient.analyze(authToken, debugFiles)
+
+            if (response.htmlReport.isNullOrEmpty()) {
+                PrintUtils.info(response.output)
+                return 0
+            }
+
+            val outputFilePath = HtmlInsightsAnalysisReporter().report(response.htmlReport, debugOutputPath)
+            val os = System.getProperty("os.name").lowercase(Locale.getDefault())
+
+            val formattedOutput = response.output.replace(
+                "{{outputFilePath}}",
+                "file:${if (os.contains("win")) "///" else "//"}${outputFilePath}\n"
+            )
+
+            PrintUtils.info(formattedOutput)
+            return 0
+        } catch (error: CliError) {
+            PrintUtils.err("Unexpected error while analyzing Flow(s): ${error.message}")
+            return 1
+        }
     }
 
     private fun processDebugFiles(outputPath: Path): AnalysisDebugFiles? {

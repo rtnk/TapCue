@@ -7,10 +7,6 @@ tools:
     - inspect_screen
     - cheat_sheet
     - open_maestro_viewer
-    - list_cloud_devices
-    - run_on_cloud
-    - get_cloud_run_status
-    - describe_cloud_run
 
   tests:
     - name: "List available devices"
@@ -20,14 +16,6 @@ tools:
         success: true
         result:
           contains: "device"
-
-    - name: "List cloud devices"
-      tool: "list_cloud_devices"
-      params: {}
-      expect:
-        success: true
-        result:
-          contains: "supported_os"
 
     - name: "Open Maestro Viewer (expect not running with --no-viewer)"
       tool: "open_maestro_viewer"
@@ -40,35 +28,6 @@ tools:
     - name: "Get Maestro cheat sheet (expect API key required)"
       tool: "cheat_sheet"
       params: {}
-      expect:
-        success: false
-        error:
-          contains: "MAESTRO_CLOUD_API_KEY"
-
-    - name: "Run on Cloud (expect API key required)"
-      tool: "run_on_cloud"
-      params:
-        app_file: "ignored.apk"
-        flows: "ignored.yaml"
-      expect:
-        success: false
-        error:
-          contains: "MAESTRO_CLOUD_API_KEY"
-
-    - name: "Get cloud run status (expect API key required)"
-      tool: "get_cloud_run_status"
-      params:
-        upload_id: "deadbeef"
-        project_id: "deadbeef"
-      expect:
-        success: false
-        error:
-          contains: "MAESTRO_CLOUD_API_KEY"
-
-    - name: "Describe cloud run (expect API key required)"
-      tool: "describe_cloud_run"
-      params:
-        run_id: "deadbeef"
       expect:
         success: false
         error:

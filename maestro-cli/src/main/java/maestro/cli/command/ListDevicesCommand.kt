@@ -7,7 +7,6 @@ import maestro.cli.report.TestDebugReporter
 import maestro.cli.util.PrintUtils
 import maestro.cli.view.bold
 import maestro.cli.view.cyan
-import maestro.cli.view.faint
 import maestro.device.Device
 import maestro.device.DeviceService
 import maestro.device.Platform
@@ -38,9 +37,6 @@ class ListDevicesCommand : Callable<Int> {
         val platformFilter = platform?.let { input ->
             Platform.fromString(input)
         }
-
-        println("Showing local devices. Use 'maestro list-cloud-devices' to list devices available on Maestro Cloud.".faint())
-        println()
 
         PrintUtils.info("Local Devices", bold = true)
         println("─".repeat(SEPARATOR_WIDTH))

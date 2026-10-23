@@ -19,7 +19,7 @@ import java.util.concurrent.Callable
 @CommandLine.Command(
     name = "start-device",
     description = [
-        "Starts or creates an iOS Simulator or Android Emulator similar to the ones in Maestro Cloud"
+        "Starts or creates an iOS Simulator or Android Emulator"
     ]
 )
 class StartDeviceCommand : Callable<Int> {

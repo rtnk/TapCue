@@ -17,9 +17,6 @@ data class TestExecutionSummary(
         val duration: Duration? = null,
         val startTime: Long? = null,
         val deviceName: String? = null,
-        val cloudUploadId: String? = null,
-        val cloudUploadUrl: String? = null,
-        val appBinaryId: String? = null,
     ) {
         fun failures(): List<FlowResult> = flows.filter { it.status == FlowStatus.ERROR }
     }
@@ -35,8 +32,6 @@ data class TestExecutionSummary(
         val tags: List<String>? = null,
         val steps: List<StepResult> = emptyList(),
         val filePath: String? = null,
-        val cloudRunId: String? = null,
-        val cloudRunUrl: String? = null,
     )
 
     data class StepResult(

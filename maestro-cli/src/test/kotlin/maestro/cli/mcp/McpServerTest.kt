@@ -18,13 +18,17 @@ class McpServerTest {
             "run",
             "inspect_screen",
             "cheat_sheet",
-            "list_cloud_devices",
-            "run_on_cloud",
-            "get_cloud_run_status",
-            "describe_cloud_run",
         )
         registeredTools.forEach { tool ->
             assertThat(INSTRUCTIONS).contains(tool)
         }
+    }
+
+    @Test
+    fun `instructions do not point to Maestro Cloud`() {
+        assertThat(INSTRUCTIONS).doesNotContain("Cloud")
+        assertThat(INSTRUCTIONS).doesNotContain("cloud")
+        assertThat(INSTRUCTIONS).doesNotContain("maestro login")
+        assertThat(INSTRUCTIONS).doesNotContain("MAESTRO_CLOUD_API_KEY")
     }
 }

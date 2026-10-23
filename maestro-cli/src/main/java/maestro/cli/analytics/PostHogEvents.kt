@@ -227,71 +227,6 @@ data class RecordFinishedEvent(
 ) : RecordEvent
 
 /**
- * Cloud Upload Events
- */
-sealed interface CloudUploadEvent : PostHogEvent
-
-data class CloudUploadTriggeredEvent(
-    override val name: String = "cloud_upload_triggered",
-    val projectId: String,
-    val isBinaryUpload: Boolean = false,
-    val usesEnvironment: Boolean = false,
-    val deviceModel: String? = null,
-    val deviceOs: String? = null
-) : CloudUploadEvent
-
-data class CloudUploadStartedEvent(
-    override val name: String = "cloud_upload_started",
-    val projectId: String,
-    val isBinaryUpload: Boolean = false,
-    val usesEnvironment: Boolean = false,
-    val platform: String,
-    val deviceModel: String? = null,
-    val deviceOs: String? = null
-) : CloudUploadEvent
-
-data class CloudUploadSucceededEvent(
-    override val name: String = "cloud_upload_succeeded",
-    val projectId: String,
-    val platform: String,
-    val isBinaryUpload: Boolean,
-    val usesEnvironment: Boolean,
-    val deviceModel: String? = null,
-    val deviceOs: String? = null,
-) : CloudUploadEvent
-
-/**
- * Cloud Run Event
- */
-sealed interface CloudRunEvent : PostHogEvent
-
-data class CloudRunFinishedEvent(
-    override val name: String = "cloud_run_finished",
-    val projectId: String,
-    val appPackageId: String,
-    val totalFlows: Number,
-    val totalPassedFlows: Number,
-    val totalFailedFlows: Number,
-    val wasAppLaunched: Boolean
-) : CloudRunEvent
-
-/**
- * User Auth Event
- */
-
-sealed interface AuthEvent : PostHogEvent
-
-data class UserAuthenticatedEvent(
-    override val name: String = "user_authenticated",
-    val isFirstAuth: Boolean,
-    val authMethod: String,
-) : AuthEvent
-
-data class UserLoggedOutEvent(
-  override val name: String = "user_logged_out",
-) : AuthEvent
-
-/**
  * Print Hierarchy Events
  */
 sealed interface PrintHierarchyEvent : PostHogEvent
@@ -308,23 +243,3 @@ data class PrintHierarchyFinishedEvent(
     val durationMs: Long,
     val errorMessage: String? = null
 ) : PrintHierarchyEvent
-
-/**
- * Trial Events
- */
-sealed interface TrialEvent : PostHogEvent
-
-data class TrialStartPromptedEvent(
-    override val name: String = "trial_start_prompted",
-) : TrialEvent
-
-data class TrialStartedEvent(
-    override val name: String = "trial_started",
-    val companyName: String,
-) : TrialEvent
-
-data class TrialStartFailedEvent(
-    override val name: String = "trial_start_failed",
-    val companyName: String,
-    val failureReason: String,
-) : TrialEvent

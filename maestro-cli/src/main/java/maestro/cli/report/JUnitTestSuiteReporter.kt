@@ -30,17 +30,10 @@ class JUnitTestSuiteReporter(
         time = suite.duration?.toDouble(DurationUnit.SECONDS)?.toString(),
         timestamp = suite.startTime?.let { millisToCurrentLocalDateTime(it, zoneId) },
         tests = suite.flows.size,
-        properties = buildList {
-            suite.cloudUploadId?.let { add(Property("cloud.uploadId", it)) }
-            suite.cloudUploadUrl?.let { add(Property("cloud.url", it)) }
-        }.takeIf { it.isNotEmpty() },
         testCases = suite.flows
             .map { flow ->
                 // Combine flow properties and tags into a single properties list
                 val allProperties = mutableListOf<Property>()
-
-                flow.cloudRunId?.let { allProperties.add(Property("cloud.runId", it)) }
-                flow.cloudRunUrl?.let { allProperties.add(Property("cloud.runUrl", it)) }
 
                 // Add custom properties (excluding JUnit-specific reserved keys)
                 flow.properties?.filterKeys { it !in JUNIT_RESERVED_PROPERTY_KEYS }?.forEach { (key, value) ->

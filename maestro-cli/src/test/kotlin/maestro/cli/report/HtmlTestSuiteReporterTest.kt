@@ -319,31 +319,4 @@ class HtmlTestSuiteReporterTest : TestSuiteReporterTest() {
         assertThat(resultStr).doesNotContain("Start Time:")
         assertThat(resultStr).doesNotContain("<time")
     }
-
-    @Test
-    fun `HTML - Cloud run is rendered as a hyperlink, not a property row`() {
-        // Given
-        val testee = HtmlTestSuiteReporter(detailed = false, zoneId = testZoneId)
-        val sink = Buffer()
-
-        // When
-        testee.report(
-            summary = testWithCloudMetadata,
-            out = sink
-        )
-        val resultStr = sink.readUtf8()
-
-        // Then
-        assertThat(resultStr).contains("Maestro Cloud run:")
-        assertThat(resultStr).contains(
-            """<a href="https://app.maestro.dev/project/proj_1/maestro-test/flow/run-987" target="_blank" rel="noopener noreferrer">run-987</a>"""
-        )
-        assertThat(resultStr).contains("View details on Maestro Cloud:")
-        assertThat(resultStr).contains(
-            """<a href="https://app.maestro.dev/project/proj_1/maestro-test/app/app_1/upload/abc123" target="_blank" rel="noopener noreferrer">abc123</a>"""
-        )
-        assertThat(resultStr).doesNotContain("cloudRunUrl")
-        assertThat(resultStr).doesNotContain("cloudRunId")
-        assertThat(resultStr).doesNotContain("Properties")
-    }
 }

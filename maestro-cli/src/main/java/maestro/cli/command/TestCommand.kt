@@ -47,20 +47,13 @@ import maestro.cli.runner.TestSuiteInteractor
 import maestro.cli.runner.resultview.AnsiResultView
 import maestro.cli.runner.resultview.PlainTextResultView
 import maestro.cli.session.MaestroSessionManager
-import maestro.cli.util.CiUtils
 import maestro.cli.util.isPortAvailable
 import maestro.cli.util.EnvUtils
 import maestro.cli.util.FileUtils.isWebFlow
 import maestro.cli.util.PrintUtils
 import maestro.cli.insights.TestAnalysisManager
-import maestro.cli.view.greenBox
 import maestro.cli.view.box
-import maestro.cli.view.green
-import maestro.cli.api.ApiClient
-import maestro.cli.auth.Auth
 import maestro.cli.model.FlowStatus
-import maestro.cli.view.cyan
-import maestro.cli.promotion.PromotionStateManager
 import maestro.orchestra.error.ValidationError
 import maestro.orchestra.workspace.WorkspaceExecutionPlanner
 import maestro.orchestra.workspace.WorkspaceExecutionPlanner.ExecutionPlan
@@ -71,7 +64,6 @@ import picocli.CommandLine
 import picocli.CommandLine.Option
 import java.io.File
 import java.nio.file.Path
-import java.time.LocalDate
 import java.net.ServerSocket
 import java.util.concurrent.Callable
 import kotlin.io.path.absolutePathString
@@ -193,15 +185,8 @@ class TestCommand : Callable<Int> {
     )
     private var analyze: Boolean = false
 
-    @Option(names = ["--api-url"], description = ["[Beta] API base URL"])
-    private var apiUrl: String = "https://api.copilot.mobile.dev"
-
-    @Option(names = ["--api-key"], description = ["[Beta] API key"])
+    @Option(names = ["--api-key"], description = ["[Beta] API key for --analyze"])
     private var apiKey: String? = null
-
-    private val client: ApiClient = ApiClient(baseUrl = apiUrl)
-    private val auth: Auth = Auth(client)
-    private val authToken: String? = auth.getAuthToken(apiKey, triggerSignIn = false)
 
     @Option(
         names = ["--reinstall-driver"],
@@ -428,11 +413,6 @@ class TestCommand : Callable<Int> {
         }
         message?.let { PrintUtils.info(it) }
 
-        // Show cloud promotion message if there are more than 5 tests (at most once per day)
-        if (flowCount > 5) {
-            showCloudFasterResultsPromotionMessageIfNeeded()
-        }
-
         val results = (0 until effectiveShards).map { shardIndex ->
             async(Dispatchers.IO + CoroutineName("shard-$shardIndex")) {
                 runShardSuite(
@@ -449,15 +429,10 @@ class TestCommand : Callable<Int> {
         val total = results.sumOf { it.second ?: 0 }
         val suites = results.mapNotNull { it.third }
 
-        // Show cloud debug promotion message if there are failures
-        if (passed != total) {
-            showCloudDebugPromotionMessageIfNeeded()
-        }
-
         suites.mergeSummaries()?.saveReport()
 
         if (effectiveShards > 1) printShardsMessage(passed, total, suites)
-        if (analyze) TestAnalysisManager(apiUrl = apiUrl, apiKey = apiKey).runAnalysis(debugOutputPath)
+        if (analyze) TestAnalysisManager(apiKey = apiKey).runAnalysis(debugOutputPath)
         if (passed == total) 0 else 1
     }
 
@@ -520,9 +495,8 @@ class TestCommand : Callable<Int> {
                         device,
                         flowFile,
                         env,
-                        analyze,
-                        authToken,
-                        deviceId,
+                        analyze = analyze,
+                        deviceId = deviceId,
                     )
                 } else {
                     runSingleFlow(maestro, device, flowFile, debugOutputPath, deviceId)
@@ -571,7 +545,6 @@ class TestCommand : Callable<Int> {
             resultView = resultView,
             debugOutputPath = debugOutputPath,
             analyze = analyze,
-            apiKey = authToken,
             deviceId = deviceId,
         )
         val duration = System.currentTimeMillis() - startTime
@@ -705,55 +678,5 @@ class TestCommand : Callable<Int> {
             passedCount = sumOf { it.passedCount ?: 0 },
             totalTests = sumOf { it.totalTests ?: 0 },
         )
-    }
-
-    private fun showCloudFasterResultsPromotionMessageIfNeeded() {
-        // Don't show in CI environments
-        if (CiUtils.getCiProvider() != null) {
-            return
-        }
-        
-        val promotionStateManager = PromotionStateManager()
-        val today = LocalDate.now().toString()
-        
-        // Don't show if already shown today
-        if (promotionStateManager.getLastShownDate("fasterResults") == today) {
-            return
-        }
-        
-        // Don't show if user has used cloud command within last 3 days
-        if (promotionStateManager.wasCloudCommandUsedWithinDays(3)) {
-            return
-        }
-        
-        val command = "maestro cloud app_file flows_folder/"
-        val message = "Get results faster by ${"executing flows in parallel".cyan()} on Maestro Cloud virtual devices. Run: \n${command.green()}"
-        PrintUtils.info(message.greenBox())
-        promotionStateManager.setLastShownDate("fasterResults", today)
-    }
-
-    private fun showCloudDebugPromotionMessageIfNeeded() {
-        // Don't show in CI environments
-        if (CiUtils.getCiProvider() != null) {
-            return
-        }
-        
-        val promotionStateManager = PromotionStateManager()
-        val today = LocalDate.now().toString()
-
-        // Don't show if already shown today
-        if (promotionStateManager.getLastShownDate("debug") == today) {
-          return
-        }
-
-        // Don't show if user has used cloud command within last 3 days
-        if (promotionStateManager.wasCloudCommandUsedWithinDays(3)) {
-          return
-        }
-        
-        val command = "maestro cloud app_file flows_folder/"
-        val message = "Debug tests faster by easy access to ${"test recordings, maestro logs, screenshots, and more".cyan()}.\n\nRun your flows on Maestro Cloud:\n${command.green()}"
-        PrintUtils.info(message.greenBox())
-        promotionStateManager.setLastShownDate("debug", today)
     }
 }

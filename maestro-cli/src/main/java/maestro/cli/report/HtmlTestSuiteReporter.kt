@@ -154,19 +154,6 @@ class HtmlTestSuiteReporter(
                                                     }
                                                 }
                                                 
-                                                val runId = flow.cloudRunId
-                                                val runUrl = flow.cloudRunUrl
-                                                if (runId != null && runUrl != null) {
-                                                    p(classes = "card-text") {
-                                                        b { +"Maestro Cloud run: " }
-                                                        a(href = runUrl) {
-                                                            attributes["target"] = "_blank"
-                                                            attributes["rel"] = "noopener noreferrer"
-                                                            +runId
-                                                        }
-                                                    }
-                                                }
-
                                                 // Display properties if present
                                                 if (!flow.properties.isNullOrEmpty()) {
                                                     h6(classes = "mt-3 mb-2") { +"Properties" }
@@ -239,27 +226,6 @@ class HtmlTestSuiteReporter(
                                 src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js",
                                 content = ""
                             )
-                        }
-                    }
-                    val cloudSuite = summary.suites.firstOrNull()
-                    val uploadId = cloudSuite?.cloudUploadId
-                    val uploadUrl = cloudSuite?.cloudUploadUrl
-                    if (cloudSuite != null && uploadId != null && uploadUrl != null) {
-                        div(classes = "px-3 pb-3") {
-                            div(classes = "alert alert-info mb-0") {
-                                b { +"View details on Maestro Cloud: " }
-                                a(href = uploadUrl) {
-                                    attributes["target"] = "_blank"
-                                    attributes["rel"] = "noopener noreferrer"
-                                    +uploadId
-                                }
-                                cloudSuite.appBinaryId?.let { binaryId ->
-                                    br {}
-                                    br {}
-                                    b { +"App binary id: " }
-                                    span(classes = "font-monospace") { +binaryId }
-                                }
-                            }
                         }
                     }
                 }

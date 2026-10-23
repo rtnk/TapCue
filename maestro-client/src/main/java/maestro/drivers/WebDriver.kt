@@ -45,8 +45,7 @@ import java.util.*
 private const val SYNTHETIC_COORDINATE_SPACE_OFFSET = 100000
 
 class WebDriver(
-    val isStudio: Boolean,
-    isHeadless: Boolean = isStudio,
+    isHeadless: Boolean = false,
     screenSize: String?,
     private val seleniumFactory: SeleniumFactory = ChromeSeleniumFactory(isHeadless = isHeadless, screenSize)
 ) : Driver {
@@ -84,10 +83,6 @@ class WebDriver(
             // implementations of Selenium do not support DevTools and do not
             // fail gracefully; CDP version mismatches surface as Errors that
             // would otherwise escape a plain Exception catch.
-        }
-
-        if (isStudio) {
-            seleniumDriver?.get("https://maestro.mobile.dev")
         }
     }
 
