@@ -6,7 +6,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import org.junit.jupiter.api.Assertions.*
 import io.mockk.spyk
-import maestro.cli.api.CliVersion
+import maestro.cli.util.CliVersion
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File

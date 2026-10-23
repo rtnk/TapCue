@@ -1,6 +1,6 @@
 # Audyt licencji — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Wersja: **2 (STEP-02, Remove Remote AI)**. Baseline: upstream `v2.11.0` (`c8c361be`); opisy źródeł odnoszą się do baseline.
+Wersja: **3 (STEP-03, Remove telemetry, error upload and update checks)**. Baseline: upstream `v2.11.0` (`c8c361be`); opisy źródeł odnoszą się do baseline.
 Status audytu: **OTWARTY — Release zablokowany** (gate G-3 w `ROADMAP-0.1.md`).
 
 > Ten dokument jest analizą techniczną wykonaną na potrzeby projektu, a nie poradą prawną.
@@ -59,8 +59,9 @@ Artefakty z bibliotekami natywnymi (do listy dozwolonych w `verify-dist.sh`):
 | `org.graalvm.truffle:truffle-api:24.2.0` | `libtruffleattach.*` | UPL-1.0 |
 | `org.seleniumhq.selenium:selenium-manager:4.43.0` | binaria `selenium-manager` (Linux/macOS/Windows) — **potrafią pobierać przeglądarki i sterowniki** (N-26) | Apache-2.0 — decyzja D-4 (usunąć z runtime, jeśli web wyłączony) |
 
-Do usunięcia razem z funkcjami (nie wejdą do paczki 0.1.0): `com.posthog:posthog-server`, `com.posthog:posthog`
-(STEP-03), komponenty Viewera/simulator-server (STEP-00B/04). Moduł `maestro-ai` **usunięty w STEP-02**; razem z nim
+Do usunięcia razem z funkcjami (nie wejdą do paczki 0.1.0): komponenty Viewera/simulator-server (STEP-00B/04).
+`com.posthog:posthog-server` i `com.posthog:posthog` **usunięte w STEP-03** (wpis `posthog` usunięty z `libs.versions.toml`
+i `maestro-cli/build.gradle.kts`; zmiana `runtimeClasspath` CLI — handover STEP-03 §2). Moduł `maestro-ai` **usunięty w STEP-02**; razem z nim
 z `runtimeClasspath` CLI zniknęło tylko `com.github.ajalt.clikt:clikt(-jvm):4.2.2` (używane wyłącznie przez demo `maestro-ai`;
 wpis usunięty też z `libs.versions.toml`) — porównanie `./gradlew :maestro-cli:dependencies --configuration runtimeClasspath`
 `main` vs gałąź STEP-02.
@@ -74,7 +75,7 @@ Wariant platformowy paczki macOS arm64: skiko ładuje bibliotekę dla bieżącej
 |---|---|---|
 | `deps/simulator-server/**`, `simulator-server*`, pliki o nazwach z `simulator-server-releases` | L-01 | 00B (JAR CLI: `CliJarContentsTest`) |
 | `mcp-viewer/**` | Viewer zależny od L-01 | 00B (JAR CLI: `CliJarContentsTest`) |
-| `com/posthog/**` | telemetria | 03 |
+| `com/posthog/**` | telemetria | 03 (CLI: `NoTelemetryTest` — klasy i classpath; JAR-y dystrybucji sprawdzone ręcznie w PR-03) |
 | `maestro/ai/**`, `ai_report.css`, `tailwind.config.js` | zdalne AI | 02 (CLI: `NoRemoteAiTest` — klasy, zasoby, classpath; JAR-y dystrybucji sprawdzone ręcznie w PR-02) |
 | `truffle-enterprise*.jar`, `com/oracle/truffle/enterprise/**` (wzorzec do potwierdzenia) | L-03 (do decyzji D-6) | 05 |
 | `driver-iPhoneSimulator/**/*.zip`, `driver-iphoneos/**/*.zip` | L-04 (do decyzji D-5) | 05 |

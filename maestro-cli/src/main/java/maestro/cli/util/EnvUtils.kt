@@ -2,9 +2,6 @@ package maestro.cli.util
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import maestro.cli.api.CliVersion
-import maestro.cli.update.Updates
-import maestro.cli.view.red
 import maestro.device.CPU_ARCHITECTURE
 import java.io.IOException
 import java.nio.file.Path
@@ -14,24 +11,11 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 object EnvUtils {
-    private const val PROD_API_URL = "https://api.copilot.mobile.dev"
-
     val OS_NAME: String = System.getProperty("os.name")
     val OS_ARCH: String = System.getProperty("os.arch")
     val OS_VERSION: String = System.getProperty("os.version")
 
     val CLI_VERSION: CliVersion? = getCLIVersion()
-
-    fun getVersion(): CliVersion? {
-        return getCLIVersion().apply {
-            if (this == null) {
-                System.err.println("\nWarning: Failed to parse current version".red())
-            }
-        }
-    }
-
-    val BASE_API_URL: String
-        get() = System.getenv("MAESTRO_API_URL") ?: PROD_API_URL
 
     fun xdgStateHome(): Path {
         if (System.getenv("XDG_STATE_HOME") != null) {
@@ -122,7 +106,7 @@ object EnvUtils {
 
     fun getCLIVersion(): CliVersion? {
         val props = try {
-            Updates::class.java.classLoader.getResourceAsStream("version.properties").use {
+            EnvUtils::class.java.classLoader.getResourceAsStream("version.properties").use {
                 Properties().apply { load(it) }
             }
         } catch (e: Exception) {

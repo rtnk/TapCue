@@ -32,6 +32,36 @@ class CliJarContentsTest {
     }
 
     @Test
+    fun `CLI jar references no telemetry, update or CDN hosts`() {
+        // STEP-03: hosts of removed telemetry, error/screen reports, update checks, changelog and
+        // samples downloads, and the CDN the HTML report used to load Bootstrap from.
+        val forbiddenHosts = listOf(
+            "posthog.com",
+            "api.copilot.mobile.dev",
+            "raw.githubusercontent.com/mobile-dev-inc",
+            "storage.googleapis.com/mobile.dev",
+            "get.maestro.mobile.dev",
+            "cdn.jsdelivr.net",
+        )
+        // N-15: `cheat_sheet` still fetches from api.copilot.mobile.dev until STEP-04.
+        val knownUntilStep04 = listOf("maestro/cli/mcp/tools/CheatSheetTool")
+
+        val jar = File(System.getProperty("maestro.cli.jar"))
+        val hits = ZipFile(jar).use { zip ->
+            zip.entries().asSequence()
+                .filter { !it.isDirectory }
+                .filter { entry -> knownUntilStep04.none { entry.name.startsWith(it) } }
+                .flatMap { entry ->
+                    val content = zip.getInputStream(entry).use { String(it.readBytes(), Charsets.ISO_8859_1) }
+                    forbiddenHosts.filter { content.contains(it) }.map { "${entry.name}: $it" }
+                }
+                .toList()
+        }
+
+        assertThat(hits).isEmpty()
+    }
+
+    @Test
     fun `runtime classpath has no simulator-server or Viewer resources`() {
         val classLoader = CliJarContentsTest::class.java.classLoader
 

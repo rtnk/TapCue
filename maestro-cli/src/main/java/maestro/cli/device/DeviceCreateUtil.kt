@@ -110,40 +110,28 @@ object DeviceCreateUtil {
             )
         }
 
-        // The spec is respected as-is. If its image is not installed and this host's SDK offers a
-        // different one for the os (API 37 only publishes minor-versioned ps16k images), fail and
-        // name the exact --device-os to use rather than silently substituting.
+        // The spec is respected as-is. If its image is not installed but another installed image
+        // matches the os (API 37 only publishes minor-versioned ps16k images), fail and name the
+        // exact --device-os to use rather than silently substituting. Images are never downloaded
+        // here: that would reach Google's SDK repository, so installing one is left to the user.
         val systemImage = deviceSpec.systemImage
         if (!DeviceService.isAndroidSystemImageInstalled(systemImage)) {
-            val offered = DeviceService.resolveSystemImage(deviceSpec.os, deviceSpec.cpuArchitecture)
-            if (offered != null && offered != systemImage) {
+            val installed = DeviceService.resolveSystemImage(deviceSpec.os, deviceSpec.cpuArchitecture)
+            if (installed != null && installed != systemImage) {
                 throw CliError(
                     """
-                    System image $systemImage is not available for ${deviceSpec.os}. The Android SDK offers $offered instead.
-                    Re-run with: --device-os $offered
+                    System image $systemImage is not installed. An installed image for ${deviceSpec.os} is $installed.
+                    Re-run with: --device-os $installed
                     """.trimIndent()
                 )
             }
-            PrintUtils.err("The required system image $systemImage is not installed.")
-
-            PrintUtils.message("Would you like to install it? y/n")
-            val r = readlnOrNull()?.lowercase()
-            if (r == "y" || r == "yes") {
-                PrintUtils.message("Attempting to install $systemImage via Android SDK Manager...\n")
-                if (!DeviceService.installAndroidSystemImage(systemImage)) {
-                    val message = """
-                        Unable to install required dependencies. You can install the system image manually by running this command:
-                        ${DeviceService.getAndroidSystemImageInstallCommand(systemImage)}
-                    """.trimIndent()
-                    throw CliError(message)
-                }
-            } else {
-                val message = """
-                    To install the system image manually, you can run this command:
-                    ${DeviceService.getAndroidSystemImageInstallCommand(systemImage)}
+            throw CliError(
+                """
+                The required system image $systemImage is not installed, and Maestro does not download system images.
+                To install it yourself, run:
+                ${DeviceService.getAndroidSystemImageInstallCommand(systemImage)}
                 """.trimIndent()
-                throw CliError(message)
-            }
+            )
         }
 
         PrintUtils.message("Attempting to create Android emulator: ${deviceSpec.deviceName} ")

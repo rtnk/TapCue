@@ -5,7 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.verify
-import maestro.cli.api.CliVersion
+import maestro.cli.util.CliVersion
 import maestro.cli.util.EnvUtils
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test

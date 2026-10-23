@@ -1,7 +1,6 @@
 package maestro.cli
 
 import com.google.common.truth.Truth.assertThat
-import maestro.cli.api.ApiClient
 import maestro.cli.command.TestCommand
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -129,7 +128,7 @@ class LocalOnlyCliTest {
         }
         assertThat(fieldValues).containsNoneOf(storedToken, envToken)
         assertThat(TestCommand::class.java.declaredFields.map { it.type.name })
-            .containsNoneOf(ApiClient::class.java.name, "maestro.cli.auth.Auth")
+            .containsNoneOf("maestro.cli.api.ApiClient", "maestro.cli.auth.Auth")
         assertThat(requestedUris).isEmpty()
     }
 
@@ -167,24 +166,10 @@ class LocalOnlyCliTest {
     }
 
     @Test
-    fun `ApiClient has no Cloud endpoints`() {
-        val methods = ApiClient::class.java.declaredMethods.map { it.name }
-
-        assertThat(methods).containsNoneOf(
-            "upload",
-            "uploadStatus",
-            "render",
-            "getRenderState",
-            "listCloudDevices",
-            "getAuthUrl",
-            "exchangeToken",
-            "isAuthTokenValid",
-            "getUser",
-            "getOrg",
-            "getOrgs",
-            "switchOrg",
-            "getProjects",
-            "describeRun",
-        )
+    fun `the API client is gone`() {
+        // STEP-01 removed its Cloud endpoints, STEP-02 `analyze`, STEP-03 the remaining
+        // error, screen and version reports together with the class itself.
+        assertThrows<ClassNotFoundException> { Class.forName("maestro.cli.api.ApiClient") }
+        assertThrows<ClassNotFoundException> { Class.forName("maestro.cli.api.SystemInformationInterceptor") }
     }
 }

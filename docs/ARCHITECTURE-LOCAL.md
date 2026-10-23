@@ -114,3 +114,14 @@ Zasady architektoniczne:
   „AI Command Not Available” w `MaestroFlowParser`, przed wykonaniem flow), brak `--analyze`/`--api-key`,
   `TestAnalysisManager`, raportu AI i `ApiClient.analyze` w CLI. `ChatCommand` (ukryte `maestro chat`, w upstream
   już wyłącznie komunikat bez sieci) zostaje bez zmian.
+- STEP-03 (Remove telemetry, error upload and update checks): punkty styku nr 1 i 3 z §2 usunięte. `App.main()`
+  nie ma już analityki (komunikat o zgodzie, `analytics.json`, zdarzenia PostHog), `ErrorReporter`, sprawdzania wersji
+  ani changelogu; obsługa błędów komend (wydzielona do `createCommandLine()`) pisze komunikat i stack trace tylko na
+  stderr. `MaestroSessionManager` nie wysyła `ScreenReporter.reportMaxDepth()` w shutdown hooku. Usunięte: pakiety
+  `analytics/`, `update/`, `api/` (cały `ApiClient` z `SystemInformationInterceptor`; `CliVersion` →
+  `maestro.cli.util`), `EnvUtils.BASE_API_URL`, `DownloadSamplesCommand` z `FileDownloader`, zależność
+  `com.posthog:posthog-server`. Raport HTML ma CSS i skrypt inline (otwiera się offline). `start-device` nie pobiera
+  obrazów systemu Android (tylko zainstalowane; brak obrazu → komunikat z poleceniem `sdkmanager`). Lokalne logi
+  (`maestro.log`, `DebugLogStore`) i raporty bez zmian. Katalog stanu bez zmian (`~/.maestro` /
+  `$XDG_STATE_HOME/maestro`) — D-2 nierozstrzygnięta. Pozostałe ruchy zewnętrzne hosta: `cheat_sheet` (N-15, STEP-04),
+  JS `http.*` i platforma web (STEP-03B).

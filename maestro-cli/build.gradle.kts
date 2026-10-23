@@ -165,7 +165,6 @@ dependencies {
     implementation(project(":maestro-ios-driver"))
     implementation(libs.apk.parser)
     implementation(libs.dd.plist)
-    implementation(libs.posthog)
     implementation(libs.dadb)
     implementation(libs.picocli)
     implementation(libs.jackson.core.databind)

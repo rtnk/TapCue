@@ -31,7 +31,6 @@ import maestro.cli.device.PickDeviceInteractor
 import maestro.device.Platform
 import maestro.utils.CliInsights
 import maestro.cli.report.TestDebugReporter
-import maestro.cli.util.ScreenReporter
 import maestro.drivers.AndroidDriver
 import maestro.drivers.IOSDriver
 import maestro.orchestra.WorkspaceConfig.PlatformConfiguration
@@ -118,7 +117,6 @@ object MaestroSessionManager {
         Runtime.getRuntime().addShutdownHook(thread(start = false) {
             heartbeatFuture.cancel(true)
             SessionStore.default.delete(sessionId, selectedDevice.platform, effectiveDeviceId)
-            runCatching { ScreenReporter.reportMaxDepth() }
             if (SessionStore.default.shouldCloseSession(selectedDevice.platform, effectiveDeviceId)) {
                 session.close()
             }

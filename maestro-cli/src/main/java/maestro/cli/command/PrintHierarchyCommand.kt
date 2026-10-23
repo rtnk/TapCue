@@ -27,9 +27,6 @@ import maestro.cli.App
 import maestro.cli.CliError
 import maestro.cli.DisableAnsiMixin
 import maestro.cli.ShowHelpMixin
-import maestro.cli.analytics.Analytics
-import maestro.cli.analytics.PrintHierarchyFinishedEvent
-import maestro.cli.analytics.PrintHierarchyStartedEvent
 import maestro.cli.report.TestDebugReporter
 import maestro.cli.session.MaestroSessionManager
 import maestro.cli.view.yellow
@@ -104,10 +101,6 @@ class PrintHierarchyCommand : Runnable {
             printToConsole = parent?.verbose == true,
         )
 
-        val platform = parent?.platform ?: "unknown"
-        val startTime = System.currentTimeMillis()
-        Analytics.trackEvent(PrintHierarchyStartedEvent(platform = platform))
-
         val effectiveDeviceId: String? = when {
             parent?.deviceId != null -> parent.deviceId
             deviceIndex != null -> null
@@ -175,14 +168,6 @@ class PrintHierarchyCommand : Runnable {
 
             print(outputContent)
         }
-
-        val duration = System.currentTimeMillis() - startTime
-        Analytics.trackEvent(PrintHierarchyFinishedEvent(
-            platform = platform,
-            success = true,
-            durationMs = duration
-        ))
-        Analytics.flush()
     }
 
     private fun processTreeToCSV(

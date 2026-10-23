@@ -124,18 +124,25 @@ class DeviceCreateUtilTest {
     }
 
     @Test
-    fun `a missing image the SDK does offer falls through to the install prompt`() {
+    fun `a missing image is not downloaded and the sdkmanager command is shown instead`() {
         val derived = "system-images;android-34;google_apis;$abi"
         every { DeviceService.isAndroidSystemImageInstalled(derived) } returns false
-        every { DeviceService.resolveSystemImage("android-34", EnvUtils.getMacOSArchitecture()) } returns derived
         every { DeviceService.getAndroidSystemImageInstallCommand(derived) } returns "sdkmanager \"$derived\""
         val spec = specFromCli("--platform", "android", "--device-os", "android-34") as DeviceSpec.Android
 
-        // No stdin in tests, so the prompt reads as "no" and the manual install command is shown.
         val error = assertThrows<CliError> { DeviceCreateUtil.getOrCreateAndroidDevice(spec, forceCreate = false) }
 
+        assertThat(error.message).contains("is not installed")
         assertThat(error.message).contains("sdkmanager \"$derived\"")
         assertThat(error.message).doesNotContain("--device-os")
+        verify(exactly = 0) { DeviceService.createAndroidDevice(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `DeviceService cannot install system images`() {
+        // STEP-03: start-device never downloads system images (docs/NETWORK-AUDIT.md N-24).
+        assertThat(DeviceService::class.java.declaredMethods.map { it.name })
+            .doesNotContain("installAndroidSystemImage")
     }
 
     @Test
