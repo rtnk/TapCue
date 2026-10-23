@@ -1,6 +1,6 @@
 # ROADMAP 0.1.0 — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Status dokumentu: **STEP-00 — w review (PR-00)**. Ostatnia aktualizacja: 2026-10-23.
+Status dokumentu: **STEP-00 — w review ([PR-00 #1](https://github.com/rtnk/TapCue/pull/1))**. Ostatnia aktualizacja: 2026-10-23.
 
 ## 0. Punkt wyjścia
 

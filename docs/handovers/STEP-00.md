@@ -3,7 +3,7 @@
 | Pole | Wartość |
 |---|---|
 | Krok | STEP-00 — **zakończony, w review** |
-| PR | PR-00: _link uzupełniany po utworzeniu PR_ |
+| PR | PR-00: https://github.com/rtnk/TapCue/pull/1 |
 | Gałąź | `step-00-baseline-plan` |
 | Gałąź docelowa | `main` |
 | Baza | `main` @ `6592abd3142e374a48ec52c80829b6c70ff0a546` (upstream `v2.11.0` `c8c361be` + bootstrap) |
