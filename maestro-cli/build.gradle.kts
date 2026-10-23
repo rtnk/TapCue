@@ -1,13 +1,6 @@
 import org.jreleaser.model.Active.ALWAYS
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.jreleaser.model.Stereotype
-import org.gradle.language.jvm.tasks.ProcessResources
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
-import java.security.MessageDigest
-import java.util.Locale
 import java.util.Properties
 
 @Suppress("DSL_SCOPE_VIOLATION")
@@ -223,112 +216,11 @@ dependencies {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
-}
-
-val mcpViewerDir = layout.projectDirectory.dir("mcp-viewer")
-val simulatorServerSha = libs.versions.simulatorServer.get()
-val simulatorServerGeneratedDir = layout.buildDirectory.dir("generated/simulator-server")
-
-val downloadSimulatorServer = tasks.register("downloadSimulatorServer") {
-    val sha = simulatorServerSha
-    val outDir = simulatorServerGeneratedDir.get().asFile
-    inputs.property("sha", sha)
-    outputs.dir(outDir)
-
-    doLast {
-        val tag = "simulator-server-$sha"
-        val baseUrl = "https://github.com/mobile-dev-inc/simulator-server-releases/releases/download/$tag"
-        val http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build()
-
-        fun download(assetName: String): ByteArray {
-            val req = HttpRequest.newBuilder(URI.create("$baseUrl/$assetName"))
-                .header("User-Agent", "maestro-cli-build")
-                .GET()
-                .build()
-            val resp = http.send(req, HttpResponse.BodyHandlers.ofByteArray())
-            check(resp.statusCode() == 200) {
-                "Failed to download $assetName from simulator-server-releases (HTTP ${resp.statusCode()}). " +
-                    "Check that release $tag exists with the expected assets."
-            }
-            return resp.body()
-        }
-
-        val sums = String(download("SHA256SUMS"), Charsets.UTF_8)
-            .lineSequence()
-            .mapNotNull { line ->
-                val parts = line.trim().split(Regex("\\s+"), limit = 2)
-                if (parts.size == 2 && parts[0].length == 64) parts[1] to parts[0].lowercase() else null
-            }
-            .toMap()
-
-        val platforms = listOf(
-            Triple("darwin", "simulator-server-$sha-darwin-universal.tar.gz", "targz"),
-            Triple("linux", "simulator-server-$sha-linux-x86_64.tar.gz", "targz"),
-            Triple("windows", "simulator-server-$sha-windows-x86_64.zip", "zip"),
-        )
-
-        outDir.deleteRecursively()
-        val depsRoot = outDir.resolve("deps/simulator-server").apply { mkdirs() }
-
-        platforms.forEach { (platform, assetName, kind) ->
-            val expected = sums[assetName]
-                ?: error("SHA256SUMS in release $tag has no entry for $assetName")
-            val bytes = download(assetName)
-            val actual = MessageDigest.getInstance("SHA-256")
-                .digest(bytes)
-                .joinToString("") { "%02x".format(it) }
-            check(actual == expected) {
-                "Checksum mismatch for $assetName: expected $expected, got $actual"
-            }
-
-            val archive = outDir.resolve(assetName).apply { parentFile.mkdirs() }
-            archive.writeBytes(bytes)
-
-            val platformDir = depsRoot.resolve(platform).apply { mkdirs() }
-            copy {
-                from(if (kind == "zip") zipTree(archive) else tarTree(resources.gzip(archive)))
-                into(platformDir)
-            }
-            archive.delete()
-        }
-
-        outDir.resolve("simulator-server-version.txt").writeText(sha)
-    }
-}
-
-val isWindows = System.getProperty("os.name").lowercase(Locale.ROOT).contains("windows")
-val npmCommand = if (isWindows) "npm.cmd" else "npm"
-
-tasks.register<Exec>("installMcpViewerDeps") {
-    workingDir = mcpViewerDir.asFile
-    inputs.file(mcpViewerDir.file("package.json"))
-    inputs.file(mcpViewerDir.file("package-lock.json"))
-        .optional()
-        .withPathSensitivity(PathSensitivity.RELATIVE)
-    outputs.dir(mcpViewerDir.dir("node_modules"))
-    commandLine(npmCommand, "install")
-}
-
-tasks.register<Exec>("buildMcpViewer") {
-    workingDir = mcpViewerDir.asFile
-    val inputFiles = fileTree(mcpViewerDir) {
-        exclude("build", "node_modules")
-    }
-    inputs.files(inputFiles)
-    outputs.file(mcpViewerDir.file("build/raw/index.html"))
-    dependsOn("installMcpViewerDeps")
-    commandLine(npmCommand, "run", "build")
-}
-
-tasks.named<ProcessResources>("processResources") {
-    dependsOn("buildMcpViewer")
-    dependsOn(downloadSimulatorServer)
-    from(mcpViewerDir.dir("build/raw")) {
-        into("mcp-viewer")
-    }
-    from(simulatorServerGeneratedDir) {
-        into("")
-    }
+    // CliJarContentsTest inspects the real JAR: simulator-server and the Viewer frontend must never
+    // be packaged (docs/LICENSE-AUDIT.md L-01).
+    val cliJar = tasks.named<Jar>("jar").flatMap { it.archiveFile }
+    inputs.file(cliJar)
+    systemProperty("maestro.cli.jar", cliJar.get().asFile.absolutePath)
 }
 
 java {

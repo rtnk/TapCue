@@ -103,3 +103,8 @@ Zasady architektoniczne:
   `--analyze`/`--api-key` i parametr `apiKey` w `TestRunner`/`Orchestra` (STEP-02), analityka,
   `ErrorReporter`, `ScreenReporter`, sprawdzanie wersji i reszta `ApiClient` (STEP-03), Viewer
   i `cheat_sheet` (STEP-04).
+- STEP-00B (legal containment): build nie ma tasków `downloadSimulatorServer`, `installMcpViewerDeps`,
+  `buildMcpViewer` (punkt styku nr 6 z §2 usunięty), JAR CLI nie zawiera `deps/simulator-server/**`
+  ani `mcp-viewer/**`. `maestro mcp` nie startuje Viewera (punkt nr 5 rozcięty; `--no-viewer`/`--viewer-port`
+  ukryte no-op), `open_maestro_viewer` niezarejestrowane. Kod Viewera (`mcp/viewer/` — nadal używany przez
+  `RunTool`/`McpMaestroSessionManager` jako wrapper `Orchestra`/`Driver`; `maestro-cli/mcp-viewer/`) — STEP-04.

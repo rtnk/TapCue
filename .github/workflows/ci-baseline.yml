@@ -1,9 +1,10 @@
 # Baseline CI for the fork (STEP-00). Replaced by ci.yml in STEP-06.
 #
-# Runs the upstream unit test suite without ever fetching or packaging
-# simulator-server (docs/LICENSE-AUDIT.md L-01) and without building the
-# Viewer frontend that drives it. iOS Swift/XCTest jobs from upstream are
-# not run here: they need macOS runners (see docs/ROADMAP-0.1.md D-9).
+# Runs the unit test suite. Since STEP-00B the build has no tasks that fetch
+# or package simulator-server (docs/LICENSE-AUDIT.md L-01) or build the
+# Viewer frontend that drives it; the guard step below checks the outputs.
+# iOS Swift/XCTest jobs from upstream are not run here: they need macOS
+# runners (see docs/ROADMAP-0.1.md D-9).
 name: CI baseline
 
 on:
@@ -45,11 +46,7 @@ jobs:
         run: ./gradlew :maestro-orchestra:detektMain :maestro-client:detektMain
 
       - name: Unit tests
-        run: >-
-          ./gradlew test --continue
-          -x downloadSimulatorServer
-          -x installMcpViewerDeps
-          -x buildMcpViewer
+        run: ./gradlew test --continue
 
       - name: Guard - no simulator-server or Viewer in build outputs
         if: always()

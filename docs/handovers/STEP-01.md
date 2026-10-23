@@ -2,7 +2,7 @@
 
 | Pole | Wartość |
 |---|---|
-| Krok | STEP-01 — **zakończony, w review** |
+| Krok | STEP-01 — **zakończony, scalony** ([#2](https://github.com/rtnk/TapCue/pull/2), 2026-10-23) |
 | PR | PR-01: https://github.com/rtnk/TapCue/pull/2 |
 | Gałąź | `step-01-remove-cloud-cli` |
 | Gałąź docelowa | `main` |
@@ -77,7 +77,7 @@ bez `maestro-android`, bez `google()`) z jedną dodatkową, niezatwierdzoną zmi
 | Detekt | `./gradlew :maestro-orchestra:detektMain :maestro-client:detektMain` | **PASS** |
 | Strażnik simulator-server | `scripts/fork/check-no-simulator-server.sh` | **PASS** — „OK: no simulator-server or mcp-viewer artifacts”; `maestro-cli/build/generated/simulator-server` nie istnieje |
 | Smoke zbudowanego CLI | `./gradlew :maestro-cli:installDist -x …`; `maestro cloud\|login\|logout\|list-cloud-devices\|studio` z pustym `HOME` | **PASS** — każda: „Unmatched argument at index 0: '…'”, kod 2; `maestro test --help` bez `--api-url`/„cloud”; `HOME` pozostał pusty |
-| `maestro-android`, CI GitHub Actions | `ci-baseline.yml` na PR-01 | wynik w PR (lokalnie NOT RUN — `dl.google.com`) |
+| `maestro-android`, CI GitHub Actions | `ci-baseline.yml` na PR-01, [run 39984039543](https://github.com/rtnk/TapCue/actions/runs/39984039543) na `2d254b5` | **PASS** po jednym ponownym uruchomieniu; pierwsza próba: niestabilny `AdbSocketTimeoutTest > a saturated pool does not starve bounded calls on a separate pool` (kod adb, niezmieniany w PR) |
 | Smoke Android/iOS (`test`, `record` z urządzeniem) | — | **NOT RUN** — brak SDK/Xcode/urządzeń |
 | Swift (`MaestroDriverLib`, XCTest runner) | — | **NOT RUN** — wymaga macOS (D-9); kod Swift nie był zmieniany |
 
@@ -112,6 +112,10 @@ idzie przed STEP-02 (rekomendacja: tak — D-8).
 (lub STEP-00B, jeśli właściciel tak zdecyduje — prompt w `docs/handovers/STEP-00.md` §8, z bazą = `main` po PR-01).
 
 ## 6. PROMPT DLA NASTĘPNEGO AGENTA (STEP-02)
+
+> **Nieaktualne po STEP-00B:** po PR-00B nie ma tasków `downloadSimulatorServer`, `installMcpViewerDeps`,
+> `buildMcpViewer`, więc flagi `-x …` z punktu 4 przerywają build. Aktualny prompt dla STEP-02:
+> `docs/handovers/STEP-00B.md` §6.
 
 ```text
 Jesteś agentem kodującym w repozytorium rtnk/TapCue (fork mobile-dev-inc/Maestro → „Maestro Local”).

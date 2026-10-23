@@ -1,6 +1,6 @@
 # ROADMAP 0.1.0 — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Status dokumentu: **STEP-01 — w review ([PR-01 #2](https://github.com/rtnk/TapCue/pull/2))**; STEP-00 scalony ([PR-00 #1](https://github.com/rtnk/TapCue/pull/1), 2026-10-23). Ostatnia aktualizacja: 2026-10-23.
+Status dokumentu: **STEP-00B — w review ([PR-00B #3](https://github.com/rtnk/TapCue/pull/3))**; STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)) i STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)) scalone 2026-10-23. Ostatnia aktualizacja: 2026-10-23.
 
 ## 0. Punkt wyjścia
 
@@ -42,7 +42,7 @@ objęte licencją L-01 w CI forka. Commit bootstrap jedynie przenosi pliki (wery
 | D-5 | Prekompilowane ZIP-y sterownika iOS zawierają frameworki Apple z Xcode (`XCTest.framework`, `XCUIAutomation.framework`, `XCTestCore`, `XCUnit`, `libXCTestSwiftSupport.dylib`, `libswift_Concurrency.dylib` …) — redystrybucja podlega licencji Xcode/SDK (L-04). | Nie dystrybuować prekompilowanych ZIP; budować runner lokalnie z dołączonego źródła (`xcodebuild`, ścieżka już istnieje w `DriverBuilder`/`LocalXCTestInstaller`) przy pierwszym użyciu iOS. Xcode i tak jest wymagany dla symulatora. Wymaga weryfikacji, że ścieżka „build from source” działa dla symulatora. | STEP-05 |
 | D-6 | GraalJS: `org.graalvm.js:js:24.2.0` dociąga `org.graalvm.truffle:truffle-enterprise` na licencji Oracle GFTC (L-03). | Przejść na artefakty community (UPL): `js-community`/`js-language` + `polyglot`, z wykluczeniem `truffle-enterprise`; regresja testów JS (`GraalJsEngineTest`, `IntegrationTest`). | STEP-05 (najpóźniej); może wejść do STEP-03B |
 | D-7 | JRE w paczce. | 0.1.0: wymagany systemowy JDK/JRE 17+ (jasno w README, launcher sprawdza wersję — mechanizm już istnieje). Paczka **nie** jest nazywana samowystarczalną. Bundle JRE (jlink) — po 0.1.0. | STEP-05 |
-| D-8 | Czy przyjąć proponowany **STEP-00B „Legal containment”** (usunięcie `downloadSimulatorServer`/Viewer z builda przed STEP-01)? | **Tak** — dziś każdy `./gradlew build/test/run` modułu CLI na `main` pobiera i pakuje binaria L-01. **Stan:** właściciel zlecił STEP-01 bezpośrednio po PR-00 (2026-10-23), więc STEP-00B nie poprzedza STEP-01; sam STEP-00B pozostaje otwarty (do wykonania przed STEP-02 albo w ramach STEP-04 — decyzja właściciela). Do tego czasu Gradle wyłącznie z `-x downloadSimulatorServer -x installMcpViewerDeps -x buildMcpViewer`. | kolejność kroków |
+| D-8 | Czy przyjąć proponowany **STEP-00B „Legal containment”** (usunięcie `downloadSimulatorServer`/Viewer z builda przed STEP-01)? | **Tak** — dziś każdy `./gradlew build/test/run` modułu CLI na `main` pobiera i pakuje binaria L-01. **Rozstrzygnięta:** STEP-01 wykonano bezpośrednio po PR-00; STEP-00B właściciel zlecił po merge PR-01 (2026-10-23), przed STEP-02. Po scaleniu PR-00B flagi `-x downloadSimulatorServer …` są zbędne (i błędne — taski nie istnieją). | kolejność kroków |
 | D-9 | Widoczność repozytorium przy wydaniu i koszty runnerów macOS (w repo prywatnym minuty macOS liczone są z mnożnikiem). | Testy macOS arm64 tylko w `release.yml` i ręcznym `workflow_dispatch`; PR-y — Linux. Decyzja o upublicznieniu przed STEP-08. | STEP-06/07/08 |
 
 ## 3. Kroki
@@ -52,9 +52,9 @@ Legenda statusu: `TODO` · `IN PROGRESS` · `IN REVIEW` · `MERGED` · `BLOCKED`
 | Krok | PR | Cel | Zależy od | Status | Szacunek |
 |---|---|---|---|---|---|
 | STEP-00 | PR-00 | Baseline, audyty, plan, bazowy CI | — | MERGED ([#1](https://github.com/rtnk/TapCue/pull/1)) | 1 sesja |
-| STEP-00B *(propozycja, D-8)* | PR-00B | Legal containment: build bez simulator-server i Viewera | PR-00 | TODO (nie poprzedził STEP-01, D-8) | 0,5 sesji |
-| STEP-01 | PR-01 | Remove Cloud CLI | PR-00 (+PR-00B) | IN REVIEW ([#2](https://github.com/rtnk/TapCue/pull/2)) | 1–2 sesje |
-| STEP-02 | PR-02 | Remove Remote AI | PR-01 | TODO | 1–2 sesje |
+| STEP-00B *(D-8)* | PR-00B | Legal containment: build bez simulator-server i Viewera | PR-00 (wykonany po PR-01) | IN REVIEW ([#3](https://github.com/rtnk/TapCue/pull/3)) | 0,5 sesji |
+| STEP-01 | PR-01 | Remove Cloud CLI | PR-00 | MERGED ([#2](https://github.com/rtnk/TapCue/pull/2)) | 1–2 sesje |
+| STEP-02 | PR-02 | Remove Remote AI | PR-01, PR-00B | TODO | 1–2 sesje |
 | STEP-03 | PR-03 | Remove telemetry, error upload, update checks, auto-downloads | PR-02 | TODO | 1 sesja |
 | STEP-03B | PR-03B | Polityka sieci dla funkcji flow (JS `http`, web, `openLink`) | PR-03, D-3, D-4 | TODO | 1 sesja |
 | STEP-04 | PR-04 | Local-only MCP, usunięcie Viewera | PR-03B | TODO | 1–2 sesje |
@@ -76,7 +76,7 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
 - **Bez zmian w kodzie produktu.**
 - **Wyjście:** PR-00 zaakceptowany i scalony; decyzje D-1…D-9 co najmniej przeczytane (D-8 rozstrzygnięta).
 
-### STEP-00B — Legal containment (PR-00B) — *propozycja*
+### STEP-00B — Legal containment (PR-00B)
 
 - **Cel:** żaden build/test/run na `main` nie pobiera, nie pakuje i nie uruchamia simulator-server.
 - **Zakres:**
@@ -89,6 +89,11 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
   - `ci-baseline.yml`: usunąć flagi `-x downloadSimulatorServer …` (stają się zbędne).
 - **Poza zakresem:** pełne usunięcie pakietu `mcp/viewer/` i `maestro-cli/mcp-viewer/` (STEP-04).
 - **Wyjście:** `./gradlew :maestro-cli:build` nie wykonuje żądań do `simulator-server-releases`; test zawartości JAR zielony.
+- **Realizacja (PR-00B, szczegóły w `docs/handovers/STEP-00B.md`):** taski i wersja usunięte; `--no-viewer`
+  i `--viewer-port` zostają jako ukryte no-op (`--viewer-port` → ostrzeżenie na stderr), bo konfiguracje klientów
+  MCP mogą je przekazywać; `Dependencies.installSimulatorServer()` usunięte, `McpViewerServer` (nieosiągalny)
+  zwraca kontrolowany błąd zamiast uruchamiać binarium; `OpenMaestroViewerTool` usunięty. Test:
+  `maestro-cli` `CliJarContentsTest` sprawdza prawdziwy JAR (task `test` zależy od `jar`) i classpath.
 
 ### STEP-01 — Remove Cloud CLI (PR-01)
 
@@ -165,10 +170,12 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
 
 - **Zachować (zweryfikowane nazwy w `v2.11.0`):** `list_devices`, `inspect_screen`, `take_screenshot`, `run`
   (`RunTool.TOOL_NAME = "run"`), `cheat_sheet`.
-- **Usunąć:** `open_maestro_viewer` (narzędzia Cloud `run_on_cloud`, `get_cloud_run_status`,
-  `describe_cloud_run`, `list_cloud_devices` usunięto już w STEP-01); pakiet `mcp/viewer/` (zależności w `RunTool` i `McpMaestroSessionManager` →
-  zwykły `Orchestra`); katalog `maestro-cli/mcp-viewer/`; `Dependencies.installSimulatorServer`,
-  `Unpacker.unpackTree` (jeśli nieużywane); opcje `--no-viewer`/`--viewer-port`.
+- **Usunąć:** pozostałości Viewera (narzędzia Cloud `run_on_cloud`, `get_cloud_run_status`,
+  `describe_cloud_run`, `list_cloud_devices` usunięto już w STEP-01, a `open_maestro_viewer`,
+  `Dependencies.installSimulatorServer` i start Viewera — w STEP-00B); pakiet `mcp/viewer/` (zależności w
+  `RunTool` i `McpMaestroSessionManager` → zwykły `Orchestra`); katalog `maestro-cli/mcp-viewer/` (+ `.nvmrc`);
+  `Unpacker.unpackTree` (nieużywane od STEP-00B); ukryte opcje `--no-viewer`/`--viewer-port` (decyzja: usunąć
+  albo zostawić jako no-op dla zgodności konfiguracji klientów).
 - **`cheat_sheet`:** treść jako wersjonowany zasób w JAR (`resources/mcp/cheat-sheet.md`), napisana dla forka
   na podstawie dokumentacji w repozytorium (bez kopiowania treści o nieznanej licencji z `docs.maestro.dev`).
 - **Instrukcje serwera** (`McpServer.kt`): bez linku do `docs.maestro.dev` (sekcję Cloud usunięto w STEP-01).

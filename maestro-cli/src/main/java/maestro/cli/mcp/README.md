@@ -26,29 +26,10 @@ maestro mcp
 
 This launches the MCP server via the Maestro CLI, exposing Maestro tools over STDIO for LLM agents and other clients.
 
-The command also starts Maestro Viewer as a local HTTP server in the same process and prints its URL to stderr:
-
-```
-mcp_viewer_ready http://127.0.0.1:<port>
-```
-
-Use `maestro mcp --no-viewer` to disable it, or `maestro mcp --viewer-port 9999` to choose a fixed port.
-
-## Viewer development
-
-The viewer is authored as a small React app in `maestro-cli/mcp-viewer` using npm, Vite, and Tailwind CSS v4.
-
-For fast UI iteration without rebuilding the CLI or running the MCP server:
-
-```
-cd maestro-cli/mcp-viewer
-npm install
-npm run dev
-```
-
-For the CLI distribution, Gradle runs `npm run build`, which compiles the React app and inlines the generated JavaScript and CSS into one HTML resource at `maestro-cli/mcp-viewer/build/raw/index.html`.
-
-The viewer accepts lightweight runtime events via `POST /api/events` and streams them to connected browsers with `GET /api/events/stream`. Keep this route payload small and generic until the MCP server and Maestro driver event boundaries are more settled.
+Maestro Local does not start the Maestro Viewer: it depends on the simulator-server binary, which
+may only be distributed with official Maestro releases (`docs/LICENSE-AUDIT.md` L-01). `--no-viewer` and
+`--viewer-port` are still accepted and ignored. The Viewer sources (`maestro-cli/mcp-viewer`,
+`mcp/viewer/`) are no longer built and will be removed in STEP-04.
 
 ## Developing
 

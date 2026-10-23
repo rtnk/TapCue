@@ -3,7 +3,6 @@ package maestro.cli.command
 import picocli.CommandLine
 import java.util.concurrent.Callable
 import maestro.cli.mcp.runMaestroMcpServer
-import maestro.cli.mcp.viewer.McpViewerServer
 import java.io.File
 import maestro.cli.util.WorkingDirectory
 
@@ -20,16 +19,12 @@ class McpCommand : Callable<Int> {
     )
     private var workingDir: File? = null
 
-    @CommandLine.Option(
-        names = ["--no-viewer"],
-        description = ["Do not start the Maestro Viewer HTTP server."]
-    )
+    // The Viewer needs simulator-server, which this fork does not ship (docs/LICENSE-AUDIT.md L-01).
+    // Both flags are still accepted so existing MCP client configurations keep working.
+    @CommandLine.Option(names = ["--no-viewer"], hidden = true)
     private var noViewer: Boolean = false
 
-    @CommandLine.Option(
-        names = ["--viewer-port"],
-        description = ["Port for the Maestro Viewer HTTP server. Defaults to a free local port."]
-    )
+    @CommandLine.Option(names = ["--viewer-port"], hidden = true)
     private var viewerPort: Int? = null
 
     override fun call(): Int {
@@ -37,17 +32,12 @@ class McpCommand : Callable<Int> {
             WorkingDirectory.baseDir = workingDir!!.absoluteFile
         }
 
-        val viewer = if (noViewer) {
-            null
-        } else {
-            McpViewerServer.start(viewerPort)
+        // stderr only: stdout is the MCP JSON-RPC channel.
+        if (viewerPort != null) {
+            System.err.println("Warning: --viewer-port is ignored; the Maestro Viewer is not available in this build.")
         }
 
-        try {
-            runMaestroMcpServer(viewerUrl = viewer?.let { "http://127.0.0.1:${it.port}/" })
-        } finally {
-            viewer?.close()
-        }
+        runMaestroMcpServer()
         return 0
     }
 }
