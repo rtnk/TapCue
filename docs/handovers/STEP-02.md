@@ -3,7 +3,7 @@
 | Pole | Wartość |
 |---|---|
 | Krok | STEP-02 — **zakończony, w review** |
-| PR | PR-02: link w `docs/ROADMAP-0.1.md` §3 i w opisie PR |
+| PR | PR-02: https://github.com/rtnk/TapCue/pull/4 |
 | Gałąź | `step-02-remove-remote-ai` |
 | Gałąź docelowa | `main` |
 | Baza | `main` @ `f08d93a` (merge PR-00B #3) |
