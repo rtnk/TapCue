@@ -1,5 +1,19 @@
 # Changelog
 
+## Maestro Local (fork `rtnk/TapCue`)
+
+Zmiany własne forka. Fork bazuje na upstream `mobile-dev-inc/Maestro` `v2.11.0`
+(`c8c361be1cc89b2e742f185466a302a22778be6b`); historia upstream znajduje się poniżej, bez zmian.
+
+### Unreleased
+
+- Repozytorium: workflowy upstream zaparkowane w `.github/upstream-workflows-disabled/` (nie uruchamiają się w forku).
+- CI: bazowy workflow `ci-baseline.yml` — testy jednostkowe bez pobierania simulator-server i bez budowania Viewera, ze strażnikiem `scripts/fork/check-no-simulator-server.sh`.
+- Dokumentacja: plan `docs/ROADMAP-0.1.md`, audyty `docs/NETWORK-AUDIT.md` i `docs/LICENSE-AUDIT.md`,
+  `docs/ARCHITECTURE-LOCAL.md`, szkic `docs/RELEASING.md`, handover `docs/handovers/STEP-00.md`.
+
+## Upstream Maestro
+
 ## Unreleased
 
 ## 2.11.0
