@@ -357,6 +357,10 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
   `workflow_dispatch` `release.yml` na `main` (run 40115219200 czerwony 2/2 — odczyt logu sandboxa po stałych 2 s nie widział
   odmowy sondy `curl`): `scripts/fork/macos-offline-test.sh` czeka na wpis (do 60 s) i dodaje sondę po komendach TapCue jako
   znacznik nadrobienia logu; `release.yml` bez zmian (osobny commit, decyzja właściciela: poprawka w PR-08).
+  Następnie walidacja na gałęzi PR-08 padła na dwóch testach zależnych od czasu (przeciążone runnery macos-26) — uodpornione
+  w osobnym commicie (`awaitParkedIn` w teście devtools, dłuższe oczekiwanie na `list_devices` w `McpStdioTest`). Walidacja
+  `release.yml` na gałęzi PR-08 ([run 40118756237](https://github.com/rtnk/TapCue/actions/runs/40118756237)) zielona, `reproduce`
+  IDENTICAL, SHA-256 archiwum `e8dd01b0…ddab6ec1`.
 
 ## 4. Gate'y blokujące publikację v0.1.0
 
@@ -365,11 +369,11 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
 | G-1 | PR-00…PR-07 (oraz 00B/03B) scalone | historia `main` | **PASS** — #1…#16 scalone (PR-08 — w review) |
 | G-2 | Zielony CI na `main` | GitHub Actions | **PASS** dla `aeaebc5` (run 40112502799); do powtórzenia na commicie scalenia PR-08 |
 | G-3 | `LICENSE-AUDIT.md` zamknięty: L-01 usunięty, L-03/L-04 rozstrzygnięte, `THIRD-PARTY-NOTICES` kompletne | review + `verify-dist.sh` | **PASS** — decyzje właściciela 2026-10-24, teksty dopisane (§3.6), audyt zamknięty |
-| G-4 | Brak simulator-server i innych zakazanych artefaktów w paczce | `verify-dist.sh` w `release.yml` | **PASS** lokalnie (archiwum 0.1.0) i w CI PR-08; w runie publish — po tagu |
-| G-5 | Test offline (egress) zielony na Linux CI i na macOS arm64 | logi CI / handover STEP-08 | Linux **PASS**; macOS — wymaga zielonego kroku offline w `release.yml` po poprawce (handover STEP-08 §2) |
+| G-4 | Brak simulator-server i innych zakazanych artefaktów w paczce | `verify-dist.sh` w `release.yml` | **PASS** lokalnie (archiwum 0.1.0), w CI PR-08 i w walidacji `release.yml` (run 40118756237); w runie publish — po tagu |
+| G-5 | Test offline (egress) zielony na Linux CI i na macOS arm64 | logi CI / handover STEP-08 | **PASS** — Linux (`egress-test.sh` lokalnie, `ci.yml`, `release.yml`), macOS (krok offline z rejestrem odmów w `release.yml` run 40118756237 i `ci.yml`); `pf` na Macu — NOT RUN |
 | G-6 | Paczka zainstalowana i uruchomiona z pliku pobranego z Release | handover STEP-08 | **NOT RUN** — po publikacji |
 | G-7 | Decyzje D-1, D-2, D-5, D-6, D-7 rozstrzygnięte (2026-10-23) i zrealizowane | ten plik | **PASS** |
-| G-8 | Release notes wymieniają braki pokrycia i nieprzetestowane platformy | Release | **PASS** w notatkach walidacji (`release-notes.py --require-section`); w Release — po publikacji |
+| G-8 | Release notes wymieniają braki pokrycia i nieprzetestowane platformy | Release | **PASS** — `release-notes.py 0.1.0 --require-section` lokalnie, `prepare` bez ostrzeżeń o sekcji; w Release — po publikacji |
 
 ## 5. Testy akceptacyjne produktu
 
