@@ -67,6 +67,16 @@ Zmiany własne forka. Fork bazuje na upstream `mobile-dev-inc/Maestro` `v2.11.0`
   `maestro.js.LocalNetworkPolicy` i parametr `networkPolicy` w `GraalJsEngine`/`GraalJsHttp`.
 - Licencje (STEP-03B): GraalJS z artefaktów community (`js-community`, `js-language`, `polyglot`, UPL) zamiast
   `org.graalvm.js:js`, który dokładał `truffle-enterprise` na licencji Oracle GFTC. Skrypty działają w trybie interpretera.
+- MCP (STEP-04): narzędzie `cheat_sheet` zwraca ściągawkę składni flow dołączoną do CLI (`mcp/cheat-sheet.md`
+  w JAR, napisaną dla Maestro Local) zamiast pobierać ją z API Maestro — działa offline i nie wymaga klucza.
+  Instrukcje serwera MCP nie odsyłają do `docs.maestro.dev`. Narzędzia: `list_devices`, `inspect_screen`,
+  `take_screenshot`, `run`, `cheat_sheet` (bez zmian w nazwach i argumentach).
+- MCP (STEP-04): usunięty kod Maestro Viewera — pakiet `maestro.cli.mcp.viewer` (serwer HTTP Viewera, wrappery
+  `Driver`/`Orchestra` publikujące zdarzenia), frontend `maestro-cli/mcp-viewer/` i `.nvmrc`. `run` korzysta ze zwykłego
+  `Orchestra`. `--no-viewer` i `--viewer-port` nadal są akceptowane i ignorowane (zgodność konfiguracji klientów MCP).
+- Build (STEP-04): CLI nie zależy już od `ktor-server-core`, `ktor-server-netty`, `ktor-server-cors`
+  i `ktor-server-status-pages` (używał ich tylko Viewer); usunięte `Unpacker.unpackTree` (rozpakowywało simulator-server).
+  Netty używany przez gRPC zostaje na 4.1.111.Final (`netty-bom`), bez natywnych transportów epoll/kqueue.
 - Android (poprawka): pula wątków I/O klienta devtools (`newAdbIoExecutor`) nie odrzuca już wywołania jako
   „all 16 adb I/O workers are busy”, gdy wolny worker właśnie kończy poprzednie wywołanie; przy 15 workerach
   zawieszonych na urządzeniu zdarzało się to przy niemal każdym kolejnym wywołaniu. Usuwa też niestabilność

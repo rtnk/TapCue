@@ -75,7 +75,8 @@ Zasady architektoniczne:
   `~/.mobiledev/authtoken`, `$XDG_STATE_HOME/maestro`. Fork zainstalowany obok oficjalnego Maestro
   nie powinien współdzielić tych katalogów ani nazwy pliku wykonywalnego `maestro` (decyzja D-2).
 - **STDIO MCP jest czyste.** `claimMcpStdout()` przekierowuje `System.out` na `stderr` przed
-  inicjalizacją; po usunięciu analityki i update-checka znika najczęstsze źródło zanieczyszczeń.
+  inicjalizacją; po usunięciu analityki i update-checka znika najczęstsze źródło zanieczyszczeń. MCP używa
+  wyłącznie STDIO (bez portu HTTP); `McpStdioTest` sprawdza, że stdout zawiera tylko ramki JSON-RPC.
 - **Dystrybucja bez zamkniętych binariów.** Lista zakazanych artefaktów (simulator-server, Viewer,
   `truffle-enterprise` do czasu decyzji D-6) sprawdzana testem zawartości archiwum.
 
@@ -136,3 +137,11 @@ Zasady architektoniczne:
   Modele `Platform.WEB`/`DeviceSpec.Web`/`WebLocale` zostają (parsowanie istniejących plików), a każde wejście w platformę
   web kończy się `MaestroException.WebPlatformNotSupported`. GraalJS z artefaktów community (UPL) bez `truffle-enterprise`
   (D-6). Pozostałe ruchy zewnętrzne hosta: `cheat_sheet` (N-15) i link `docs.maestro.dev` w instrukcjach MCP (N-17) — STEP-04.
+- STEP-04 (Local-only MCP i usunięcie Viewera): punkt styku nr 4 i 5 z §2 usunięte w całości. `cheat_sheet` czyta
+  `mcp/cheat-sheet.md` z JAR CLI (bez sieci), instrukcje serwera nie linkują `docs.maestro.dev`. Pakiet `mcp/viewer/`
+  usunięty: `RunTool` tworzy zwykły `Orchestra(maestro)`, a `McpMaestroSessionManager` — zwykłe `AndroidDriver`/`IOSDriver`
+  (zestaw obsługiwanych urządzeń bez zmian). Usunięte też `maestro-cli/mcp-viewer/`, `.nvmrc`, `Unpacker.unpackTree`
+  i zależności CLI `ktor-server-*`; `--no-viewer`/`--viewer-port` zostają jako ukryte no-op. Serwer MCP:
+  `list_devices`, `inspect_screen`, `take_screenshot`, `run`, `cheat_sheet` na STDIO; ruch tylko lokalny (ADB, XCTest
+  na loopback). Po STEP-04 host CLI nie ma znanych ścieżek do usług producenta w runtime (pozostają linki w komunikatach,
+  N-35 — STEP-05).

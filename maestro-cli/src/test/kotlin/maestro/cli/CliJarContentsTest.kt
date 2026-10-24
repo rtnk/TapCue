@@ -13,7 +13,7 @@ import java.util.zip.ZipFile
  */
 class CliJarContentsTest {
 
-    private val forbiddenPrefixes = listOf("deps/simulator-server/", "mcp-viewer/")
+    private val forbiddenPrefixes = listOf("deps/simulator-server/", "mcp-viewer/", "maestro/cli/mcp/viewer/")
 
     @Test
     fun `CLI jar contains no simulator-server or Viewer entries`() {
@@ -43,14 +43,10 @@ class CliJarContentsTest {
             "get.maestro.mobile.dev",
             "cdn.jsdelivr.net",
         )
-        // N-15: `cheat_sheet` still fetches from api.copilot.mobile.dev until STEP-04.
-        val knownUntilStep04 = listOf("maestro/cli/mcp/tools/CheatSheetTool")
-
         val jar = File(System.getProperty("maestro.cli.jar"))
         val hits = ZipFile(jar).use { zip ->
             zip.entries().asSequence()
                 .filter { !it.isDirectory }
-                .filter { entry -> knownUntilStep04.none { entry.name.startsWith(it) } }
                 .flatMap { entry ->
                     val content = zip.getInputStream(entry).use { String(it.readBytes(), Charsets.ISO_8859_1) }
                     forbiddenHosts.filter { content.contains(it) }.map { "${entry.name}: $it" }
@@ -58,6 +54,28 @@ class CliJarContentsTest {
                 .toList()
         }
 
+        assertThat(hits).isEmpty()
+    }
+
+    @Test
+    fun `MCP server code and resources reference no Maestro web hosts`() {
+        // STEP-04: the cheat sheet is bundled (N-15) and the server instructions no longer link docs.maestro.dev (N-17).
+        val forbidden = listOf("maestro.dev", "mobile.dev", "https://", "http://")
+
+        val jar = File(System.getProperty("maestro.cli.jar"))
+        val (mcpEntries, hits) = ZipFile(jar).use { zip ->
+            val entries = zip.entries().asSequence()
+                .filter { !it.isDirectory }
+                .filter { it.name.startsWith("maestro/cli/mcp/") || it.name.startsWith("mcp/") }
+                .toList()
+            entries.map { it.name } to entries.flatMap { entry ->
+                val content = zip.getInputStream(entry).use { String(it.readBytes(), Charsets.ISO_8859_1) }
+                forbidden.filter { content.contains(it) }.map { "${entry.name}: $it" }
+            }
+        }
+
+        assertThat(mcpEntries).contains("mcp/cheat-sheet.md")
+        assertThat(mcpEntries).contains("maestro/cli/mcp/tools/CheatSheetTool.class")
         assertThat(hits).isEmpty()
     }
 
@@ -88,9 +106,19 @@ class CliJarContentsTest {
     }
 
     @Test
-    fun `open_maestro_viewer tool is gone`() {
-        val result = runCatching { Class.forName("maestro.cli.mcp.tools.OpenMaestroViewerTool") }
+    fun `Viewer classes are gone`() {
+        // open_maestro_viewer went in STEP-00B, the rest of the mcp/viewer package in STEP-04.
+        listOf(
+            "maestro.cli.mcp.tools.OpenMaestroViewerTool",
+            "maestro.cli.mcp.viewer.McpViewerServer",
+            "maestro.cli.mcp.viewer.McpViewerDriver",
+            "maestro.cli.mcp.viewer.McpViewerOrchestra",
+            "maestro.cli.mcp.viewer.McpViewerEvents",
+            "maestro.cli.mcp.viewer.StreamDeviceType",
+        ).forEach { name ->
+            val result = runCatching { Class.forName(name) }
 
-        assertThat(result.exceptionOrNull()).isInstanceOf(ClassNotFoundException::class.java)
+            assertThat(result.exceptionOrNull()).isInstanceOf(ClassNotFoundException::class.java)
+        }
     }
 }

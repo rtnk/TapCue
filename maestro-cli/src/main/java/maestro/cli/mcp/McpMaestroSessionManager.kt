@@ -5,10 +5,6 @@ import ios.xctest.XCTestIOSDevice
 import maestro.Maestro
 import maestro.MaestroException
 import maestro.cli.CliError
-import maestro.cli.mcp.viewer.McpViewerDriver
-import maestro.cli.mcp.viewer.McpViewerEvents
-import maestro.cli.mcp.viewer.StreamDeviceType
-import maestro.cli.mcp.viewer.ViewerEvent
 import maestro.cli.report.TestDebugReporter
 import maestro.android.AndroidDeviceConnection
 import maestro.device.DeviceService
@@ -34,20 +30,8 @@ internal class McpMaestroSessionManager : AutoCloseable {
         deviceId: String,
         block: (McpMaestroSession) -> T,
     ): T {
-        val session = sessions.computeIfAbsent(deviceId) {
-            createSession(deviceId).also { publishConnected(it) }
-        }
+        val session = sessions.computeIfAbsent(deviceId) { createSession(deviceId) }
         return block(session)
-    }
-
-    private fun publishConnected(session: McpMaestroSession) {
-        McpViewerEvents.publish(
-            ViewerEvent.MaestroConnected(
-                platform = session.platform,
-                deviceType = session.streamDeviceType,
-                deviceId = session.deviceId,
-            )
-        )
     }
 
     override fun close() {
@@ -65,36 +49,42 @@ internal class McpMaestroSessionManager : AutoCloseable {
         val device = DeviceService.listConnectedDevices()
             .find { it.instanceId.equals(deviceId, ignoreCase = true) }
             ?: throw CliError("Device with id $deviceId is not connected")
-        val streamDeviceType = StreamDeviceType.forConnected(device)
-            ?: throw UnsupportedOperationException(
+        if (!isSupported(device)) {
+            throw UnsupportedOperationException(
                 "Device ${device.instanceId} (${device.platform}/${device.deviceType}) is not supported by the MCP server"
             )
+        }
 
         return when (device.platform) {
-            Platform.ANDROID -> createAndroidSession(device, streamDeviceType)
-            Platform.IOS -> createIosSession(device, streamDeviceType)
+            Platform.ANDROID -> createAndroidSession(device)
+            Platform.IOS -> createIosSession(device)
             Platform.WEB -> throw MaestroException.WebPlatformNotSupported()
         }
     }
 
-    private fun createAndroidSession(device: Device.Connected, streamDeviceType: StreamDeviceType): McpMaestroSession {
+    // Android emulators and devices, iOS simulators.
+    private fun isSupported(device: Device.Connected): Boolean = when (device.platform) {
+        Platform.ANDROID -> device.deviceType == Device.DeviceType.EMULATOR || device.deviceType == Device.DeviceType.REAL
+        Platform.IOS -> device.deviceType == Device.DeviceType.SIMULATOR
+        Platform.WEB -> false
+    }
+
+    private fun createAndroidSession(device: Device.Connected): McpMaestroSession {
         val connection = AndroidDeviceConnection.byId(device.instanceId)
             ?: error("Unable to find device with id ${device.instanceId}")
-        val driver = McpViewerDriver(AndroidDriver(connection, device.instanceId, true), "android")
+        val driver = AndroidDriver(connection, device.instanceId, true)
         return McpMaestroSession(
             maestro = Maestro.android(driver),
             platform = "android",
-            streamDeviceType = streamDeviceType,
             deviceId = device.instanceId,
         )
     }
 
-    private fun createIosSession(device: Device.Connected, streamDeviceType: StreamDeviceType): McpMaestroSession {
-        val driver = McpViewerDriver(createIOSDriver(device.instanceId, device.deviceType), "ios")
+    private fun createIosSession(device: Device.Connected): McpMaestroSession {
+        val driver = createIOSDriver(device.instanceId, device.deviceType)
         return McpMaestroSession(
             maestro = Maestro.ios(driver, openDriver = true),
             platform = "ios",
-            streamDeviceType = streamDeviceType,
             deviceId = device.instanceId,
         )
     }
@@ -156,8 +146,6 @@ internal class McpMaestroSessionManager : AutoCloseable {
     data class McpMaestroSession(
         val maestro: Maestro,
         val platform: String,
-        // null for web sessions, which the viewer doesn't stream.
-        val streamDeviceType: StreamDeviceType?,
         val deviceId: String,
     ) {
         fun close() {

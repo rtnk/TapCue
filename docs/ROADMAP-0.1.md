@@ -1,6 +1,6 @@
 # ROADMAP 0.1.0 — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Status dokumentu: **STEP-03B w review ([#8](https://github.com/rtnk/TapCue/pull/8)); następny: STEP-04**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23. Ostatnia aktualizacja: 2026-10-23.
+Status dokumentu: **STEP-04 w review (PR-04); następny: STEP-04B**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23, STEP-03B ([#8](https://github.com/rtnk/TapCue/pull/8)) — 2026-10-24. Ostatnia aktualizacja: 2026-10-24.
 
 ## 0. Punkt wyjścia
 
@@ -63,8 +63,8 @@ Legenda statusu: `TODO` · `IN PROGRESS` · `IN REVIEW` · `MERGED` · `BLOCKED`
 | STEP-01 | PR-01 | Remove Cloud CLI | PR-00 | MERGED ([#2](https://github.com/rtnk/TapCue/pull/2)) | 1–2 sesje |
 | STEP-02 | PR-02 | Remove Remote AI | PR-01, PR-00B | MERGED ([#4](https://github.com/rtnk/TapCue/pull/4)) | 1–2 sesje |
 | STEP-03 | PR-03 | Remove telemetry, error upload, update checks, auto-downloads | PR-02 | MERGED ([#6](https://github.com/rtnk/TapCue/pull/6), uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) | 1 sesja |
-| STEP-03B | PR-03B | Polityka sieci dla funkcji flow (JS `http`, web, `openLink`) + GraalJS community | PR-03, D-3, D-4, D-6 | IN REVIEW ([#8](https://github.com/rtnk/TapCue/pull/8)) | 1 sesja |
-| STEP-04 | PR-04 | Local-only MCP, usunięcie Viewera | PR-03B | TODO | 1–2 sesje |
+| STEP-03B | PR-03B | Polityka sieci dla funkcji flow (JS `http`, web, `openLink`) + GraalJS community | PR-03, D-3, D-4, D-6 | MERGED ([#8](https://github.com/rtnk/TapCue/pull/8)) | 1 sesja |
+| STEP-04 | PR-04 | Local-only MCP, usunięcie Viewera | PR-03B | IN REVIEW (PR-04) | 1–2 sesje |
 | STEP-04B | PR-04B | TapCue: nazwa, polecenie `tapcue`, katalogi `~/.tapcue` i `.tapcue/` | PR-04, D-1, D-2 | TODO | 1–2 sesje |
 | STEP-05 | PR-05 | Dystrybucja lokalna macOS arm64 + audyt licencji | PR-04B, D-5, D-7 | TODO | 2 sesje |
 | STEP-06 | PR-06 | GitHub Actions CI + testy offline | PR-05 | TODO | 2 sesje |
@@ -225,6 +225,19 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
   zachowane narzędzia) → `tools/call cheat_sheet` → `list_devices` bez urządzeń (kontrolowany wynik) →
   zamknięcie STDIN kończy proces; stdout zawiera wyłącznie ramki JSON-RPC. Testy z urządzeniem — jeśli dostępne.
 - **Wyjście:** lokalny MCP działa bez Viewera i bez binarium simulator-server.
+- **Realizacja (PR-04, szczegóły w `docs/handovers/STEP-04.md`):** `cheat_sheet` czyta `mcp/cheat-sheet.md` z JAR CLI
+  (ściągawka napisana dla forka na podstawie parsera `maestro.orchestra.yaml`; każdy przykład `yaml` jest parsowany
+  w `CheatSheetToolTest`), bez żądania sieciowego. Instrukcje serwera bez linku `docs.maestro.dev`. Usunięte: pakiet
+  `maestro.cli.mcp.viewer` (`McpViewerServer`, `McpViewerDriver`, `McpViewerOrchestra`, `McpViewerEvents`, `ViewerHint`,
+  `StreamDeviceType`), `maestro-cli/mcp-viewer/`, `.nvmrc`, `Unpacker.unpackTree`, zależności CLI `ktor-server-core`/
+  `-netty`/`-cors`/`-status-pages` (i ich wpisy `-netty`/`-cors`/`-status-pages` w `libs.versions.toml`; `ktor-server-core`
+  zostaje dla `maestro-android`). `RunTool` używa zwykłego `Orchestra`, `McpMaestroSessionManager` — zwykłych sterowników
+  (zestaw obsługiwanych urządzeń bez zmian: emulator/urządzenie Android, symulator iOS). **Decyzja:** `--no-viewer`/
+  `--viewer-port` zostają jako ukryte no-op (jak `--headless`/`--screen-size` w STEP-03B) — konfiguracje klientów MCP
+  z tymi flagami dalej działają. `ktor-client-core`/`-cio` zostają: kod CLI ich nie używa, ale `ktor-client-core`
+  dostarcza `ktor-http`, którego potrzebuje `ServerOptions` SDK MCP (SDK ma wykluczone `io.ktor`). Netty gRPC przypięty
+  `netty-bom` 4.1.111.Final (wcześniej podnosił go `ktor-server-netty`; bez przypięcia spadłby do 4.1.79). Test:
+  `McpStdioTest` (proces CLI, JSON-RPC na STDIO, wszystkie połączenia wychodzące przez lokalne rejestratory).
 
 ### STEP-04B — TapCue: nazwa, polecenie i katalogi (PR-04B)
 
