@@ -113,15 +113,14 @@ jobs:
 
       - name: Install the archive
         run: |
-          mkdir -p "$RUNNER_TEMP/tapcue" "$RUNNER_TEMP/home"
+          mkdir -p "$RUNNER_TEMP/tapcue"
           unzip -q maestro-cli/build/distributions/tapcue-*-macos-arm64.zip -d "$RUNNER_TEMP/tapcue"
           echo "TAPCUE=$(ls -d "$RUNNER_TEMP"/tapcue/tapcue-*/bin/tapcue)" >> "$GITHUB_ENV"
 
       - name: Run without network access
+        # The JVM takes user.home from the account, not from $HOME, so TapCue state lands in the runner's real home.
         # sandbox-exec denies every outbound connection except loopback (and the DNS resolver socket), so a command
         # that needed the internet would fail here.
-        env:
-          HOME: ${{ runner.temp }}/home
         run: |
           cat > "$RUNNER_TEMP/offline.sb" <<'SB'
           (version 1)
@@ -146,8 +145,6 @@ jobs:
           test ! -e "$HOME/.maestro"
 
       - name: Build the iOS Simulator driver from source, offline
-        env:
-          HOME: ${{ runner.temp }}/home
         run: |
           xcodebuild -version
           sandbox-exec -f "$RUNNER_TEMP/offline.sb" "$TAPCUE" driver-setup --simulator
@@ -158,7 +155,6 @@ jobs:
 
       - name: Drive a simulator with the driver built from source
         env:
-          HOME: ${{ runner.temp }}/home
           MAESTRO_DRIVER_STARTUP_TIMEOUT: 240000
         run: |
           udid="$(xcrun simctl list devices available -j | python3 -c '
@@ -171,3 +167,7 @@ jobs:
           "$TAPCUE" --device "$udid" hierarchy > "$RUNNER_TEMP/hierarchy.json"
           grep -q '"attributes"' "$RUNNER_TEMP/hierarchy.json"
           echo "hierarchy: $(wc -c < "$RUNNER_TEMP/hierarchy.json") bytes"
+
+      - name: Show iOS driver build log
+        if: failure()
+        run: tail -n 200 "$HOME/.tapcue/maestro-iphonesimulator-driver-build/output.log" || true
