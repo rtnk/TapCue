@@ -32,3 +32,11 @@ detekt {
     autoCorrect = true
     config = files("${rootDir}/detekt.yml")
 }
+
+// Every JAR and archive the same bytes for the same inputs (STEP-05: the release archive and its SHA256SUMS).
+allprojects {
+    tasks.withType<AbstractArchiveTask>().configureEach {
+        isPreserveFileTimestamps = false
+        isReproducibleFileOrder = true
+    }
+}

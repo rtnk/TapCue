@@ -17,6 +17,7 @@ binariów, działająca offline; proces dystrybucji i publikacji upstream usuni�
 | Obszar | Zmiana |
 |---|---|
 | Publikacja upstream (B-04, B-05, B-09) | Usunięte: `jreleaser` (wtyczka, blok konfiguracji z brew tap i release do `mobile-dev-inc/maestro`, szablon `maestro-cli/src/jreleaser/`, wpis w `libs.versions.toml`), `scripts/install.sh`, publikacja Maven Central we **wszystkich** modułach i katalogu głównym (`com.vanniktech.maven.publish`, `maven-publish`, bloki `mavenPublishing`, `*/gradle.properties` z `POM_*`, metadane `POM_*`/`SONATYPE_*`/`GROUP`/`VERSION_NAME` w `gradle.properties`). `maestro-cli` ma teraz jawne `version = CLI_VERSION` (wcześniej ustawiała je wtyczka; nazwa `maestro-cli-2.11.0.jar` bez zmian) |
+| Powtarzalność | Wszystkie JAR-y i archiwa wszystkich modułów bez znaczników czasu, z ustaloną kolejnością (`allprojects` w głównym `build.gradle.kts`); `createProperties` pisze `version.properties` bez komentarza z datą |
 | Archiwum (D-1) | `distributions`: `main` (`tapcue-<wersja>.zip/.tar`, wszystkie platformy — do lokalnych buildów) i `macosArm64` (`tapcue-<wersja>-macos-arm64.zip`, katalog `tapcue-<wersja>-macos-arm64/`; bez `skiko-awt-runtime-{linux,windows,macos-x64}` i `tapcue.bat`: 136 JAR-ów, ~106 MB zamiast 141/~167 MB). Zawartość: `bin/tapcue`, `bin/jvm-version.jar`, `lib/*.jar`, `LICENSE`, `NOTICE`, `THIRD-PARTY-NOTICES.md`, `README.md`. Archiwa bez znaczników czasu, z ustaloną kolejnością plików. `macosArm64DistSha256` (finalizer `macosArm64DistZip`) zapisuje `build/distributions/SHA256SUMS` (format `shasum -a 256 -c`) |
 | `NOTICE` | nowy plik w katalogu głównym (i w paczce): TapCue, „based on Maestro (Apache-2.0), not affiliated with mobile.dev”, atrybucja upstream (repozytorium, tag `v2.11.0`, copyright mobile.dev, brak `NOTICE` upstream), zakres zmian forka, znaki towarowe, wskazanie `THIRD-PARTY-NOTICES.md` |
 | `THIRD-PARTY-NOTICES.md` | task `:maestro-cli:generateThirdPartyNotices` (klasa `ThirdPartyNoticesTask` w `maestro-cli/build.gradle.kts`): (1) tabela — każdy zewnętrzny JAR z `runtimeClasspath` (134), plik, licencja z POM (z dziedziczeniem z POM nadrzędnych); moduły TapCue (7 + `maestro-cli`); (2) wszystkie teksty licencji/NOTICE zawarte w tych JAR-ach (31 unikalnych, Apache-2.0 §4(d)); (3) suplement `docs/audit/notices-supplement.md`: `applesimutils` (MIT Wix + FMDB), APK sterownika Android (L-05), źródło runnera iOS z FlyingFox (MIT), `jvm-version.jar`, oraz teksty licencji 12 pozycji MIT/BSD/UPL/Unicode, których JAR-y ich nie zawierają (pobrane z repozytoriów źródłowych w wydanej wersji — tabela z commitami w §3.5). Zależność bez licencji w POM → build kończy się błędem (mapa `thirdPartyLicenseOverrides`, obecnie pusta). Migawka tabeli: `docs/audit/runtime-dependencies-step05.md` |
@@ -57,14 +58,14 @@ STEP-04B, skrypt deweloperski Windows), zaparkowane workflowy upstream (STEP-06)
 
 | Test | Komenda | Wynik |
 |---|---|---|
-| Wszystkie testy + detekt + dystrybucja (od zera) | `LANG=C.UTF-8 ./gradlew --continue --rerun-tasks :maestro-orchestra:detektMain :maestro-client:detektMain test :maestro-cli:installDist :maestro-cli:macosArm64DistZip` | FINAL_RESULT |
-| ↳ `maestro-cli` | jw. | CLI_RESULT |
-| ↳ `maestro-ios-driver` | jw. | IOS_RESULT |
-| ↳ pozostałe | jw. | OTHER_RESULT |
-| Weryfikacja archiwum | `scripts/verify-dist.sh --smoke maestro-cli/build/distributions/tapcue-2.11.0-macos-arm64.zip` | VERIFY_RESULT |
-| Testy negatywne skryptu | `scripts/fork/test-verify-dist.sh maestro-cli/build/distributions/tapcue-2.11.0-macos-arm64.zip` | NEG_RESULT |
-| Powtarzalność archiwum | `macosArm64DistZip`, potem `macosArm64DistZip --rerun`, porównanie SHA-256 | REPRO_RESULT |
-| Strażnik | `scripts/fork/check-no-simulator-server.sh` (w kopii z wynikami builda) | GUARD_RESULT |
+| Wszystkie testy + detekt + dystrybucja (od zera) | `LANG=C.UTF-8 ./gradlew --continue --rerun-tasks :maestro-orchestra:detektMain :maestro-client:detektMain test :maestro-cli:installDist :maestro-cli:macosArm64DistZip` | **PASS — 1318 testów, 0 porażek** (STEP-04B: 1300), detekt OK |
+| ↳ `maestro-cli` | jw. | **PASS**, 153 (STEP-04B: 138; +7 `IOSSimulatorDriverTest`, +5 `DriverBuilderTest`, +2 `StartScriptsTest`, +1 `CliJarContentsTest`) |
+| ↳ `maestro-ios-driver` | jw. | **PASS**, 50 (STEP-04B: 47; +3 przepisany `IOSBuildProductsExtractorTest`, wcześniej nieuruchamiany) |
+| ↳ pozostałe | jw. | **PASS** bez zmian liczności: `maestro-client` 324 (2 skipped), `maestro-orchestra` 456 (3 skipped; zaktualizowane fixture'y błędów), `maestro-orchestra-models` 51, `maestro-ios` 2, `maestro-test` 233, `maestro-utils` 49 |
+| Weryfikacja archiwum | `scripts/verify-dist.sh --smoke maestro-cli/build/distributions/tapcue-2.11.0-macos-arm64.zip` | **PASS** — 142 pliki, 136 JAR-ów, 67 dozwolonych binariów; `SHA256SUMS` zgodne; `tapcue 2.11.0` + dopisek z rozpakowanego archiwum, pusty `HOME` |
+| Testy negatywne skryptu | `scripts/fork/test-verify-dist.sh maestro-cli/build/distributions/tapcue-2.11.0-macos-arm64.zip` | **PASS** — dobre archiwum przyjęte, 13 zmutowanych odrzuconych z właściwym komunikatem |
+| Powtarzalność archiwum | `macosArm64DistZip`, potem `macosArm64DistZip --rerun`, porównanie SHA-256 | **PASS** — ten sam SHA-256 (`8504e3a5…f6f8a4`) po zwykłym buildzie, po `--rerun-tasks` całego projektu i po ponownym `--rerun-tasks`. Wymagało: stałych znaczników czasu we wszystkich JAR-ach (`allprojects` w `build.gradle.kts`) i `version.properties` bez daty (`Properties.store`) |
+| Strażnik | `scripts/fork/check-no-simulator-server.sh` (w kopii z wynikami builda) | **PASS** |
 | Licencje | `generateThirdPartyNotices` | **PASS** — 134 biblioteki zewnętrzne, każda z licencją w POM (bez wpisów w `thirdPartyLicenseOverrides`), 31 unikalnych tekstów z JAR-ów; brak licencji GFTC/własnościowych w `lib/` |
 | `jvm-version.jar` (L-07) | `unzip -l`, `javap -c -p JvmVersion.class` | **PASS** — tylko manifest i `JvmVersion.class`, wywołania zgodne z opisanym źródłem |
 | `applesimutils` (L-02) | porównanie z wydaniem 0.9.10 | **NOT RUN (niemożliwe)** — wydanie zawiera tylko źródła; binarium zawiera FMDB zgodnie ze źródłem |
@@ -100,6 +101,8 @@ tapcue-*/bin/tapcue driver-setup --simulator
   licencji „Android Software Development Kit License” (własnościowa, Google) — do przeglądu właściciela.
 - **Test offline na macOS** w CI to `sandbox-exec` (polecenie przestarzałe, ale działające), a nie blokada `pf`; nie rejestruje
   prób połączeń — pełny test egress z rejestrem prób to STEP-06 (Linux) i STEP-08 (Mac).
+- **Natychmiastowy EOF na STDIN `tapcue mcp`** (np. `printf … | tapcue mcp`) kończy proces przed odpowiedzią na
+  `initialize` — zachowanie sprzed STEP-05 (SDK MCP); krok CI trzyma STDIN otwarte 5 s. Do oceny w STEP-06.
 - **Wersja:** archiwum nazywa się `tapcue-2.11.0-macos-arm64.zip` (wersja upstream) do czasu PR-08.
 - **`THIRD-PARTY-NOTICES.md` opisuje cały `runtimeClasspath`** — także biblioteki Skia innych platform, których paczka
   `macos-arm64` nie zawiera (nadzbiór, celowo jeden plik dla obu archiwów).

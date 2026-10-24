@@ -3,7 +3,6 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.w3c.dom.Element
 import java.security.MessageDigest
-import java.util.Properties
 import java.util.zip.ZipFile
 import javax.xml.parsers.DocumentBuilderFactory
 
@@ -250,11 +249,8 @@ tasks.create("createProperties") {
     dependsOn("processResources")
 
     doLast {
-        File("$buildDir/resources/main/version.properties").writer().use { w ->
-            val p = Properties()
-            p["version"] = CLI_VERSION
-            p.store(w, null)
-        }
+        // Written by hand: Properties.store adds a date comment, which would make the JAR differ on every build.
+        File("$buildDir/resources/main/version.properties").writeText("version=$CLI_VERSION\n")
     }
 }
 
@@ -320,12 +316,6 @@ distributions {
             )
         }
     }
-}
-
-tasks.withType<AbstractArchiveTask>().matching { it.name.endsWith("DistZip") || it.name.endsWith("DistTar") || it.name in setOf("distZip", "distTar") }.configureEach {
-    // The same bytes for the same inputs, so SHA256SUMS can be reproduced.
-    isPreserveFileTimestamps = false
-    isReproducibleFileOrder = true
 }
 
 tasks.named<Zip>("distZip") {

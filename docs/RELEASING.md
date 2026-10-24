@@ -20,8 +20,9 @@ Plik `RELEASING.md` w katalogu głównym oraz skill `.claude/skills/release/` op
 | Licencje | `THIRD-PARTY-NOTICES.md` generuje `:maestro-cli:generateThirdPartyNotices`; ręczna część: `docs/audit/notices-supplement.md`; nowa zależność bez licencji w POM kończy build błędem (wpis w `thirdPartyLicenseOverrides` po sprawdzeniu) |
 
 Archiwum ma stałe znaczniki czasu i kolejność plików (`isPreserveFileTimestamps = false`, `isReproducibleFileOrder = true`),
-więc ten sam commit i te same zależności dają te same bajty na jednej maszynie. Identyczność między maszynami (inne JDK,
-inny system) nie była jeszcze sprawdzana — STEP-07.
+tak samo jak JAR-y wszystkich modułów (`allprojects` w `build.gradle.kts`), a `version.properties` nie zawiera daty — ten sam
+commit i te same zależności dają te same bajty (sprawdzone w STEP-05: identyczny SHA-256 po `--rerun-tasks`). Identyczność
+między maszynami (inne JDK, inny system) nie była jeszcze sprawdzana — STEP-07.
 
 Instalacja i uruchomienie z archiwum — `maestro-cli/src/dist/README.md` (w paczce jako `README.md`).
 

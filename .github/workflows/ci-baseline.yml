@@ -138,7 +138,8 @@ jobs:
           offline "$TAPCUE" --version
           offline "$TAPCUE" --help > /dev/null
           offline "$TAPCUE" check-syntax "$RUNNER_TEMP/project/.tapcue/flow.yaml"
-          reply="$(printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' \
+          # Keep STDIN open briefly: the server exits on EOF, possibly before it has answered.
+          reply="$({ printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}'; sleep 5; } \
             | offline "$TAPCUE" mcp)"
           echo "$reply"
           grep -q '"name":"tapcue"' <<<"$reply"
