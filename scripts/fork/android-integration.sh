@@ -41,6 +41,9 @@ run() {
   if [ "$expect" = pass ] && [ "$status" != 0 ]; then verdict=FAIL; reason="exit $status, expected 0"; fi
   if [ "$expect" = fail ] && [ "$status" = 0 ]; then verdict=FAIL; reason="exit 0, expected an error"; fi
   if [ -n "$pattern" ] && ! grep -Eq -- "$pattern" "$dir/$name.out"; then verdict=FAIL; reason+=" output does not match /$pattern/"; fi
+  if [ "$verdict" = FAIL ] && [ -f "$dir/debug/$name/maestro.log" ]; then
+    grep -E "Exception|ERROR|not found" "$dir/debug/$name/maestro.log" | tail -n 15 | sed 's/^/  log| /'
+  fi
   record "$verdict $name (exit $status, $((end - start)) s)${reason:+: $reason}"
 }
 
@@ -103,10 +106,11 @@ elapsed=$(( $(date +%s) - start ))
 cat "$dir/driver-killed.out" | sed 's/^/  | /'
 echo "  maestro.log (last lines):"
 tail -n 40 "$dir/debug/driver-killed/maestro.log" 2>/dev/null | sed 's/^/  | /'
-if [ "$status" != 0 ] && [ "$elapsed" -lt 150 ]; then
+# The error is the driver's: gRPC reports the on-device server as unavailable (maestro.log).
+if [ "$status" != 0 ] && [ "$elapsed" -lt 150 ] && grep -q "UNAVAILABLE" "$dir/debug/driver-killed/maestro.log" 2>/dev/null; then
   record "PASS driver-killed (exit $status, $elapsed s)"
 else
-  record "FAIL driver-killed (exit $status, $elapsed s): expected an error before the 150 s flow timeout"
+  record "FAIL driver-killed (exit $status, $elapsed s): expected a driver (gRPC UNAVAILABLE) error before the 150 s flow timeout"
 fi
 
 adb -s "$device" exec-out screencap -p > "$dir/final-screen.png" 2>/dev/null || true

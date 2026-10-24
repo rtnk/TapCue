@@ -5,9 +5,12 @@ name: Settings - launch, scroll, tap, input text, screenshot
 - launchApp:
     clearState: true
 - assertVisible: "Network & internet"
+# Generous limits: the CI emulator is slow, and "System" is near the end of a long list on a small screen.
 - scrollUntilVisible:
     element:
       text: "System"
+    timeout: 60000
+    visibilityPercentage: 50
 - tapOn: "System"
 - assertVisible: "Languages.*"
 - back
@@ -16,6 +19,8 @@ name: Settings - launch, scroll, tap, input text, screenshot
     element:
       text: "Network & internet"
     direction: UP
+    timeout: 60000
+    visibilityPercentage: 50
 - tapOn: "Search settings"
 - inputText: "battery"
 - assertVisible:
