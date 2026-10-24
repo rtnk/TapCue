@@ -30,8 +30,9 @@ class RealIOSDeviceDriver(private val teamId: String?, private val destination: 
 
             val products = driverDirectory.resolve("driver-iphoneos").resolve("Build").resolve("Products")
             val xctestRun = products.toFile().walk().find { it.extension == "xctestrun" }
-            if (currentCliVersion > localVersion) {
-                message("Local version $localVersion of iOS driver is outdated. Updating to latest.")
+            // Any other version, not only an older one: TapCue 0.1.0 is numbered below the 2.11.0 it was forked from.
+            if (currentCliVersion != localVersion) {
+                message("Local version $localVersion of iOS driver does not match $currentCliVersion. Updating.")
                 buildDriver(driverDirectory, message = "Validating and updating iOS driver for real iOS device: $destination...")
             } else if (xctestRun?.exists() == false || xctestRun == null) {
                 message("Drivers for $destination not found, building the drivers.")
