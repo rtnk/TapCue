@@ -124,6 +124,11 @@ gh workflow run release.yml --ref main
   przeszły, ale log systemowy nie pokazał jeszcze odmowy sondy `curl` po stałych 2 s, a w release (`REQUIRE_REGISTER=true`)
   to błąd. Poprawka w osobnym PR: `macos-offline-test.sh` czeka do 60 s (`REGISTER_WAIT`) na wpis sondy i powtarza sondę po
   poleceniach TapCue, więc brak odmów `java` jest sprawdzany dopiero, gdy log dogonił te polecenia.
+  Run walidacji na gałęzi poprawki ([40115909754](https://github.com/rtnk/TapCue/actions/runs/40115909754)) — log nie pokazał
+  odmowy `curl` nawet po 60 s, choć w `ci.yml` (`macos`, ten sam skrypt i obraz `macos26 20261013.0424.1`) pokazuje ją od razu
+  w każdym sprawdzonym runie. Różnica: w `release.yml` test offline szedł po ~5 min `./gradlew test` na macOS (zostają demony
+  Gradle/Kotlin i `adb`). Hipoteza (bez Maca nie do potwierdzenia lokalnie): log systemowy gubi komunikaty sandboxa po
+  testach. Zmiana: w jobie `build` test offline przed testami jednostkowymi, strażnik simulator-server po testach.
 - Koszt: każdy run `release.yml` to ok. 6 min `macos-26` + ~6 min ubuntu (repozytorium prywatne, D-9).
 - Otwarte po stronie właściciela (bez zmian, blokują STEP-08/G-3): przegląd `THIRD-PARTY-NOTICES.md`/suplementu, ocena Google
   Play services i JUnit (EPL-1.0) w APK sterownika (L-05), akceptacja polityki `scripts/fork/allowed-licenses.tsv`,

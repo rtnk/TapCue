@@ -132,9 +132,6 @@ jobs:
             echo "gradle=$(./gradlew --version | sed -n 's/^Gradle //p')"
           } | tee release/build-info.txt
 
-      - name: Detekt and unit tests
-        run: ./gradlew --no-build-cache --continue :maestro-orchestra:detektMain :maestro-client:detektMain test
-
       - name: Build the distribution archive
         run: ./gradlew --no-build-cache :maestro-cli:macosArm64DistZip
 
@@ -158,9 +155,6 @@ jobs:
       - name: Dependency check (forbidden GAVs in the CLI runtime classpath)
         run: scripts/fork/check-forbidden-deps.sh
 
-      - name: Guard - no simulator-server or Viewer in build outputs
-        run: scripts/fork/check-no-simulator-server.sh
-
       - name: Install the archive
         run: |
           mkdir -p "$RUNNER_TEMP/tapcue"
@@ -176,6 +170,14 @@ jobs:
         env:
           REQUIRE_REGISTER: 'true'
         run: scripts/fork/macos-offline-test.sh "$TAPCUE" reports/macos
+
+      # After the offline run: the tests leave Gradle/Kotlin daemons and adb behind, and in two dispatch runs the sandbox
+      # denials of the offline run that followed them never reached the system log (release runs 40115219200, 40115909754).
+      - name: Detekt and unit tests
+        run: ./gradlew --no-build-cache --continue :maestro-orchestra:detektMain :maestro-client:detektMain test
+
+      - name: Guard - no simulator-server or Viewer in build outputs
+        run: scripts/fork/check-no-simulator-server.sh
 
       - name: Release notes
         run: |
