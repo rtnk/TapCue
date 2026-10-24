@@ -144,18 +144,19 @@ jobs:
           grep -q '"name":"tapcue"' <<<"$reply"
           test ! -e "$HOME/.maestro"
 
-      - name: Build the iOS Simulator driver from source, offline
+      - name: Build the iOS Simulator driver from source without fetching anything
+        # Not under sandbox-exec: SwiftPM and the Swift macro plugin server sandbox themselves, and sandboxes cannot nest.
+        # Instead the build must not resolve any remote package: no SourcePackages checkouts, no fetch in the log.
         run: |
           xcodebuild -version
-          # SwiftPM evaluates package manifests in its own sandbox-exec, which cannot nest inside ours; let it run them
-          # unsandboxed on this runner so the outer, network-denying sandbox can wrap the whole build.
-          defaults write com.apple.dt.Xcode IDEPackageSupportDisableManifestSandbox -bool YES
-          defaults write com.apple.dt.Xcode IDEPackageSupportDisablePluginExecutionSandbox -bool YES
-          sandbox-exec -f "$RUNNER_TEMP/offline.sb" "$TAPCUE" driver-setup --simulator
-          products="$HOME/.tapcue/maestro-iphonesimulator-driver-build/driver-iPhoneSimulator/Build/Products"
+          "$TAPCUE" driver-setup --simulator
+          build="$HOME/.tapcue/maestro-iphonesimulator-driver-build"
+          products="$build/driver-iPhoneSimulator/Build/Products"
           ls "$products"/*.xctestrun
           test -d "$products/Debug-iphonesimulator/maestro-driver-iosUITests-Runner.app"
-          cat "$HOME/.tapcue/maestro-iphonesimulator-driver-build/version.properties"
+          cat "$build/version.properties"
+          test ! -d "$build/driver-iPhoneSimulator/SourcePackages/checkouts"
+          ! grep -nE "Fetching|Cloning|Updating https?://|github\.com" "$build/output.log"
 
       - name: Drive a simulator with the driver built from source
         env:

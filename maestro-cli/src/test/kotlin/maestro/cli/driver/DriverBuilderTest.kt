@@ -129,7 +129,11 @@ class DriverBuilderTest {
         every { driverBuilder.getDriverSourceFromResources(any()) } returns Files.createDirectories(tempDir.resolve("source"))
         every { mockProcess.waitFor(900, TimeUnit.SECONDS) } returns true
         every { mockProcess.exitValue() } returns 0
-        every { processBuilderFactory.createProcess(commands = capture(commands), workingDirectory = any(), outputFile = any()) } returns mockProcess
+        val outputFile = slot<File>()
+        every { processBuilderFactory.createProcess(commands = capture(commands), workingDirectory = any(), outputFile = capture(outputFile)) } answers {
+            outputFile.captured.writeText("** TEST BUILD SUCCEEDED **")
+            mockProcess
+        }
 
         // when
         val products = driverBuilder.buildDriver(
@@ -155,6 +159,7 @@ class DriverBuilderTest {
         val versionProperties = buildDir.resolve("version.properties").readText()
         assertThat(versionProperties).contains("version=2.11.0")
         assertThat(versionProperties).contains("sourceFingerprint=abc123")
+        assertThat(buildDir.resolve("output.log").readText()).isEqualTo("** TEST BUILD SUCCEEDED **")
     }
 
     @Test

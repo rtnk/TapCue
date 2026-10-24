@@ -33,7 +33,7 @@ class DriverBuilder(private val processBuilderFactory: XcodeBuildProcessBuilderF
      *         |                             maestro-iphonesimulator-driver-build)
      *         |_ driver-iphoneos: Consists the build products to setup iOS driver: maestro-driver-*.xctestrun,
      *            Debug-iphoneos/maestro-driver-iosUITests-Runner.app, and Debug-iphoneos/maestro-driver-ios.app
-     *         |_ output.log: In case of errors output.log would be there to help debug
+     *         |_ output.log: the xcodebuild log of the last build
      *         |_ version.properties: CLI version (and driver source fingerprint) the products were built from
      *
      *   2. xcodebuildOutput (Path): A temporary directory created to store the output logs of the xcodebuild process and source code.
@@ -89,9 +89,7 @@ class DriverBuilder(private val processBuilderFactory: XcodeBuildProcessBuilderF
             }
 
             if (!finished || process.exitValue() != 0) {
-                // copy the error log inside driver output
                 val targetErrorFile = File(buildDir.toFile(), outputFile.name)
-                outputFile.copyTo(targetErrorFile, overwrite = true)
                 val reason = if (finished) "" else " (xcodebuild did not finish within $waitTime s; set MAESTRO_XCODEBUILD_WAIT_TIME to wait longer)"
                 throw MaestroException.IOSDeviceDriverSetupException(
                     """
@@ -108,6 +106,10 @@ class DriverBuilder(private val processBuilderFactory: XcodeBuildProcessBuilderF
             // Return path to build products
             return derivedDataPath.resolve("Build/Products")
         } finally {
+            // Keep the xcodebuild log next to the build products, after a failure and after a success alike.
+            if (outputFile.exists()) {
+                outputFile.copyTo(File(buildDir.toFile(), outputFile.name), overwrite = true)
+            }
             File(buildDir.toFile(), "version.properties").writer().use {
                 val p = Properties()
                 p["version"] = config.cliVersion.toString()
