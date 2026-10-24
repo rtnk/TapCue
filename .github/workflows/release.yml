@@ -1,0 +1,355 @@
+# TapCue release pipeline (STEP-07; procedure in docs/RELEASING.md).
+#
+#   push of a tag vMAJOR.MINOR.PATCH   build, check and publish a GitHub Release from exactly the tagged commit
+#   workflow_dispatch                  the same build and checks of the selected branch, publishing nothing (validation)
+#
+#   prepare    decides the mode (scripts/fork/release-context.sh): a tag must be annotated, equal v<CLI_VERSION> and point
+#              at a commit on main; no Release may exist for it; the CHANGELOG section must exist (publish mode only);
+#              tests of the release scripts
+#   build      macOS arm64: detekt and ./gradlew test, the archive tapcue-<version>-macos-arm64.zip with SHA256SUMS,
+#              verify-dist.sh --smoke, license scan, dependency check, simulator-server guard, the archive run without
+#              network under sandbox-exec with the register of denied attempts, release notes; uploads the assets
+#   egress     Linux: the same archive in a loopback-only network namespace under strace (zero attempts)
+#   reproduce  Linux: rebuilds the archive from the same commit with the same JDK; the bytes must be identical
+#   publish    only for a pushed tag, after all of the above: the only job with contents: write; creates the Release
+#              with GITHUB_TOKEN and never overwrites one (scripts/fork/publish-release.sh)
+#
+# No caches: a release is built from a clean Gradle home, so nothing from earlier runs ends up in it.
+name: Release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  workflow_dispatch:
+  # TEMPORARY (STEP-07 only, removed before merge): workflow_dispatch can start this workflow only once the file is on
+  # the default branch, so the validation mode is exercised on the pull request. A pull request is always a validation run.
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # The exact JDK the release is built with; docs/RELEASING.md ("Odtworzenie builda") rebuilds with the same one.
+  RELEASE_JDK: '17.0.21'
+
+jobs:
+  prepare:
+    name: Mode, tag and version checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      mode: ${{ steps.context.outputs.mode }}
+      version: ${{ steps.context.outputs.version }}
+      tag: ${{ steps.context.outputs.tag }}
+      sha: ${{ steps.context.outputs.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Release mode and tag
+        id: context
+        run: |
+          scripts/fork/release-context.sh > "$RUNNER_TEMP/context.txt"
+          cat "$RUNNER_TEMP/context.txt" | tee -a "$GITHUB_OUTPUT"
+          { echo "### Release run"; echo; sed 's/^/    /' "$RUNNER_TEMP/context.txt"; echo; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: No Release exists for the tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.context.outputs.tag }}
+          MODE: ${{ steps.context.outputs.mode }}
+        run: |
+          if [ "$MODE" = publish ]; then
+            scripts/fork/publish-release.sh check "$TAG"
+          else
+            scripts/fork/publish-release.sh check "$TAG" ||
+              echo "::warning::A Release for $TAG already exists: tagging this version would fail."
+            echo "Validation run: nothing is published." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: CHANGELOG section for the version
+        env:
+          VERSION: ${{ steps.context.outputs.version }}
+          MODE: ${{ steps.context.outputs.mode }}
+        run: |
+          if [ "$MODE" = publish ]; then
+            python3 -I scripts/fork/release-notes.py "$VERSION" --require-section > /dev/null
+          elif ! python3 -I scripts/fork/release-notes.py "$VERSION" --require-section > /dev/null; then
+            echo "::warning::CHANGELOG.md has no complete '### $VERSION' section: a tag push would fail here."
+          fi
+
+      - name: Tests of the release scripts
+        run: scripts/fork/test-release.sh
+
+  build:
+    name: Build and check on macOS arm64
+    needs: prepare
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      TAG: ${{ needs.prepare.outputs.tag }}
+      SHA: ${{ needs.prepare.outputs.sha }}
+      MODE: ${{ needs.prepare.outputs.mode }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: The checkout is the commit being released
+        run: test "$(git rev-parse HEAD)" = "$SHA"
+
+      - name: Require Apple silicon
+        run: |
+          uname -m
+          test "$(uname -m)" = arm64
+          sw_vers
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+
+      - name: Set up Java
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: zulu
+          java-version: ${{ env.RELEASE_JDK }}
+
+      - name: Build facts
+        run: |
+          java -version
+          ./gradlew --version
+          mkdir -p release
+          {
+            echo "commit=$SHA"
+            echo "tag=$TAG ($MODE)"
+            echo "runner=$ImageOS $ImageVersion, macOS $(sw_vers -productVersion) $(uname -m)"
+            echo "jdk=$(java -XshowSettings:properties -version 2>&1 | sed -n 's/^ *java.vendor = //p') $(java -XshowSettings:properties -version 2>&1 | sed -n 's/^ *java.runtime.version = //p')"
+            echo "gradle=$(./gradlew --version | sed -n 's/^Gradle //p')"
+          } | tee release/build-info.txt
+
+      - name: Detekt and unit tests
+        run: ./gradlew --no-build-cache --continue :maestro-orchestra:detektMain :maestro-client:detektMain test
+
+      - name: Build the distribution archive
+        run: ./gradlew --no-build-cache :maestro-cli:macosArm64DistZip
+
+      - name: The archive carries the release version
+        run: |
+          ls maestro-cli/build/distributions
+          test "$(ls maestro-cli/build/distributions/tapcue-*-macos-arm64.zip)" = \
+            "maestro-cli/build/distributions/tapcue-$VERSION-macos-arm64.zip"
+          (cd maestro-cli/build/distributions && shasum -a 256 -c SHA256SUMS)
+
+      - name: Verify the archive
+        run: scripts/verify-dist.sh --smoke "maestro-cli/build/distributions/tapcue-$VERSION-macos-arm64.zip"
+
+      - name: License scan
+        run: |
+          mkdir -p build/reports/fork
+          python3 -I scripts/fork/check-licenses.py "maestro-cli/build/distributions/tapcue-$VERSION-macos-arm64.zip" \
+            --report build/reports/fork/license-scan.md
+          cat build/reports/fork/license-scan.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Dependency check (forbidden GAVs in the CLI runtime classpath)
+        run: scripts/fork/check-forbidden-deps.sh
+
+      - name: Guard - no simulator-server or Viewer in build outputs
+        run: scripts/fork/check-no-simulator-server.sh
+
+      - name: Install the archive
+        run: |
+          mkdir -p "$RUNNER_TEMP/tapcue"
+          unzip -q "maestro-cli/build/distributions/tapcue-$VERSION-macos-arm64.zip" -d "$RUNNER_TEMP/tapcue"
+          echo "TAPCUE=$RUNNER_TEMP/tapcue/tapcue-$VERSION-macos-arm64/bin/tapcue" >> "$GITHUB_ENV"
+
+      - name: The installed CLI reports the release version
+        run: |
+          "$TAPCUE" --version | tee version.txt
+          grep -Fq "$VERSION" version.txt
+
+      - name: Run without network access (register of denied attempts)
+        env:
+          REQUIRE_REGISTER: 'true'
+        run: scripts/fork/macos-offline-test.sh "$TAPCUE" reports/macos
+
+      - name: Release notes
+        run: |
+          require=()
+          if [ "$MODE" = publish ]; then require=(--require-section); fi
+          python3 -I scripts/fork/release-notes.py "$VERSION" "${require[@]}" \
+            --sums maestro-cli/build/distributions/SHA256SUMS --build-info release/build-info.txt \
+            --output release/notes.md
+          cat release/notes.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the release assets
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tapcue-release
+          path: |
+            maestro-cli/build/distributions/tapcue-${{ env.VERSION }}-macos-arm64.zip
+            maestro-cli/build/distributions/SHA256SUMS
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload the release notes
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-notes
+          path: release
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-build-reports
+          path: |
+            reports
+            build/reports/fork
+            **/build/reports/tests/test
+            **/build/test-results/test
+          retention-days: 30
+          if-no-files-found: warn
+
+  egress:
+    name: Offline test of the release archive (Linux)
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: The checkout is the commit being released
+        env:
+          SHA: ${{ needs.prepare.outputs.sha }}
+        run: test "$(git rev-parse HEAD)" = "$SHA"
+
+      - name: Set up Java
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: zulu
+          java-version: ${{ env.RELEASE_JDK }}
+
+      - name: Install strace
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q strace
+          strace -V | head -n 1
+
+      - name: Download the release assets
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: tapcue-release
+          path: dist
+
+      - name: Install the archive
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          (cd dist && sha256sum -c SHA256SUMS)
+          mkdir -p "$RUNNER_TEMP/tapcue"
+          unzip -q "dist/tapcue-$VERSION-macos-arm64.zip" -d "$RUNNER_TEMP/tapcue"
+          echo "TAPCUE=$RUNNER_TEMP/tapcue/tapcue-$VERSION-macos-arm64/bin/tapcue" >> "$GITHUB_ENV"
+
+      - name: The harness detects network attempts
+        run: scripts/fork/egress-test.sh self-test reports/egress-self-test
+
+      - name: TapCue CLI and MCP without network
+        run: scripts/fork/egress-test.sh cli "$TAPCUE" reports/egress-cli
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-egress-reports
+          path: reports
+          retention-days: 30
+          if-no-files-found: warn
+
+  reproduce:
+    name: Rebuild on Linux and compare the bytes
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: The checkout is the commit being released
+        env:
+          SHA: ${{ needs.prepare.outputs.sha }}
+        run: test "$(git rev-parse HEAD)" = "$SHA"
+
+      - name: Set up Java
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: zulu
+          java-version: ${{ env.RELEASE_JDK }}
+
+      - name: Build the distribution archive
+        run: |
+          java -version
+          ./gradlew --no-build-cache :maestro-cli:macosArm64DistZip
+
+      - name: Download the release assets
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: tapcue-release
+          path: dist
+
+      - name: Same bytes as the macOS build
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          python3 -I scripts/fork/compare-archives.py "dist/tapcue-$VERSION-macos-arm64.zip" \
+            "maestro-cli/build/distributions/tapcue-$VERSION-macos-arm64.zip" | tee compare.txt
+          cmp dist/SHA256SUMS maestro-cli/build/distributions/SHA256SUMS
+          { echo '### Reproducibility'; echo; sed 's/^/    /' compare.txt; } >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    name: Publish the GitHub Release
+    needs: [prepare, build, egress, reproduce]
+    if: needs.prepare.outputs.mode == 'publish' && github.event_name == 'push' && github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download the release assets
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: tapcue-release
+          path: dist
+
+      - name: Download the release notes
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-notes
+          path: notes
+
+      - name: Create the Release (never over an existing one)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          SHA: ${{ needs.prepare.outputs.sha }}
+        run: scripts/fork/publish-release.sh publish "$TAG" "$SHA" dist notes/notes.md

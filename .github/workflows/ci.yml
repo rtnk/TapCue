@@ -9,6 +9,9 @@
 #   android  the archive against an Android emulator (KVM): flows, hierarchy, MCP with a device and the error paths
 #   macos    the archive on Apple silicon: offline run, the iOS Simulator driver built from source, a simulator
 #
+# Releases are built by .github/workflows/release.yml (STEP-07), which repeats the build, egress and macOS offline checks
+# on the archive it publishes.
+#
 # Device jobs never turn green without having run: no KVM, or a pull request that only changes documentation, makes
 # their test steps show as skipped with the reason in the job summary. Decision D-9 (macOS cost): while the repository
 # is private, docs-only pull requests skip the macOS and Android jobs; push to main and workflow_dispatch run them all.
@@ -109,6 +112,9 @@ jobs:
         run: |
           scripts/fork/test-ci-checks.sh maestro-cli/build/distributions/tapcue-*-macos-arm64.zip \
             build/reports/fork/cli-runtime-dependencies.txt
+
+      - name: Tests of the release scripts (release.yml)
+        run: scripts/fork/test-release.sh
 
       - name: Android driver APK libraries (L-05)
         run: |
@@ -377,53 +383,8 @@ jobs:
 
       - name: Run without network access
         if: steps.run.outputs.available == 'true'
-        # The JVM takes user.home from the account, not from $HOME, so TapCue state lands in the runner's real home.
-        # sandbox-exec denies every outbound connection except loopback (and the DNS resolver socket), so a command
-        # that needed the internet would fail here. Denials are logged by the kernel; scripts/fork/macos-sandbox-log.sh
-        # reads them back as the register of attempts, after checking that it sees curl's.
-        run: |
-          cat > "$RUNNER_TEMP/offline.sb" <<'SB'
-          (version 1)
-          (allow default)
-          (deny network-outbound)
-          (allow network-outbound (remote ip "localhost:*"))
-          (allow network-outbound (remote unix-socket))
-          (deny network-outbound (remote unix-socket (path-literal "/private/var/run/mDNSResponder")))
-          SB
-          offline() { sandbox-exec -f "$RUNNER_TEMP/offline.sb" "$@"; }
-          mkdir -p reports/macos
-          probe_start="$(date '+%Y-%m-%d %H:%M:%S')"
-          offline curl -sS --max-time 10 https://example.com >/dev/null 2>&1 && { echo "sandbox does not block the network"; exit 1; }
-          sleep 2
-          scripts/fork/macos-sandbox-log.sh "$probe_start" curl > reports/macos/sandbox-probe.txt || true
-          start="$(date '+%Y-%m-%d %H:%M:%S')"
-          mkdir -p "$RUNNER_TEMP/project/.tapcue"
-          printf 'appId: com.example\n---\n- launchApp\n' > "$RUNNER_TEMP/project/.tapcue/flow.yaml"
-          offline "$TAPCUE" --version
-          offline "$TAPCUE" --help > /dev/null
-          offline "$TAPCUE" check-syntax "$RUNNER_TEMP/project/.tapcue/flow.yaml"
-          # STDIN ends right after the requests: since STEP-06 the server answers them before it exits.
-          reply="$(printf '%s\n' \
-            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' \
-            '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"cheat_sheet","arguments":{}}}' \
-            | offline "$TAPCUE" mcp)"
-          echo "$reply" | head -c 600; echo
-          grep -q '"name":"tapcue"' <<<"$reply"
-          grep -q '"id":2,"result"' <<<"$reply"
-          test ! -e "$HOME/.maestro"
-          sleep 2
-          if grep -q "deny" reports/macos/sandbox-probe.txt; then
-            echo "The sandbox log shows curl's denied attempt; checking that TapCue made none:"
-            scripts/fork/macos-sandbox-log.sh "$start" java | tee reports/macos/sandbox-tapcue.txt
-            if grep -q "deny" reports/macos/sandbox-tapcue.txt; then
-              echo "TapCue attempted a network connection outside loopback"
-              exit 1
-            fi
-            echo "OK: no denied network attempt by TapCue"
-          else
-            echo "::warning::The sandbox log did not show curl's denied attempt; on this runner the macOS run proves only that the commands work without network, not the absence of attempts."
-            cat reports/macos/sandbox-probe.txt
-          fi
+        # sandbox-exec without network, with the register of denied attempts (shared with release.yml since STEP-07).
+        run: scripts/fork/macos-offline-test.sh "$TAPCUE" reports/macos
 
       - name: Build the iOS Simulator driver from source without fetching anything
         if: steps.run.outputs.available == 'true'
