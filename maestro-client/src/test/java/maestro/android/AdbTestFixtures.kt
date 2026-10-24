@@ -93,6 +93,23 @@ internal fun awaitParked(thread: Thread) {
     }
 }
 
+/**
+ * Like [awaitParked], but only a park with a frame of [frameClass] on the stack counts. On a loaded machine the
+ * thread also parks briefly on the way (e.g. the bounded write of a request), and an interrupt sent then lands
+ * in the wrong place.
+ */
+internal fun awaitParkedIn(thread: Thread, frameClass: String) {
+    val deadline = System.currentTimeMillis() + 10_000
+    while (!(
+            (thread.state == Thread.State.WAITING || thread.state == Thread.State.TIMED_WAITING) &&
+                thread.stackTrace.any { it.className.startsWith(frameClass) }
+            )
+    ) {
+        check(System.currentTimeMillis() < deadline) { "thread never parked in $frameClass, state=${thread.state}" }
+        Thread.sleep(10)
+    }
+}
+
 /** A `cat /proc/net/unix` response listing one abstract socket row per name. */
 internal fun socketListing(vararg names: String) = AdbShellResponse(
     names.joinToString("") { "0000000000000000: 00000002 00000000 00010000 0001 01 54321 @$it\n" },

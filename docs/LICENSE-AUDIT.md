@@ -1,10 +1,12 @@
 # Audyt licencji — TapCue (repozytorium `rtnk/TapCue`)
 
-Wersja: **8 (STEP-07, pipeline wydania: `verify-dist.sh` i skan licencji archiwum wydania)**. Baseline: upstream `v2.11.0` (`c8c361be`); opisy źródeł odnoszą się do baseline.
-Status audytu: **OTWARTY — Release zablokowany** (gate G-3 w `ROADMAP-0.1.md`). Po STEP-06 otwarte zostają wyłącznie
-decyzje właściciela (§5): przegląd `THIRD-PARTY-NOTICES.md`/suplementu, ocena `play-services-location` w APK sterownika
-(L-05) i akceptacja polityki listy dozwolonych licencji (§3, `scripts/fork/allowed-licenses.tsv`). Pełna lista bibliotek APK
-sterownika (L-05) i automatyczny skan licencji działają w CI od STEP-06.
+Wersja: **9 (STEP-08, wydanie 0.1.0: decyzje właściciela, pełne teksty licencji, audyt zamknięty)**. Baseline: upstream `v2.11.0` (`c8c361be`); opisy źródeł odnoszą się do baseline.
+Status audytu: **ZAMKNIĘTY dla 0.1.0 (STEP-08, 2026-10-24)** — gate G-3 spełniony. Decyzje właściciela z 2026-10-24 (§5):
+(1) noty — dopisać brakujące pełne teksty licencji (zrealizowane: suplement §3.6, teksty bibliotek APK sterownika; teksty
+bibliotek CLI bez tekstu w JAR-ze były już w §3.5 od STEP-05); (2) L-05 — Google Play services (Android SDK License)
+i JUnit 4.13.2 (EPL-1.0) w APK sterownika **zaakceptowane** dla 0.1.0, bez dodatkowej wzmianki w ograniczeniach (wystarczają
+noty); (3) polityka `scripts/fork/allowed-licenses.tsv` **zaakceptowana** (CDDL+GPLv2-CPE `allowed`, LGPL-2.1
+`alternative-only`). Każda nowa licencja nadal zatrzymuje CI do przeglądu.
 
 Od STEP-05 paczka `tapcue-<wersja>-macos-arm64.zip` zawiera `LICENSE`, `NOTICE` (atrybucja upstream, dopisek
 „based on Maestro (Apache-2.0), not affiliated with mobile.dev”), `THIRD-PARTY-NOTICES.md` (generowany przez
@@ -52,8 +54,10 @@ Apache-2.0 (AndroidX, AndroidX Test, gRPC, Ktor, Gson, Guava, Kotlin, kotlinx-co
 Hamcrest 1.3), MIT (checker-qual, animal-sniffer-annotations, slf4j-api), ISC (kotlin-retry), **EPL-1.0 (JUnit 4.13.2, tylko APK
 instrumentacji)**, CDDL/GPLv2-CPE (`javax.annotation-api`), **Android SDK License (Google, własnościowa): `play-services-location`
 21.3.0, `play-services-base` 18.5.0, `play-services-basement` 18.4.0, `play-services-tasks` 18.2.0**. Lista w
-`THIRD-PARTY-NOTICES.md` §3.2 (suplement). Teksty licencji EPL-1.0/CDDL/BSD bibliotek APK nie są jeszcze powielone w suplemencie.
-**Ocena Google Play services i EPL-1.0 w APK — właściciel (otwarte)** |
+`THIRD-PARTY-NOTICES.md` §3.2 (suplement). **STEP-08:** pełne teksty licencji bibliotek APK spoza Apache-2.0 (EPL-1.0 JUnit,
+BSD-3 Hamcrest, MIT checker-qual i SLF4J, ISC kotlin-retry, CDDL `javax.annotation-api`; protobuf-lite i animal-sniffer — §3.5)
+w suplemencie §3.6, z JAR-ów z Maven Central (SLF4J — z repozytorium źródeł). **Google Play services i JUnit (EPL-1.0) w APK
+zaakceptowane przez właściciela 2026-10-24** (bez dodatkowej wzmianki w ograniczeniach) |
 | L-06 | FlyingFox 0.22.0 (`swhitty/FlyingFox`; w baseline SwiftPM pin w `project.xcworkspace/xcshareddata/swiftpm/Package.resolved`, od STEP-05 `maestro-ios-xctest-runner/Vendor/FlyingFox/`) | wkompilowany w runner iOS | MIT, © 2022 Simon Whitty. SHA-256 tekstu `d108595341bd18bb218ee3bad7eb5bdeee07c7c55e89e4488392449f84f2eef0` | Potwierdzone | **OK z notą (STEP-05; dołączenie zaakceptowane przez właściciela 2026-10-24)** — źródła FlyingFox 0.22.0 (rewizja `3ad076e081749cef043e25ac01719a503b772113`, ta sama co w usuniętym `Package.resolved`; SHA-256 `LICENSE` jak wyżej) dołączone bez zmian w `maestro-ios-xctest-runner/Vendor/FlyingFox/` (`XCLocalSwiftPackageReference` zamiast pakietu zdalnego), więc trafiają do JAR CLI (`driver/ios/Vendor/`) jako źródło. Dzięki temu build sterownika przy pierwszym użyciu nie pobiera niczego (N-36). Tekst MIT w `THIRD-PARTY-NOTICES.md` §3.3; `CSystemLinux/` (tylko Linux) — Apache-2.0 z Runtime Library Exception |
 | L-07 | `maestro-cli/jvm-version.jar` | zatwierdzony; kopiowany do `bin/` dystrybucji przez `startScripts` | źródło opisane w komentarzu `maestro-cli/build.gradle.kts` (klasa `JvmVersion`, część projektu → Apache-2.0) | Potwierdzone (opis); **STEP-05:** `jvm-version.jar` zawiera wyłącznie `META-INF/MANIFEST.MF` (`Main-Class: JvmVersion`) i `JvmVersion.class` (`javap -c`: `System.getProperty("java.version")`, `StringTokenizer`, `System.out.println`, `System.exit` — zgodne z opisem, bez sieci i plików) | OK — `THIRD-PARTY-NOTICES.md` §3.4 |
 | L-08 | `gradle/wrapper/gradle-wrapper.jar` | build | Apache-2.0 | Potwierdzone | NIE DOTYCZY paczki; walidacja `wrapper-validation` w CI |
@@ -82,7 +86,7 @@ i dopisania wpisu. Wynik dla paczki STEP-06 (134 biblioteki): Apache-2.0 101, UP
 BSD-2-Clause 2, BSD-2-Clause-FreeBSD 2, CC0-1.0 1, BSD-2-Clause/CC0-1.0 1, MIT/UPL-1.0 1, ISC 1, Unicode-3.0 1,
 CDDL-1.1/GPL-2.0-CPE 1 — wszystkie na liście. Testy negatywne (`scripts/fork/test-ci-checks.sh`): nowa licencja (GFTC),
 znana licencja zapisana inaczej, biblioteka tylko z licencją `alternative-only`, pusta tabela, niezgodna liczba wierszy —
-każde odrzucone. Polityka jest decyzją techniczną do akceptacji właściciela (§5).
+każde odrzucone. Polityka zaakceptowana przez właściciela 2026-10-24 (§5).
 
 Podsumowanie licencji wg POM: Apache-2.0 (zdecydowana większość), MIT, UPL-1.0 (GraalVM community),
 BSD-2/BSD-3/FreeBSD (`jcodec`, `jline`, `HdrHistogram`), ISC (`kotlin-result`), Unicode/ICU (`icu4j` shadowed),
@@ -154,12 +158,16 @@ Uruchamiany w CI (`.github/workflows/ci.yml`: job `build` i job `macos`; do STEP
 ## 5. Otwarte zadania audytu
 
 1. ~~STEP-05: `THIRD-PARTY-NOTICES.md`~~ — **zrealizowane** (generowany przy buildzie; teksty z JAR-ów + suplement).
-   Zostaje: artefakty, których JAR nie zawiera tekstu licencji (np. część MIT/BSD), mają w tabeli nazwę i URL licencji
-   z POM, ale nie pełny tekst — przegląd właściciela przed STEP-08 (ewentualnie dopisanie tekstów do suplementu).
+   Przegląd właściciela (2026-10-24): dopisać brakujące pełne teksty — **zrealizowane w STEP-08** (biblioteki CLI bez tekstu
+   w JAR-ze: §3.5 od STEP-05; biblioteki APK sterownika: §3.6). Kontrola STEP-08: każda biblioteka z §1 `THIRD-PARTY-NOTICES.md`
+   na licencji innej niż Apache-2.0 ma tekst w §2 (z JAR-a) albo w §3.5 (handover STEP-08 §2).
 2. STEP-05: drzewo zależności `maestro-android` (APK) i noty dla L-05 — **pełna lista przechodnia w STEP-06** (job CI `build`,
-   `scripts/fork/android-driver-deps.py`, §3.2 suplementu); **ocena `play-services-location` — właściciel** (otwarte).
+   `scripts/fork/android-driver-deps.py`, §3.2 suplementu); **Google Play services i JUnit EPL-1.0 zaakceptowane przez
+   właściciela 2026-10-24**; teksty — §3.6 (STEP-08).
 3. ~~STEP-05: SHA-256 `applesimutils` vs wydanie 0.9.10~~ — oficjalne wydanie to tylko źródła; porównanie niemożliwe (L-02).
 4. ~~D-5: implementacja z testami regresji~~ — **zrealizowane w STEP-05**. D-6 zrealizowana w STEP-03B.
-5. ~~STEP-06: automatyczny skan licencji w CI~~ — **zrealizowane** (`scripts/fork/check-licenses.py`, §3). Do akceptacji
-   właściciela: polityka listy dozwolonych (w szczególności CDDL+GPLv2-CPE `javax.annotation-api` jako `allowed` i LGPL-2.1
-   jako `alternative-only`).
+5. ~~STEP-06: automatyczny skan licencji w CI~~ — **zrealizowane** (`scripts/fork/check-licenses.py`, §3). Polityka listy
+   dozwolonych (CDDL+GPLv2-CPE `javax.annotation-api` jako `allowed`, LGPL-2.1 jako `alternative-only`) **zaakceptowana przez
+   właściciela 2026-10-24**.
+6. Po 0.1.0 (bez wpływu na G-3): sprawdzenie logo TapCue pod kątem kolizji ze znakami towarowymi przed szerszą promocją —
+   decyzja właściciela (handover STEP-08). Logo (`docs/assets/tapcue-logo.png`) jest tylko w repozytorium, nie w paczce.

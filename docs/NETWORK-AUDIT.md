@@ -1,6 +1,6 @@
 # Audyt ruchu sieciowego — TapCue (repozytorium `rtnk/TapCue`)
 
-Wersja: **10 (STEP-07, pipeline wydania)**. Baseline: upstream `mobile-dev-inc/Maestro` tag `v2.11.0`
+Wersja: **11 (STEP-08, wydanie 0.1.0)**. Baseline: upstream `mobile-dev-inc/Maestro` tag `v2.11.0`
 (`c8c361be1cc89b2e742f185466a302a22778be6b`); numery linii w kolumnie „Źródło” odnoszą się do baseline.
 
 Historia zmian statusów:
@@ -66,6 +66,11 @@ Historia zmian statusów:
   z `GITHUB_TOKEN`). Bez zmian statusów runtime: archiwum wydania przechodzi te same kontrole co w CI — na macOS paczka pod
   `sandbox-exec` z **wymaganym** rejestrem odmów (`scripts/fork/macos-offline-test.sh`, `REQUIRE_REGISTER=true`), na Linux
   `egress-test.sh self-test` i `cli` na tym samym archiwum (job `egress` w `release.yml`).
+- **STEP-08** (wydanie 0.1.0) — bez zmian statusów i bez nowych pozycji: zmiana wersji CLI na `0.1.0`, dokumenty, logo
+  w repozytorium (`docs/assets/tapcue-logo.png`, poza paczką), pełne teksty licencji w suplemencie not, przebudowa sterownika
+  iOS dla urządzeń fizycznych przy każdej innej wersji CLI (lokalny `xcodebuild`, bez sieci — jak dotąd). Dowód braku prób
+  połączeń dla archiwum `0.1.0`: `egress-test.sh` (lokalnie i w jobie `egress`) oraz krok offline macOS w `release.yml`/`ci.yml`
+  (handover STEP-08 §2). README wskazuje `gh release download` — ruch użytkownika do GitHub przy instalacji, nie TapCue.
 
 Dokument jest rejestrem *wszystkich* znanych ścieżek, którymi narzędzie (CLI, MCP, build) może
 nawiązać połączenie sieciowe. Każdy kolejny krok aktualizuje kolumnę **Status** i dopisuje dowody.

@@ -93,6 +93,28 @@ class RealDeviceDriverTest {
     }
 
     @Test
+    fun `should update driver built by a higher version`() {
+        // TapCue 0.1.0 follows builds numbered 2.11.0 (the upstream version it was forked from)
+        mockkObject(EnvUtils)
+        val driverBuilder = mockk<DriverBuilder>()
+        every { driverBuilder.buildDriver(any()) } returns tempDir.resolve("Build/Products")
+        every { EnvUtils.getCLIVersion() } returns CliVersion.parse("0.1.0")
+        every { EnvUtils.CLI_VERSION } returns CliVersion.parse("0.1.0")
+        val driverDirectory = Files.createDirectories(Paths.get(tempDir.pathString + "/maestro-iphoneos-driver-build"))
+        driverDirectory.resolve("driver-iphoneos").resolve("Build").resolve("Products").createDirectories()
+            .resolve("maestro-driver-ios-config.xctestrun").createFile()
+        Files.newBufferedWriter(driverDirectory.resolve("version.properties")).use { writer ->
+            Properties().apply { setProperty("version", "2.11.0") }.store(writer, null)
+        }
+
+        RealIOSDeviceDriver(teamId = "dummy-team", destination = "destination", driverBuilder)
+            .validateAndUpdateDriver(driverRootDirectory = tempDir)
+
+        verify(exactly = 1) { driverBuilder.buildDriver(any()) }
+        driverDirectory.toFile().deleteRecursively()
+    }
+
+    @Test
     fun `should update driver when version file is missing`() {
         // Set up a test version.properties file with an outdated version
         // Mock CLI_VERSION in EnvUtils to return "1.2.0"
