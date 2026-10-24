@@ -100,7 +100,9 @@ adb -s "$device" shell am force-stop dev.mobile.maestro
 status=0
 wait "$pid" || status=$?
 elapsed=$(( $(date +%s) - start ))
-tail -n 25 "$dir/driver-killed.out" | sed 's/^/  | /'
+cat "$dir/driver-killed.out" | sed 's/^/  | /'
+echo "  maestro.log (last lines):"
+tail -n 40 "$dir/debug/driver-killed/maestro.log" 2>/dev/null | sed 's/^/  | /'
 if [ "$status" != 0 ] && [ "$elapsed" -lt 150 ]; then
   record "PASS driver-killed (exit $status, $elapsed s)"
 else

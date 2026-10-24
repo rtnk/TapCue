@@ -215,10 +215,23 @@ jobs:
           tasks=()
           for module in maestro-cli maestro-client maestro-ios maestro-ios-driver maestro-orchestra \
                         maestro-orchestra-models maestro-test maestro-utils; do
-            tasks+=(":$module:test")
+            tasks+=(":$module:test" --rerun)
           done
+          # --rerun and no build cache: the tests must really run here, not come back from the CI cache.
           scripts/fork/egress-test.sh run reports/egress-unit-tests unit-tests -- \
-            ./gradlew --offline --no-daemon --continue "${tasks[@]}"
+            ./gradlew --offline --no-daemon --no-build-cache --continue "${tasks[@]}"
+
+      - name: List failed tests
+        if: failure()
+        run: |
+          python3 -I - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          for path in sorted(glob.glob("*/build/test-results/test/*.xml")):
+              for case in ET.parse(path).getroot().iter("testcase"):
+                  for problem in list(case.findall("failure")) + list(case.findall("error")):
+                      print(f"FAILED {case.get('classname')} > {case.get('name')}")
+                      print("    " + (problem.text or problem.get("message") or "").strip().replace("\n", "\n    ")[:3000])
+          PY
 
       - name: Upload reports
         if: always()
