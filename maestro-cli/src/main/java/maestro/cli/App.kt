@@ -155,7 +155,7 @@ internal fun createCommandLine(): CommandLine {
             )
 
             if (
-                ex !is CliError && ex !is MaestroException.UnsupportedJavaVersion
+                ex !is CliError && ex !is MaestroException.WebPlatformNotSupported
                 && ex !is MaestroException.MissingAppleTeamId && ex !is MaestroException.IOSDeviceDriverSetupException
             ) {
                 cmd.err.println("\nThe stack trace was:")

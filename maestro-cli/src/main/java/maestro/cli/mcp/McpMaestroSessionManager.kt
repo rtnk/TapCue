@@ -3,6 +3,7 @@ package maestro.cli.mcp
 import device.SimctlIOSDevice
 import ios.xctest.XCTestIOSDevice
 import maestro.Maestro
+import maestro.MaestroException
 import maestro.cli.CliError
 import maestro.cli.mcp.viewer.McpViewerDriver
 import maestro.cli.mcp.viewer.McpViewerEvents
@@ -14,7 +15,6 @@ import maestro.device.DeviceService
 import maestro.device.Device
 import maestro.device.Platform
 import maestro.drivers.AndroidDriver
-import maestro.drivers.CdpWebDriver
 import maestro.drivers.IOSDriver
 import maestro.utils.CliInsights
 import maestro.utils.TempFileHandler
@@ -59,7 +59,7 @@ internal class McpMaestroSessionManager : AutoCloseable {
 
     private fun createSession(deviceId: String): McpMaestroSession {
         if (deviceId == WEB_DEVICE_ID) {
-            return createWebSession()
+            throw MaestroException.WebPlatformNotSupported()
         }
 
         val device = DeviceService.listConnectedDevices()
@@ -73,7 +73,7 @@ internal class McpMaestroSessionManager : AutoCloseable {
         return when (device.platform) {
             Platform.ANDROID -> createAndroidSession(device, streamDeviceType)
             Platform.IOS -> createIosSession(device, streamDeviceType)
-            Platform.WEB -> createWebSession()
+            Platform.WEB -> throw MaestroException.WebPlatformNotSupported()
         }
     }
 
@@ -96,17 +96,6 @@ internal class McpMaestroSessionManager : AutoCloseable {
             platform = "ios",
             streamDeviceType = streamDeviceType,
             deviceId = device.instanceId,
-        )
-    }
-
-    private fun createWebSession(): McpMaestroSession {
-        val driver = McpViewerDriver(CdpWebDriver(isHeadless = false, screenSize = null), "web")
-        driver.open()
-        return McpMaestroSession(
-            maestro = Maestro(driver),
-            platform = "web",
-            streamDeviceType = null,
-            deviceId = WEB_DEVICE_ID,
         )
     }
 

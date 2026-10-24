@@ -53,9 +53,9 @@ dependencies {
     implementation(project(":maestro-utils"))
     implementation(project(":maestro-ios-driver"))
 
-    api(libs.graaljs)
-    api(libs.graaljsEngine)
+    api(libs.graaljsCommunity)
     api(libs.graaljsLanguage)
+    api(libs.graalPolyglot)
 
     api(libs.grpc.kotlin.stub)
     api(libs.grpc.stub)
@@ -77,13 +77,10 @@ dependencies {
     api(libs.apk.parser)
 
     implementation(project(":maestro-ios"))
-    implementation(project(":maestro-web"))
     implementation(libs.google.findbugs)
     implementation(libs.axml)
-    implementation(libs.selenium)
-    implementation(libs.selenium.devtools)
-    implementation(libs.jcodec)
     implementation(libs.datafaker)
+    implementation(libs.kotlinx.coroutines.core)
 
     api(libs.logging.sl4j)
     api(libs.logging.api)

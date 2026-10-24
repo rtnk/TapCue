@@ -35,9 +35,10 @@ class GraalJsEngine(
     ),
     platform: String = "unknown",
     scope: FileAccessScope = FileAccessScope.everything,
+    networkPolicy: LocalNetworkPolicy = LocalNetworkPolicy(),
 ) : JsEngine {
 
-    private val httpBinding = GraalJsHttp(httpClient, scope)
+    private val httpBinding = GraalJsHttp(httpClient, scope, networkPolicy)
     private val outputBinding = HashMap<String, Any>()
     private val maestroBinding = HashMap<String, Any?>()
     private val envBinding = HashMap<String, String>()
@@ -189,6 +190,9 @@ class GraalJsEngine(
 
         val context = Context.newBuilder("js")
             .option("js.strict", "true")
+            // GraalJS community has no optimizing compiler on a stock JDK; flow scripts are short,
+            // so the interpreter is enough and its one-time warning would only add noise on stderr.
+            .option("engine.WarnInterpreterOnly", "false")
             .logHandler(NULL_HANDLER)
             .out(outputStream)
             .allowHostAccess(hostAccess)

@@ -23,7 +23,6 @@ import com.github.romankh3.image.comparison.ImageComparison
 import maestro.UiElement.Companion.toUiElementOrNull
 import maestro.device.CapturedDeviceArtifact
 import maestro.device.DeviceOrientation
-import maestro.drivers.CdpWebDriver
 import maestro.utils.MaestroTimer
 import maestro.utils.ScreenshotUtils
 import maestro.utils.SocketUtils
@@ -808,29 +807,6 @@ class Maestro(
             if (openDriver) {
                 driver.open()
             }
-            return Maestro(driver)
-        }
-
-        fun web(
-            isHeadless: Boolean,
-            screenSize: String?,
-        ): Maestro {
-            // Check that JRE is at least 11
-            val version = System.getProperty("java.version")
-            if (version.startsWith("1.")) {
-                val majorVersion = version.substring(2, 3).toInt()
-                if (majorVersion < 11) {
-                    throw MaestroException.UnsupportedJavaVersion(
-                        "Maestro Web requires Java 11 or later. Current version: $version"
-                    )
-                }
-            }
-
-            val driver = CdpWebDriver(
-                isHeadless = isHeadless,
-                screenSize = screenSize,
-            )
-            driver.open()
             return Maestro(driver)
         }
     }

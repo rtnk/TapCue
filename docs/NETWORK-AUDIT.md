@@ -1,6 +1,6 @@
 # Audyt ruchu sieciowego — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Wersja: **4 (STEP-03, Remove telemetry, error upload and update checks)**. Baseline: upstream `mobile-dev-inc/Maestro` tag `v2.11.0`
+Wersja: **5 (STEP-03B, Network policy for flow features)**. Baseline: upstream `mobile-dev-inc/Maestro` tag `v2.11.0`
 (`c8c361be1cc89b2e742f185466a302a22778be6b`); numery linii w kolumnie „Źródło” odnoszą się do baseline.
 
 Historia zmian statusów:
@@ -21,6 +21,16 @@ Historia zmian statusów:
   poza classpath), `CliJarContentsTest` (JAR CLI bez hostów telemetrii, aktualizacji, próbek i CDN — poza znanym N-15),
   `HtmlTestSuiteReporterTest` (raport bez URL-i, CSS i skrypt inline), `DeviceCreateUtilTest` (`start-device` nie instaluje
   obrazów, pokazuje polecenie `sdkmanager`).
+- **STEP-03B** — ograniczone: N-25 (JS `http.*` tylko do loopback/sieci prywatnej/link-local, D-3); usunięte: N-26,
+  N-28, N-30 (platforma web wyłączona, sterownik web, Selenium i `maestro-web` usunięte, D-4), T-01; udokumentowane jako
+  granica: N-29. Dowód: testy `maestro-client` `LocalNetworkPolicyTest` (klasyfikacja adresów, rozwiązywanie nazw,
+  gniazdo odrzuca adres publiczny przed `connect`), `maestro-test` `JsHttpNetworkPolicyTest` (`http.get` do loopback
+  działa; `https://example.com` i każda metoda do adresu publicznego → błąd skryptu bez wywołania OkHttp, bez próby
+  połączenia i bez zapytania do `ProxySelector`; przekierowanie na publiczny literał IP lub nazwę → błąd, jedyne nawiązane
+  połączenie to lokalne; przekierowanie w sieci lokalnej działa), `IntegrationTest` Case 136 na lokalnym `MockWebServer`,
+  `maestro-cli` `WebPlatformDisabledTest` (flow web w `test`/`record`, `start-device --platform web` → kontrolowany błąd
+  bez stack trace i bez sieci; klasy sterownika web i Selenium oraz JAR-y `selenium*`/`truffle-enterprise` poza
+  classpath).
 - **STEP-00B** — usunięte: B-01, B-02 (build bez simulator-server i npm); częściowo: N-18. Dowód:
   `CliJarContentsTest` (JAR i classpath bez `deps/simulator-server/**`, `mcp-viewer/**`), strażnik
   `scripts/fork/check-no-simulator-server.sh`, smoke `maestro mcp` przez STDIO bez `mcp_viewer_ready`.
@@ -44,7 +54,7 @@ nawiązać połączenie sieciowe. Każdy kolejny krok aktualizuje kolumnę **Sta
 Dozwolone w gotowym narzędziu:
 
 - połączenia do `127.0.0.1`/`::1`/`localhost` (driver iOS XCTest na porcie lokalnym, port-forward
-  ADB, gRPC do `maestro-server.apk` przez forward, CDP do lokalnego Chrome/WebView, serwer MCP
+  ADB, gRPC do `maestro-server.apk` przez forward, CDP do WebView na urządzeniu przez ADB, serwer MCP
   na STDIO — bez sieci w ogóle);
 - połączenia ADB do urządzeń w sieci prywatnej, jeśli użytkownik sam je skonfigurował
   (`adb connect`, `--host`) — ruch sterujący urządzeniem, nie usługa producenta;
@@ -54,9 +64,10 @@ Dozwolone w gotowym narzędziu:
 
 Ruch sieciowy **testowanej aplikacji** (backend aplikacji, WebView, przeglądarka urządzenia) jest
 osobną sprawą: fork nie mockuje backendu aplikacji. Komendy, które jedynie przekazują URL do
-urządzenia (`openLink` na Android/iOS), mają status `GRANICA` i zostaną opisane w dokumentacji.
-Komendy, w których **host** (JVM CLI) sam wykonuje żądanie (JS `http.*`, sterownik web), mają
-status `OGRANICZ`.
+urządzenia (`openLink`, `launchApp` z linkiem na Android/iOS), mają status `GRANICA`: żądanie wykonuje
+urządzenie lub symulator, nie host CLI, więc polityka forka go nie obejmuje i nie blokuje (N-29). Ruch hosta
+wynikający z treści flow: JS `http.*` jest ograniczony do loopback, sieci prywatnych i link-local (N-25, D-3);
+sterownik web (Chrome na hoście) został usunięty (N-26, N-28, N-30, D-4).
 
 ## Rejestr — runtime CLI / MCP
 
@@ -86,12 +97,12 @@ status `OGRANICZ`.
 | N-22 | `report/HtmlAITestSuiteReporter.kt:71`, `auth/Auth.kt:25` | raport AI / strona callbacku logowania | `cdn.tailwindcss.com` | IP | — | **USUNIĘTE (STEP-01/02)** — STEP-01: strony callbacku logowania (`Auth.kt`); STEP-02: raport AI (`HtmlAITestSuiteReporter`, `ai_report.css`, `tailwind.config.js`) | USUŃ (razem z AI/Cloud) | 01/02 |
 | N-23 | `maestro-client/.../mockserver/MockInteractor.kt:53,84,103` | brak wywołań w kodzie produkcyjnym (tylko `main()` w tym pliku) | `api.copilot.mobile.dev` `/auth`, `/mms-events` | token | — | **USUNIĘTE (STEP-01)** — `MockInteractor.kt` | USUŃ | 01 |
 | N-24 | `maestro-client/.../device/DeviceService.kt:632,682` | `maestro start-device`, gdy obraz systemu Android nie jest zainstalowany | `sdkmanager --list` / instalacja obrazu (serwery Google) | — | — | **USUNIĘTE (STEP-03)** — `DeviceService.installAndroidSystemImage` i pytanie „Would you like to install it?” usunięte; `resolveSystemImage` przegląda tylko `sdkmanager --list_installed` (nie `--list`, które czyta zdalny katalog Google). Brak obrazu → `CliError` z poleceniem `sdkmanager "…"` do samodzielnego uruchomienia. Hipoteza (do testu egress w STEP-06): `--list_installed` nie łączy się z siecią | OGRANICZ (tylko obrazy zainstalowane; brak auto-pobierania) | 03 |
-| N-25 | `maestro-client/.../js/GraalJsHttp.kt:74`, `GraalJsEngine.kt:40,155` | `runScript`/`evalScript` z `http.get/post/put/delete/request` | **dowolny URL** podany w skrypcie flow | dowolne dane flow | — | Potwierdzone | OGRANICZ (domyślnie tylko loopback/prywatne; inne — jawny błąd) | 03B |
-| N-26 | `maestro-client/.../drivers/CdpWebDriver.kt:107` (Selenium `ChromeDriverService.Builder` bez ścieżki) | platforma `web` | Selenium Manager może **pobrać chromedriver/Chrome** (Chrome for Testing) i wysłać statystyki użycia | wersje, OS | `SE_OFFLINE`, `SE_AVOID_STATS` (Selenium) | Hipoteza (zachowanie Selenium 4.43) | OGRANICZ lub wyłączyć platformę web w 0.1.0 (decyzja D-4) | 03B |
+| N-25 | `maestro-client/.../js/GraalJsHttp.kt:74`, `GraalJsEngine.kt:40,155` | `runScript`/`evalScript` z `http.get/post/put/delete/request` | **dowolny URL** podany w skrypcie flow | dowolne dane flow | — | **OGRANICZONE (STEP-03B)** — `LocalNetworkPolicy` (`maestro-client`, pakiet `maestro.js`): dozwolone tylko `127.0.0.0/8`, `::1`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `fc00::/7`, `169.254.0.0/16`, `fe80::/10`. URL jest sprawdzany przed przekazaniem do OkHttp (nazwa rozwiązywana, **każdy** adres musi być dozwolony), a klient skryptów (dowolny przekazany `OkHttpClient`) dostaje `Dns` z tą samą regułą (każdy skok przekierowania), gniazda, które odrzucają niedozwolony adres przed `connect` (literały IP w przekierowaniach), i `Proxy.NO_PROXY` (także dla SOCKS). Naruszenie → błąd skryptu „Blocked request to … is not a loopback, private or link-local address”. Bez flagi opt-in. Pozostaje zapytanie DNS przez systemowy resolver dla nazw hostów (potrzebne do sprawdzenia adresu) | OGRANICZ (domyślnie tylko loopback/prywatne; inne — jawny błąd) | 03B |
+| N-26 | `maestro-client/.../drivers/CdpWebDriver.kt:107` (Selenium `ChromeDriverService.Builder` bez ścieżki) | platforma `web` | Selenium Manager może **pobrać chromedriver/Chrome** (Chrome for Testing) i wysłać statystyki użycia | wersje, OS | `SE_OFFLINE`, `SE_AVOID_STATS` (Selenium) | **USUNIĘTE (STEP-03B)** — platforma web wyłączona (D-4): `CdpWebDriver`, `WebDriver`, `Maestro.web` i moduł `maestro-web` usunięte, `selenium-java`/`selenium-devtools` (z `selenium-manager`) poza grafem; flow web, `--platform web` i urządzenie `chromium` → `MaestroException.WebPlatformNotSupported` | USUŃ (D-4) | 03B |
 | N-27 | `CdpWebDriver.kt:97` | sterownik web w trybie `isStudio` | `https://maestro.mobile.dev` | IP | — | **USUNIĘTE (STEP-01)** — parametr `isStudio` usunięty z `CdpWebDriver`, `WebDriver`, `Maestro.web`, `MaestroSessionManager` | USUŃ | 01 |
-| N-28 | `CdpWebDriver.kt:581`, `WebDriver.kt` (`openLink`, `launchApp` URL) | flow web | URL z flow — wykonuje **przeglądarka hosta** | dane testowanej strony | — | Potwierdzone | OGRANICZ (D-4) | 03B |
-| N-29 | `openLink` na Android (ADB `am start`) / iOS (`simctl openurl`) | flow mobilny | URL wykonuje urządzenie/symulator | — | — | Potwierdzone | GRANICA (dokumentacja) | 03B |
-| N-30 | Chrome uruchamiany przez sterownik web | platforma `web` | usługi tła Chrome (aktualizacje komponentów, Safe Browsing itp.) | — | — | Hipoteza | OGRANICZ (flagi Chrome) / D-4 | 03B |
+| N-28 | `CdpWebDriver.kt:581`, `WebDriver.kt` (`openLink`, `launchApp` URL) | flow web | URL z flow — wykonuje **przeglądarka hosta** | dane testowanej strony | — | **USUNIĘTE (STEP-03B)** — razem ze sterownikiem web (N-26); flow z nagłówkiem `url:` kończy się błędem przed uruchomieniem czegokolwiek | USUŃ (D-4) | 03B |
+| N-29 | `openLink` na Android (ADB `am start`) / iOS (`simctl openurl`), `launchApp`/`openLink` z linkiem | flow mobilny | URL wykonuje urządzenie/symulator | — | — | **GRANICA (STEP-03B)** — udokumentowane (`ARCHITECTURE-LOCAL.md` §4, sekcja „Granica” wyżej): host CLI przekazuje tylko URL urządzeniu, ruch wykonuje urządzenie/symulator; fork go nie ogranicza | GRANICA (dokumentacja) | 03B |
+| N-30 | Chrome uruchamiany przez sterownik web | platforma `web` | usługi tła Chrome (aktualizacje komponentów, Safe Browsing itp.) | — | — | **USUNIĘTE (STEP-03B)** — CLI nie uruchamia już Chrome (N-26) | USUŃ (D-4) | 03B |
 | N-31 | `maestro-ios-driver/.../xcuitest/XCTestDriverClient.kt`, `OkHttpClientInstance.kt` | sterowanie iOS | `127.0.0.1:<port>` (XCTest runner) | polecenia UI | — | Potwierdzone | ZACHOWAJ | — |
 | N-32 | `maestro-client/.../android/AdbSocketFactory.kt`, `AndroidDeviceConnection.kt`, dadb | sterowanie Android | ADB (`localhost:5037`/emulator/urządzenie), gRPC przez port-forward | polecenia UI | — | Potwierdzone | ZACHOWAJ | — |
 | N-33 | `maestro-client/.../android/chromedevtools/DadbChromeDevToolsClient.kt` | hierarchia WebView na Android | socket DevTools przez ADB (`http://$socketName/json`) | — | — | Potwierdzone | ZACHOWAJ | — |
@@ -115,7 +126,7 @@ status `OGRANICZ`.
 
 | ID | Źródło | Cel | Skutek | Status | Decyzja | Krok |
 |---|---|---|---|---|---|---|
-| T-01 | `maestro-test/src/test/resources/script/multipart_request_file_script.js` (IntegrationTest „Case 136 - Relative path in http multipart script”) | `https://eu.httpbin.org/anything` | test pada bez internetu (w sesji STEP-00: `CONNECT 403` z proxy) | Potwierdzone | przepisać na lokalny `MockWebServer` (razem z polityką D-3) | 03B |
+| T-01 | `maestro-test/src/test/resources/script/multipart_request_file_script.js` (IntegrationTest „Case 136 - Relative path in http multipart script”) | `https://eu.httpbin.org/anything` | test pada bez internetu (w sesji STEP-00: `CONNECT 403` z proxy) | **USUNIĘTE (STEP-03B)** — skrypt wysyła na `UPLOAD_URL` z env flow; test uruchamia lokalny `MockWebServer` i sprawdza żądanie multipart (`imagefile` = `abc.png`, pole `name`) | przepisać na lokalny `MockWebServer` (razem z polityką D-3) | 03B |
 | T-02 | `maestro-test`/`maestro-orchestra` — URL-e `example.com` w testach | brak żądań (tylko parsowanie) | — | Hipoteza (do potwierdzenia testem egress) | weryfikacja | 06 |
 
 ## Zmienne środowiskowe związane z ruchem (upstream)
@@ -132,7 +143,8 @@ nie będzie polegał na zmiennych — kod zostanie usunięty.
 1. Test jednostkowy/architektoniczny: w klasach runtime brak odwołań do `api.copilot.mobile.dev`,
    `posthog`, `ngrok.io`, `openai.com`, `anthropic.com`, `storage.googleapis.com`, `jsdelivr`,
    `tailwindcss` (grep po zawartości JAR + test w Gradle).
-2. Test grafu zależności: `runtimeClasspath` CLI bez `com.posthog`, bez modułu `maestro-ai`.
+2. Test grafu zależności: `runtimeClasspath` CLI bez `com.posthog`, bez modułu `maestro-ai`, bez `selenium*`,
+   `maestro-web` i `truffle-enterprise` (STEP-02/03/03B: testy `NoRemoteAiTest`, `NoTelemetryTest`, `WebPlatformDisabledTest`).
 3. Test egress na runnerze Linux: uruchomienie CLI (`--version`, `--help`, `check-syntax`, `test`
    z `FakeDriver`/bez urządzenia, `mcp` handshake) w przestrzeni sieciowej bez trasy do internetu
    (np. `unshare -n` lub reguły `iptables` z wyjątkiem loopback) z rejestrowaniem prób DNS

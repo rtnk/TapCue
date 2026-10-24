@@ -47,8 +47,6 @@ micrometerCore = "1.13.4"
 mockk = "1.12.0"
 mordant = "3.0.2"
 picocli = "4.6.3"
-selenium = "4.43.0"
-selenium-devtools = "4.43.0"
 skiko = "0.8.18"
 squareOkhttp = "4.12.0"
 squareOkio = "3.16.2"
@@ -83,9 +81,10 @@ google-gson = { module = "com.google.code.gson:gson", version.ref = "googleGson"
 google-protobuf-kotlin = { module = "com.google.protobuf:protobuf-kotlin", version.ref = "googleProtobuf" }
 google-protobuf-kotlin-lite = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "googleProtobuf" }
 google-truth = { module = "com.google.truth:truth", version.ref = "googleTruth" }
-graaljs = { module = "org.graalvm.js:js", version.ref = "graaljs" }
-graaljsEngine = { module = "org.graalvm.js:js-scriptengine", version.ref = "graaljs" }
+# GraalJS community (UPL). Not org.graalvm.js:js, which adds truffle-enterprise (Oracle GFTC, LICENSE-AUDIT L-03).
+graaljsCommunity = { module = "org.graalvm.js:js-community", version.ref = "graaljs" }
 graaljsLanguage = { module = "org.graalvm.js:js-language", version.ref = "graaljs" }
+graalPolyglot = { module = "org.graalvm.polyglot:polyglot", version.ref = "graaljs" }
 grpc-kotlin-stub = { module = "io.grpc:grpc-kotlin-stub", version.ref = "grpcKotlinStub" }
 grpc-netty = { module = "io.grpc:grpc-netty", version.ref = "grpc" }
 grpc-netty-shaded = { module = "io.grpc:grpc-netty-shaded", version.ref = "grpc" }
@@ -113,10 +112,8 @@ kotlin-retry = { module = "com.michael-bull.kotlin-retry:kotlin-retry", version.
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-serial-gson = { module = "io.ktor:ktor-serialization-gson", version.ref = "ktor" }
-ktor-serial-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor" }
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
-ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
@@ -127,8 +124,6 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mordant = { module = "com.github.ajalt.mordant:mordant", version.ref = "mordant" }
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
 picocli-codegen = { module = "info.picocli:picocli-codegen", version.ref = "picocli" }
-selenium = { module = "org.seleniumhq.selenium:selenium-java", version.ref = "selenium" }
-selenium-devtools = { module = "org.seleniumhq.selenium:selenium-devtools-v147", version.ref = "selenium-devtools" }
 skiko-macos-arm64 = { module = "org.jetbrains.skiko:skiko-awt-runtime-macos-arm64", version.ref = "skiko" }
 skiko-macos-x64 = { module = "org.jetbrains.skiko:skiko-awt-runtime-macos-x64", version.ref = "skiko" }
 skiko-linux-arm64 = { module = "org.jetbrains.skiko:skiko-awt-runtime-linux-arm64", version.ref = "skiko" }

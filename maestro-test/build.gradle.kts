@@ -35,6 +35,7 @@ dependencies {
     testRuntimeOnly(libs.junit.jupiter.engine)
 
     testImplementation(libs.wiremock.jre8)
+    testImplementation(libs.square.mock.server)
 }
 
 tasks.named<Test>("test") {
