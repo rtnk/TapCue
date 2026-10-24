@@ -11,6 +11,9 @@
 >   reintroduce them, and do not pass `-x` for them (Gradle fails on unknown tasks).
 > - The web platform is disabled (STEP-03B, D-4): `maestro-web`, `CdpWebDriver`/`WebDriver` and Selenium are gone, and web
 >   flows fail with `WebPlatformNotSupported`. The `e2e/workspaces/web` fixtures are upstream's and are evaluated in STEP-06.
+> - The MCP server is local-only (STEP-04): the Viewer (`mcp/viewer/`, `maestro-cli/mcp-viewer/`) is gone and
+>   `cheat_sheet` serves `maestro-cli/src/main/resources/mcp/cheat-sheet.md` — keep its `yaml` examples valid
+>   (`CheatSheetToolTest` parses them) and do not make MCP tools call remote services.
 > - The `release` and `bump-android-version` skills in `.claude/skills/`, root `RELEASING.md` and
 >   `.github/upstream-workflows-disabled/` describe upstream processes (Maestro Cloud, Maven Central,
 >   Homebrew, GCS) and do not apply here. Fork releases: `docs/RELEASING.md`.

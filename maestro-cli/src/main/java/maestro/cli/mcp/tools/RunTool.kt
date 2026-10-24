@@ -5,7 +5,6 @@ import io.modelcontextprotocol.kotlin.sdk.server.RegisteredTool
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 import maestro.cli.mcp.McpMaestroSessionManager
-import maestro.cli.mcp.viewer.McpViewerOrchestra
 import maestro.cli.util.WorkingDirectory
 import maestro.orchestra.Orchestra
 import maestro.orchestra.util.Env.withDefaultEnvVars
@@ -83,7 +82,7 @@ object RunTool {
             val result = sessionManager.withSession(
                 deviceId = args.deviceId,
             ) { session ->
-                val orchestra = McpViewerOrchestra.create(session.maestro)
+                val orchestra = Orchestra(session.maestro)
                 when (executable) {
                     is Executable.Inline -> runInline(args.deviceId, orchestra, executable.yaml, args.env)
                     is Executable.Plan -> runPlan(args.deviceId, orchestra, executable.plan, args.env)

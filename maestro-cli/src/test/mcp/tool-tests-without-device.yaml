@@ -16,10 +16,10 @@ tools:
         result:
           contains: "device"
 
-    - name: "Get Maestro cheat sheet (expect API key required)"
+    - name: "Get Maestro cheat sheet (bundled with the CLI)"
       tool: "cheat_sheet"
       params: {}
       expect:
-        success: false
-        error:
-          contains: "MAESTRO_CLOUD_API_KEY"
+        success: true
+        result:
+          contains: "Maestro Local flow cheat sheet"

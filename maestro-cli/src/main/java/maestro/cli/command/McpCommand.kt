@@ -19,8 +19,8 @@ class McpCommand : Callable<Int> {
     )
     private var workingDir: File? = null
 
-    // The Viewer needs simulator-server, which this fork does not ship (docs/LICENSE-AUDIT.md L-01).
-    // Both flags are still accepted so existing MCP client configurations keep working.
+    // The Viewer was removed: it needs simulator-server, which this fork does not ship (docs/LICENSE-AUDIT.md L-01).
+    // Both flags are still accepted and ignored so existing MCP client configurations keep working.
     @CommandLine.Option(names = ["--no-viewer"], hidden = true)
     private var noViewer: Boolean = false
 
