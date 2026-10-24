@@ -194,9 +194,6 @@ private fun aiCommandNotAvailable(location: JsonLocation, commandName: String) =
     """.trimMargin("|"),
 )
 
-private const val DOCS_FIRST_FLOW = "https://docs.maestro.dev/getting-started/writing-your-first-flow"
-private const val DOCS_COMMANDS = "https://docs.maestro.dev/api-reference/commands"
-
 private class ParseException(
     val location: JsonLocation,
     val title: String,
@@ -291,7 +288,6 @@ private fun wrapException(error: Throwable, parser: JsonParser, contentPath: Pat
                     |- launchApp
                     |```
                 """.trimMargin("|"),
-                docs = DOCS_FIRST_FLOW,
             )
             else -> FlowParseException(
                 location = e.location ?: parser.currentLocation(),
@@ -317,7 +313,6 @@ private fun wrapException(error: Throwable, parser: JsonParser, contentPath: Pat
                 |- launchApp
                 |```
             """.trimMargin("|"),
-            docs = DOCS_FIRST_FLOW,
         )
     }
     findException<UnrecognizedPropertyException>(error)?.let { e ->
@@ -384,7 +379,6 @@ private object YamlCommandDeserializer : JsonDeserializer<YamlFluentCommand>() {
                 errorMessage = """
                     |Invalid command format. Expected: "<commandName>: <options>" eg. "tapOn: submit"
                 """.trimMargin("|"),
-                docs = DOCS_COMMANDS,
             )
         }
     }
@@ -420,7 +414,6 @@ private object YamlCommandDeserializer : JsonDeserializer<YamlFluentCommand>() {
                 |
                 |${suggestCommandMessage(commandText)}
             """.trimMargin("|").trim(),
-            docs = DOCS_COMMANDS,
         )
     }
 
@@ -679,7 +672,6 @@ object MaestroFlowParser {
                     |- launchApp
                     |```
                 """.trimMargin("|"),
-                docs = DOCS_FIRST_FLOW,
             )
         }
 
@@ -707,7 +699,6 @@ object MaestroFlowParser {
                     |- launchApp
                     |```
                 """.trimMargin("|"),
-                docs = DOCS_FIRST_FLOW,
             )
         }
 

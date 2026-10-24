@@ -6,7 +6,6 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.protobuf) apply false
-    alias(libs.plugins.mavenPublish)
     alias(libs.plugins.detekt)
 }
 
@@ -32,4 +31,12 @@ detekt {
     allRules = false
     autoCorrect = true
     config = files("${rootDir}/detekt.yml")
+}
+
+// Every JAR and archive the same bytes for the same inputs (STEP-05: the release archive and its SHA256SUMS).
+allprojects {
+    tasks.withType<AbstractArchiveTask>().configureEach {
+        isPreserveFileTimestamps = false
+        isReproducibleFileOrder = true
+    }
 }

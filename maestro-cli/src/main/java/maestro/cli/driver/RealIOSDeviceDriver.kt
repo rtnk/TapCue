@@ -11,7 +11,7 @@ import java.util.Properties
 class RealIOSDeviceDriver(private val teamId: String?, private val destination: String, private val driverBuilder: DriverBuilder) {
 
     fun validateAndUpdateDriver(driverRootDirectory: Path = getDefaultVersionPropertiesFile(), force: Boolean = false) {
-        val driverDirectory = driverRootDirectory.resolve("maestro-iphoneos-driver-build")
+        val driverDirectory = driverRootDirectory.resolve(DriverBuilder.REAL_DEVICE_BUILD_DIRECTORY)
         val versionPropertiesFile = driverDirectory.resolve("version.properties")
 
         val currentCliVersion = EnvUtils.CLI_VERSION ?: throw IllegalStateException("CLI version is unavailable.")

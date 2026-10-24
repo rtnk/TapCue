@@ -29,6 +29,8 @@ import maestro.MaestroException
 import maestro.device.Device
 import maestro.cli.CliError
 import maestro.cli.device.PickDeviceInteractor
+import maestro.cli.driver.DriverBuilder
+import maestro.cli.driver.IOSSimulatorDriver
 import maestro.cli.util.EnvUtils
 import maestro.device.Platform
 import maestro.utils.CliInsights
@@ -347,7 +349,7 @@ object MaestroSessionManager {
         }
         val iOSDriverConfig = when (deviceType) {
             Device.DeviceType.REAL -> {
-                val driverPath = EnvUtils.tapcueHome().resolve("maestro-iphoneos-driver-build").resolve("driver-iphoneos")
+                val driverPath = EnvUtils.tapcueHome().resolve(DriverBuilder.REAL_DEVICE_BUILD_DIRECTORY).resolve("driver-iphoneos")
                     .resolve("Build").resolve("Products")
                 IOSDriverConfig(
                     prebuiltRunner = false,
@@ -359,7 +361,7 @@ object MaestroSessionManager {
             Device.DeviceType.SIMULATOR -> {
                 IOSDriverConfig(
                     prebuiltRunner = false,
-                    sourceDirectory =  "driver-iPhoneSimulator",
+                    sourceDirectory = IOSSimulatorDriver().buildProducts().pathString,
                     context = Context.CLI,
                     snapshotKeyHonorModalViews = platformConfiguration?.ios?.snapshotKeyHonorModalViews
                 )

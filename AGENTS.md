@@ -24,6 +24,18 @@
 > - The `release` and `bump-android-version` skills in `.claude/skills/`, root `RELEASING.md` and
 >   `.github/upstream-workflows-disabled/` describe upstream processes (Maestro Cloud, Maven Central,
 >   Homebrew, GCS) and do not apply here. Fork releases: `docs/RELEASING.md`.
+> - Distribution (STEP-05, D-1/D-5/D-7): the only release artifact is `tapcue-<version>-macos-arm64.zip` + `SHA256SUMS`
+>   from `./gradlew :maestro-cli:macosArm64DistZip`; check it with `scripts/verify-dist.sh --smoke <zip>` (CI does). There is
+>   no `jreleaser`, `scripts/install.sh` or Maven Central publishing — do not reintroduce them. `THIRD-PARTY-NOTICES.md` is
+>   generated (`:maestro-cli:generateThirdPartyNotices`, hand-written part `docs/audit/notices-supplement.md`); a new runtime
+>   dependency whose POM has no license fails the build until it is checked and added to `thirdPartyLicenseOverrides`. A new
+>   native library or nested archive in `lib/` fails `verify-dist.sh` until it is added to its allowlist with its license.
+>   User-facing text and start scripts must not link to maestro.dev/mobile.dev (N-35).
+> - No prebuilt iOS driver (STEP-05, D-5): the `driver-iPhoneSimulator`/`driver-iphoneos` ZIPs and the `buildIosDriver`
+>   task are gone. The CLI builds the simulator runner from the source in its JAR (`driver/ios`) with the local Xcode
+>   (`maestro.cli.driver.IOSSimulatorDriver`, `~/.tapcue/maestro-iphonesimulator-driver-build`). Swift dependencies are
+>   vendored in `maestro-ios-xctest-runner/Vendor/` so that build needs no network; do not add remote Swift packages.
+>   The module rows and "What NOT to do" items below about checked-in iOS driver ZIPs describe upstream.
 >
 > The rest of this file is upstream's and still describes the module layout and test layers accurately.
 

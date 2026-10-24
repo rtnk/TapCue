@@ -1,15 +1,9 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
-    id("maven-publish")
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.mavenPublish)
 }
 
-mavenPublishing {
-    publishToMavenCentral(true)
-    signAllPublications()
-}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17

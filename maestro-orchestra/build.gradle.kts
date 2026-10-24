@@ -1,10 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
-    id("maven-publish")
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.mavenPublish)
     alias(libs.plugins.detekt)
 }
 
@@ -54,10 +52,6 @@ tasks.named("compileKotlin", KotlinCompilationTask::class.java) {
     }
 }
 
-mavenPublishing {
-    publishToMavenCentral(true)
-    signAllPublications()
-}
 
 tasks.named<Test>("test") {
     useJUnitPlatform()

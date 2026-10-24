@@ -32,6 +32,25 @@ class CliJarContentsTest {
     }
 
     @Test
+    fun `CLI jar bundles the iOS driver source and no prebuilt driver`() {
+        // D-5 (STEP-05): the simulator runner is built from driver/ios with the local Xcode; prebuilt driver ZIPs
+        // contained Apple frameworks (LICENSE-AUDIT L-04) and are not shipped.
+        val jar = File(System.getProperty("maestro.cli.jar"))
+        val entries = ZipFile(jar).use { zip -> zip.entries().asSequence().map { it.name }.toList() }
+
+        assertThat(entries).containsAtLeast(
+            "driver/ios/maestro-driver-ios.xcodeproj/project.pbxproj",
+            "driver/ios/Vendor/FlyingFox/Package.swift",
+            "driver/ios/MaestroDriverLib/Sources/MaestroDriverLib/MaestroDriverLib.swift",
+        )
+        assertThat(entries.filter { it.endsWith(".zip") || it.endsWith(".xctestrun") || ".app/" in it || ".framework/" in it }).isEmpty()
+
+        val classLoader = CliJarContentsTest::class.java.classLoader
+        assertThat(classLoader.getResource("driver-iPhoneSimulator/Debug-iphonesimulator/maestro-driver-iosUITests-Runner.zip")).isNull()
+        assertThat(classLoader.getResource("driver-iphoneos/Debug-iphoneos/maestro-driver-iosUITests-Runner.zip")).isNull()
+    }
+
+    @Test
     fun `CLI jar references no telemetry, update or CDN hosts`() {
         // STEP-03: hosts of removed telemetry, error/screen reports, update checks, changelog and
         // samples downloads, and the CDN the HTML report used to load Bootstrap from.

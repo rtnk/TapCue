@@ -1,10 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
-import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
-    id("maven-publish")
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.mavenPublish)
 }
 
 sourceSets {
@@ -58,10 +55,6 @@ tasks.named("compileKotlin", KotlinCompilationTask::class.java) {
     }
 }
 
-mavenPublishing {
-    publishToMavenCentral(true)
-    signAllPublications()
-}
 
 tasks.named<Test>("test") {
     useJUnitPlatform()

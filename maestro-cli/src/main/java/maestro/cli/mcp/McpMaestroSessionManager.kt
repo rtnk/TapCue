@@ -5,6 +5,7 @@ import ios.xctest.XCTestIOSDevice
 import maestro.Maestro
 import maestro.MaestroException
 import maestro.cli.CliError
+import maestro.cli.driver.IOSSimulatorDriver
 import maestro.cli.report.TestDebugReporter
 import maestro.android.AndroidDeviceConnection
 import maestro.device.DeviceService
@@ -22,6 +23,7 @@ import xcuitest.installer.Context
 import xcuitest.installer.LocalXCTestInstaller
 import xcuitest.installer.LocalXCTestInstaller.IOSDriverConfig
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.io.path.pathString
 
 internal class McpMaestroSessionManager : AutoCloseable {
     private val sessions = ConcurrentHashMap<String, McpMaestroSession>()
@@ -99,7 +101,7 @@ internal class McpMaestroSessionManager : AutoCloseable {
 
         val iOSDriverConfig = IOSDriverConfig(
             prebuiltRunner = false,
-            sourceDirectory = "driver-iPhoneSimulator",
+            sourceDirectory = IOSSimulatorDriver().buildProducts().pathString,
             context = Context.CLI,
             snapshotKeyHonorModalViews = null,
         )

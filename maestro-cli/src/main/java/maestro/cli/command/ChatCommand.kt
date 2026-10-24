@@ -7,7 +7,7 @@ import java.util.concurrent.Callable
 @CommandLine.Command(
     name = "chat",
     description = [
-        "Discontinued. Use Maestro MCP instead: https://docs.maestro.dev/get-started/maestro-mcp"
+        "Discontinued. Use the local MCP server instead: tapcue mcp"
     ],
     hidden = true
 )
@@ -38,11 +38,11 @@ class ChatCommand : Callable<Int> {
 
     companion object {
         private val MESSAGE = """
-            @|yellow maestro chat has been discontinued.|@
+            @|yellow tapcue chat has been discontinued.|@
 
-            MaestroGPT answered questions about Maestro. Maestro MCP does more: it connects your coding agent (Claude Code, Cursor, Codex, and others) directly to Maestro so it can write, run, and debug your flows for you.
+            It relied on a remote AI service, which TapCue does not include. The local MCP server connects your coding agent (Claude Code, Cursor, Codex, and others) to TapCue over STDIO so it can write, run, and debug your flows.
 
-            Get started: @|blue,underline https://docs.maestro.dev/get-started/maestro-mcp|@
+            Get started: @|bold tapcue mcp|@
         """.trimIndent()
     }
 }

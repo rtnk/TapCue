@@ -2,7 +2,7 @@
 
 | Pole | Wartość |
 |---|---|
-| Krok | STEP-04B — w review |
+| Krok | STEP-04B — **scalony** 2026-10-24 (merge `ad15449`) |
 | PR | PR-04B: https://github.com/rtnk/TapCue/pull/12 |
 | Gałąź | `step-04b-tapcue` |
 | Gałąź docelowa | `main` |
@@ -17,7 +17,7 @@ Cel (D-1, D-2, R-6): fork nie koliduje z oficjalną instalacją Maestro ani nazw
 |---|---|
 | Jedno źródło ścieżek | nowy `maestro.utils.TapCueDirs` w `maestro-utils`: `NAME = "tapcue"`, `PROJECT_DIR = ".tapcue"`, `LEGACY_PROJECT_DIR = ".maestro"`, `home()` = `~/.tapcue`, `state()` = `$XDG_STATE_HOME/tapcue` albo `home()`, `binaryDependency(name)` = `~/.tapcue/deps/<name>`. Leży w `maestro-utils`, a nie w `EnvUtils` (jak sugerowała ROADMAP), bo `DebugLogStore` (`maestro-client`) i `LocalSimulatorUtils` (`maestro-ios-driver`) nie zależą od CLI; `EnvUtils.xdgStateHome()` i nowe `EnvUtils.tapcueHome()` delegują do niego |
 | Katalog stanu (D-2) | `~/.maestro` → `~/.tapcue` w: `SessionStore` (`sessions`), `Unpacker.binaryDependency` (`deps/applesimutils`), `LocalSimulatorUtils` (ścieżka `applesimutils` — musi się zgadzać z `Unpacker`), `MaestroSessionManager` i `RealIOSDeviceDriver` (build sterownika iOS dla urządzeń fizycznych), `DriverBuilder` (`TapCueDirs.home(sourceCodeRoot)`). `TestDebugReporter`: artefakty w `$XDG_STATE_HOME/tapcue/tests` lub `~/.tapcue/tests`, a z `--debug-output <dir>` — `<dir>/.tapcue/tests`. `DebugLogStore`: `AppDirs` z nazwą `tapcue` (np. `~/.cache/tapcue/logs`, `~/Library/Logs/tapcue`; wcześniej `maestro`/`mobile_dev`). Nazwy plików wewnątrz (`maestro.log`, `maestro-iphoneos-driver-build`) bez zmian — nie kolidują, bo leżą w katalogach TapCue. `~/.mobiledev` nie jest używany (od STEP-01). Stan z `~/.maestro` nie jest migrowany (sesje i `deps` odtwarzają się same, build sterownika — `tapcue driver-setup`) |
-| `LegacyAnalyticsState` | **decyzja: usunięty** (z testem i wywołaniem w `App.main`). Po przejściu na `~/.tapcue` fork nie ma własnego `analytics.json` do sprzątania, a kasowanie pliku w `~/.maestro`/`$XDG_STATE_HOME/maestro` ingerowałoby w równoległą instalację oficjalnego Maestro (R-6: np. ponowne pytanie o zgodę). Wymaga potwierdzenia właściciela — D-2 mówiła „analytics.json jest usuwany” |
+| `LegacyAnalyticsState` | **decyzja: usunięty** (z testem i wywołaniem w `App.main`). Po przejściu na `~/.tapcue` fork nie ma własnego `analytics.json` do sprzątania, a kasowanie pliku w `~/.maestro`/`$XDG_STATE_HOME/maestro` ingerowałoby w równoległą instalację oficjalnego Maestro (R-6: np. ponowne pytanie o zgodę). Wymagało potwierdzenia właściciela — D-2 mówiła „analytics.json jest usuwany”; **potwierdzone 2026-10-24** |
 | Polecenie i nazwa (D-1) | picocli `name = "tapcue"` z nagłówkiem „TapCue - local mobile UI test automation, based on Maestro (Apache-2.0), not affiliated with mobile.dev”; `--version` → `tapcue <wersja>` + dopisek w drugiej linii (`versionText()`); `application.applicationName = "tapcue"` → `bin/tapcue`, `bin/tapcue.bat`, `build/install/tapcue/`. Wstawka sprawdzająca Javę 17 w `tapcue.bat` szukała `@rem Execute maestro` — teraz `@rem Execute $applicationName` (inaczej po zmianie nazwy znikałaby po cichu; sprawdzone w zbudowanym skrypcie) |
 | Komunikaty | `maestro <komenda>` → `tapcue <komenda>` (`StartDeviceCommand`, `PickDeviceInteractor`, `RecordCommand`, nagłówek wideo `SkiaFrameRenderer`); „Maestro” jako nazwa produktu → „TapCue” (`TestCommand`/`RecordCommand` `--config`, `DriverCommand`, `McpCommand`, tytuł raportu HTML, log „TapCue Version”, `tapcue-recording.mp4`); „Maestro Local” → „TapCue” w błędach (`WebPlatformNotSupported`, `LocalNetworkPolicy.POLICY`, komenda AI w `MaestroFlowParser`) i ich testach/fixture'ach `e025`–`e027`. „Maestro” zostaje tam, gdzie nazywa format flow lub produkt upstream (Viewer, `check-syntax` „Maestro flow file”, opisy narzędzi MCP o selektorach) |
 | MCP | `serverInfo.name` = `tapcue`; instrukcje: „TapCue MCP … (the Maestro flow format)”, „Save flows in the project's `.tapcue/` directory” (limit 2 KB zachowany); ściągawka: „TapCue flow cheat sheet”, akapit o `.tapcue/` i `mv .maestro .tapcue`; `src/test/mcp/` (B-08): oczekiwany nagłówek ściągawki, ścieżka `install/tapcue/bin/tapcue` |
@@ -82,7 +82,7 @@ scripts/fork/check-no-simulator-server.sh
 - **Zmiana łamiąca dla użytkowników forka:** nowe polecenie, katalogi i konwencja `.tapcue/`. Fork nie miał jeszcze wydania,
   więc dotyczy to tylko lokalnych buildów; CHANGELOG ma trzy wpisy „Zmiana łamiąca”. Stan z `~/.maestro` nie jest
   przenoszony; zbudowany sterownik iOS dla urządzeń fizycznych trzeba zbudować ponownie (`tapcue driver-setup`).
-- **`LegacyAnalyticsState` usunięty wbrew dosłownemu brzmieniu D-2** (patrz §1). Jeśli właściciel woli zachować sprzątanie
+- **`LegacyAnalyticsState` usunięty wbrew dosłownemu brzmieniu D-2** (patrz §1; właściciel potwierdził 2026-10-24). Jeśli właściciel woli zachować sprzątanie
   `analytics.json` upstream, wystarczy przywrócić klasę z STEP-03 — ale wtedy TapCue modyfikuje katalog oficjalnego Maestro.
 - **Ostrzeżenie `.maestro/` tylko w `tapcue test`.** `record`, `check-syntax` i `run` w MCP (`dir`/`files` z `.maestro/`)
   działają bez ostrzeżenia. Wystarczy to dla głównej ścieżki; rozszerzenie — w razie potrzeby.
@@ -96,6 +96,10 @@ scripts/fork/check-no-simulator-server.sh
 
 PR-04B **scalony** do `main`, CI `ci-baseline.yml` zielone na `main`. Właściciel potwierdził (albo odrzucił) decyzje
 z §1: usunięcie `LegacyAnalyticsState` i ostrzeżenie dla `.maestro/` bez automatycznego odczytu.
+
+**Stan (2026-10-24):** spełniony. PR-04B scalony (`ad15449`), CI `ci-baseline.yml` na `main` zielone
+([run 40075814509](https://github.com/rtnk/TapCue/actions/runs/40075814509)). **Właściciel potwierdził obie decyzje:**
+(1) ostrzeżenie `tapcue test` dla `.maestro/` bez automatycznego odczytu, (2) usunięcie `LegacyAnalyticsState`.
 
 ## 5. Następny krok
 

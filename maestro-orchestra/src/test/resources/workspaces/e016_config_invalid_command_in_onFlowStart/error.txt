@@ -9,4 +9,3 @@ Invalid Command: inp at /tmp/WorkspaceExecutionPlannerErrorsTest_workspace/works
   `inp` is not a valid command.
   
   Did you mean one of: inputRandomText, inputRandomNumber, inputRandomEmail, inputRandomPersonName, inputRandomCityName, inputRandomCountryName, inputRandomColorName, inputText
-  See: https://docs.maestro.dev/api-reference/commands

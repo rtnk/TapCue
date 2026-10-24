@@ -6,4 +6,3 @@ Invalid Command at /tmp/WorkspaceExecutionPlannerErrorsTest_workspace/workspace/
               ^
 
   Invalid command format. Expected: "<commandName>: <options>" eg. "tapOn: submit"
-  See: https://docs.maestro.dev/api-reference/commands
