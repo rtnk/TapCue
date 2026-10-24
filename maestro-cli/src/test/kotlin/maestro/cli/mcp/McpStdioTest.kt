@@ -41,7 +41,7 @@ import kotlin.concurrent.thread
  * The child JVM sends every HTTP(S) and SOCKS connection to a non-loopback host through local recorders,
  * so an outbound attempt is counted even though it never leaves the machine.
  */
-@Timeout(value = 3, unit = TimeUnit.MINUTES)
+@Timeout(value = 6, unit = TimeUnit.MINUTES)
 class McpStdioTest {
 
     @TempDir
@@ -124,7 +124,9 @@ class McpStdioTest {
                 put("name", "list_devices")
                 putJsonObject("arguments") {}
             }
-            val listDevices = stdout.awaitResponse(4).result()
+            // list_devices runs `xcrun simctl` on macOS; the first call on a fresh runner starts CoreSimulator, which
+            // took more than 90 s on a loaded macos-26 runner (release.yml run 40116758695).
+            val listDevices = stdout.awaitResponse(4, timeoutSeconds = 240).result()
             assertThat(listDevices.isError()).isFalse()
             // The machine running the test may or may not have emulators or simulators; the shape is what counts.
             Json.parseToJsonElement(listDevices.text()).jsonObject["devices"]!!.jsonArray.forEach { device ->
@@ -244,8 +246,8 @@ class McpStdioTest {
         flush()
     }
 
-    private fun LinkedBlockingQueue<String>.awaitResponse(id: Int): JsonObject {
-        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(90)
+    private fun LinkedBlockingQueue<String>.awaitResponse(id: Int, timeoutSeconds: Long = 90): JsonObject {
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(timeoutSeconds)
         while (true) {
             val remaining = deadline - System.nanoTime()
             val line = poll(remaining.coerceAtLeast(0), TimeUnit.NANOSECONDS)
