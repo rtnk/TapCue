@@ -84,12 +84,17 @@ isolated() {
     sudo=(sudo)
     as_user=(-u "$user")
   fi
-  "${sudo[@]}" unshare --net -- /bin/sh -c 'ip link set lo up && exec "$@"' sh \
+  # A PID namespace too, so that a daemon the command leaves behind (an adb server, a Gradle daemon) can be reaped and
+  # strace -f does not wait for it forever.
+  "${sudo[@]}" unshare --net --pid --fork --mount-proc -- /bin/sh -c 'ip link set lo up && exec "$@"' sh \
     strace "${as_user[@]}" -f --seccomp-bpf -qq -o "$log" -e trace=connect,sendto,sendmsg,sendmmsg -- \
     env -u JAVA_TOOL_OPTIONS -u _JAVA_OPTIONS -u JDK_JAVA_OPTIONS \
       -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u NO_PROXY -u http_proxy -u https_proxy -u all_proxy -u no_proxy \
-      HOME="$HOME" PATH="$PATH" "$@"
+      HOME="$HOME" PATH="$PATH" timeout --kill-after=10 "$limit" "$root/scripts/fork/egress-reap.sh" "$@"
 }
+
+# Seconds one isolated command may take before it is killed (and fails): a hang must not stall CI silently.
+limit="${EGRESS_TIMEOUT:-300}"
 
 failures=0
 summary=""
@@ -101,6 +106,10 @@ scenario() {
   local out="$dir/$name.out" log="$dir/$name.strace" status=0 verdict=PASS
   echo "== $name: $*"
   isolated "$log" "$@" > "$out" 2>&1 || status=$?
+  if [ "$status" = 124 ] || [ "$status" = 137 ]; then
+    verdict=FAIL
+    echo "  killed after ${limit} s (EGRESS_TIMEOUT)"
+  fi
   case "$expect" in
     0) [ "$status" = 0 ] || { verdict=FAIL; echo "  exit code $status, expected 0"; } ;;
     nonzero) [ "$status" != 0 ] || { verdict=FAIL; echo "  exit code 0, expected an error"; } ;;
@@ -259,6 +268,7 @@ case "${1:-}" in
     [ $# -ge 3 ] && [ "$3" = "--" ] || usage
     dir="$1" name="$2"
     shift 3
+    limit="${EGRESS_TIMEOUT:-3600}"
     mkdir -p "$dir"
     dir="$(cd "$dir" && pwd)"
     scenario "$dir" "$name" 0 "$@"

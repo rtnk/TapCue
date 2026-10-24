@@ -1,6 +1,6 @@
 # ROADMAP 0.1.0 — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Status dokumentu: **STEP-05 w review ([#13](https://github.com/rtnk/TapCue/pull/13)); następny: STEP-06**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23, STEP-03B ([#8](https://github.com/rtnk/TapCue/pull/8)), STEP-04 ([#9](https://github.com/rtnk/TapCue/pull/9)) i STEP-04B ([#12](https://github.com/rtnk/TapCue/pull/12)) — 2026-10-24. Ostatnia aktualizacja: 2026-10-24.
+Status dokumentu: **STEP-06 w review ([#14](https://github.com/rtnk/TapCue/pull/14)); następny: STEP-07**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23, STEP-03B ([#8](https://github.com/rtnk/TapCue/pull/8)), STEP-04 ([#9](https://github.com/rtnk/TapCue/pull/9)) STEP-04B ([#12](https://github.com/rtnk/TapCue/pull/12)) i STEP-05 ([#13](https://github.com/rtnk/TapCue/pull/13)) — 2026-10-24. Ostatnia aktualizacja: 2026-10-24.
 
 ## 0. Punkt wyjścia
 
@@ -46,7 +46,7 @@ pliku (PR-00).
 | D-6 | GraalJS `truffle-enterprise` (Oracle GFTC, L-03) | **Artefakty community** (UPL: `js-community`/`js-language` + `polyglot`, wykluczenie `truffle-enterprise`) — **już w STEP-03B** | STEP-03B (`js-community` + `js-language` + `polyglot`) |
 | D-7 | JRE w paczce | **Wymagany systemowy JDK/JRE 17+** (README, launcher sprawdza wersję); paczka nie jest nazywana samowystarczalną | STEP-05 — zrealizowane w PR-05 (`README.md` w paczce, `bin/tapcue` sprawdza Javę 17; `StartScriptsTest`, `verify-dist.sh`) |
 | D-8 | STEP-00B „Legal containment” przed dalszymi krokami | Tak (wykonany po PR-01, scalony jako #3). Flagi `-x downloadSimulatorServer …` zbędne i błędne | — |
-| D-9 | Widoczność repozytorium i koszt runnerów macOS | **Repozytorium może być publiczne już teraz** (zmiana ustawień — po stronie właściciela). W repo publicznym minuty standardowych runnerów (także macOS) są bezpłatne, więc ograniczenie testów macOS do release/`workflow_dispatch` nie jest już wymuszone kosztem | STEP-06/07 (zakres jobów macOS) |
+| D-9 | Widoczność repozytorium i koszt runnerów macOS | **Repozytorium może być publiczne już teraz** (zmiana ustawień — po stronie właściciela). W repo publicznym minuty standardowych runnerów (także macOS) są bezpłatne, więc ograniczenie testów macOS do release/`workflow_dispatch` nie jest już wymuszone kosztem | STEP-06: job `macos` w `ci.yml` na każdym PR (poza PR zmieniającymi wyłącznie dokumentację — wtedy jawnie `skipped`), push `main` i `workflow_dispatch`; repozytorium 2026-10-24 nadal **prywatne** (minuty macOS płatne — przy upublicznieniu reguła „tylko dokumentacja” może zostać). STEP-07: release |
 
 Uwaga do D-9: historia repozytorium zawiera prekompilowane ZIP-y sterownika iOS z frameworkami Apple (L-04, zatwierdzone
 w upstream i publiczne w `mobile-dev-inc/Maestro`). Upublicznienie forka udostępnia je tak samo jak upstream; usunięcie
@@ -66,8 +66,8 @@ Legenda statusu: `TODO` · `IN PROGRESS` · `IN REVIEW` · `MERGED` · `BLOCKED`
 | STEP-03B | PR-03B | Polityka sieci dla funkcji flow (JS `http`, web, `openLink`) + GraalJS community | PR-03, D-3, D-4, D-6 | MERGED ([#8](https://github.com/rtnk/TapCue/pull/8)) | 1 sesja |
 | STEP-04 | PR-04 | Local-only MCP, usunięcie Viewera | PR-03B | MERGED ([#9](https://github.com/rtnk/TapCue/pull/9)) | 1–2 sesje |
 | STEP-04B | PR-04B | TapCue: nazwa, polecenie `tapcue`, katalogi `~/.tapcue` i `.tapcue/` | PR-04, D-1, D-2 | MERGED ([#12](https://github.com/rtnk/TapCue/pull/12)) | 1–2 sesje |
-| STEP-05 | PR-05 | Dystrybucja lokalna macOS arm64 + audyt licencji | PR-04B, D-5, D-7 | IN REVIEW ([#13](https://github.com/rtnk/TapCue/pull/13)) | 2 sesje |
-| STEP-06 | PR-06 | GitHub Actions CI + testy offline | PR-05 | TODO | 2 sesje |
+| STEP-05 | PR-05 | Dystrybucja lokalna macOS arm64 + audyt licencji | PR-04B, D-5, D-7 | MERGED ([#13](https://github.com/rtnk/TapCue/pull/13)) | 2 sesje |
+| STEP-06 | PR-06 | GitHub Actions CI + testy offline | PR-05 | IN REVIEW ([#14](https://github.com/rtnk/TapCue/pull/14)) | 2 sesje |
 | STEP-07 | PR-07 | Release pipeline | PR-06 | TODO | 1 sesja |
 | STEP-08 | PR-08 + tag | Release candidate i publikacja v0.1.0 | PR-07, wszystkie gate'y | TODO | 1 sesja + operacja release |
 
@@ -306,6 +306,21 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
   release na `macos-*` (D-9). Brak emulatora/Xcode → job kończy się jawnym `skipped`/komunikatem, nie zielonym fałszem.
 - Ścieżki błędów: niepoprawny YAML, brak urządzenia, brak elementu (timeout), błąd sterownika, crash CLI.
 - Usunięcie `.github/upstream-workflows-disabled/` i `ci-baseline.yml` (zastąpione).
+- **Realizacja (PR-06, szczegóły w `docs/handovers/STEP-06.md`):** `.github/workflows/ci.yml` z jobami `changes` (PR tylko
+  z dokumentacją → joby urządzeń jawnie `skipped`), `build` (detekt, `./gradlew test` — w tym `McpStdioTest` i testy schematu
+  YAML, `macosArm64DistZip` + `verify-dist.sh --smoke` + `test-verify-dist.sh`, `check-forbidden-deps.sh` na `runtimeClasspath`
+  CLI, `check-licenses.py` — licencje z `THIRD-PARTY-NOTICES.md` w paczce vs `scripts/fork/allowed-licenses.tsv`, testy
+  negatywne `test-ci-checks.sh`, lista bibliotek APK sterownika Android z licencjami z POM — L-05), `egress` (`egress-test.sh`:
+  przestrzeń sieciowa `unshare --net` z samym `lo`, `strace -f` na `connect`/`sendto`/`sendmsg`; najpierw dowód, że harness
+  wykrywa próby — sondy DNS/TCP/curl/JVM i launcher z dopisanym `curl`; potem CLI z paczki: `--version`, `--help`,
+  `check-syntax` (poprawny, niepoprawny YAML, nieznana komenda), `test` bez urządzenia, crash CLI, handshake i narzędzia MCP,
+  `e2e/cli/test-cli.sh`; na końcu wszystkie testy jednostkowe modułów JVM `--offline` w tej samej izolacji — T-02),
+  `android` (emulator API 34 na KVM: flow na aplikacji Ustawienia — `launchApp`, `assertVisible`, `scroll`/`scrollUntilVisible`,
+  `tapOn`, `inputText`, `takeScreenshot` — `hierarchy`, MCP z urządzeniem, ścieżki błędów: brak elementu/timeout, brak
+  aplikacji, niepoprawny YAML, zabity sterownik) i `macos` (przeniesiony `macos-dist` + rejestr prób z logu sandboxa).
+  Usunięte: `ci-baseline.yml`, `.github/upstream-workflows-disabled/` (B-06), `maestro-cli/src/test/mcp/` (B-08),
+  `e2e/workspaces/web` z serwerem fixture'ów i `e2e/update_samples` (B-07). Poprawka produktu: `tapcue mcp` odpowiada na
+  żądania odczytane przed EOF na STDIN (`PendingRequests`). Testy `AdbSocket*Test` nie wysyłają już zapytań DNS.
 
 ### STEP-07 — Release pipeline (PR-07)
 

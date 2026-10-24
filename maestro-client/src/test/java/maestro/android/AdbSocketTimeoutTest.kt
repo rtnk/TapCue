@@ -33,6 +33,9 @@ import java.util.concurrent.atomic.AtomicReference
  * an interruptible `Condition.await`, or a raw `java.net.Socket` read that `Thread.interrupt()` does
  * not release on JDK 17. So [AdbSocketFactory]'s fake socket must bound the caller's wait itself for
  * both park modes.
+ *
+ * Endpoints are unresolved: `InetSocketAddress(name, port)` would send a DNS query for the socket name (found by the
+ * STEP-06 offline test), while the factory only reads the name.
  */
 class AdbSocketTimeoutTest {
 
@@ -108,7 +111,7 @@ class AdbSocketTimeoutTest {
     private fun saturate(target: ExecutorService, entered: CountDownLatch, park: InterruptProofLatch): List<Thread> =
         (1..ADB_IO_POOL_MAX).map { n ->
             val socket = AdbSocketFactory.bounded(target) { _, _ -> parkedReadStream(entered, park) }.createSocket()
-            socket.connect(InetSocketAddress("webview_devtools_remote_$n", 9222))
+            socket.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_$n", 9222))
             val input = socket.getInputStream()
             Thread { runCatching { input.read() } }.apply {
                 isDaemon = true
@@ -187,7 +190,7 @@ class AdbSocketTimeoutTest {
     fun `a blocked read throws SocketTimeoutException once soTimeout elapses, whichever way dadb parks`() {
         for ((stream, release) in parkModes()) {
             val socket = AdbSocketFactory.bounded(pool) { _, _ -> stream }.createSocket()
-            socket.connect(InetSocketAddress("webview_devtools_remote_12345", 9222))
+            socket.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_12345", 9222))
             socket.soTimeout = 500
             val input = socket.getInputStream()
 
@@ -205,7 +208,7 @@ class AdbSocketTimeoutTest {
     fun `close releases a read parked on the adb stream, whichever way dadb parks`() {
         for ((stream, release) in parkModes()) {
             val socket = AdbSocketFactory.bounded(pool) { _, _ -> stream }.createSocket()
-            socket.connect(InetSocketAddress("webview_devtools_remote_12345", 9222))
+            socket.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_12345", 9222))
             val reader = ParkedReader(socket.getInputStream())
 
             socket.close()
@@ -221,7 +224,7 @@ class AdbSocketTimeoutTest {
     fun `an external interrupt surfaces as InterruptedIOException and re-asserts the interrupt flag`() {
         val stream = NeverRespondingStream()
         val socket = AdbSocketFactory.bounded(pool) { _, _ -> stream }.createSocket()
-        socket.connect(InetSocketAddress("webview_devtools_remote_12345", 9222))
+        socket.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_12345", 9222))
         val reader = ParkedReader(socket.getInputStream())
 
         reader.thread.interrupt()
@@ -244,7 +247,7 @@ class AdbSocketTimeoutTest {
         try {
             assertTimeoutPreemptively(Duration.ofSeconds(10)) {
                 assertThrows<SocketTimeoutException> {
-                    socket.connect(InetSocketAddress("webview_devtools_remote_12345", 9222), 500)
+                    socket.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_12345", 9222), 500)
                 }
             }
         } finally {
@@ -279,7 +282,7 @@ class AdbSocketTimeoutTest {
 
         assertTimeoutPreemptively(Duration.ofSeconds(10)) {
             assertThrows<SocketTimeoutException> {
-                socket.connect(InetSocketAddress("webview_devtools_remote_12345", 9222), 200)
+                socket.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_12345", 9222), 200)
             }
         }
         gate.countDown()
@@ -292,7 +295,7 @@ class AdbSocketTimeoutTest {
     fun `a read after close fails fast with SocketException`() {
         val stream = NeverRespondingStream()
         val socket = AdbSocketFactory.bounded(pool) { _, _ -> stream }.createSocket()
-        socket.connect(InetSocketAddress("webview_devtools_remote_12345", 9222))
+        socket.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_12345", 9222))
         val input = socket.getInputStream()
 
         socket.close()
@@ -307,7 +310,7 @@ class AdbSocketTimeoutTest {
     fun `a dadb stream failure propagates as the original exception`() {
         val failure = IOException("dadb transport broke")
         val socket = AdbSocketFactory.bounded(pool) { _, _ -> failingReadStream(failure) }.createSocket()
-        socket.connect(InetSocketAddress("webview_devtools_remote_12345", 9222))
+        socket.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_12345", 9222))
         val input = socket.getInputStream()
 
         val thrown = assertTimeoutPreemptively<IOException>(Duration.ofSeconds(5)) {
@@ -322,7 +325,7 @@ class AdbSocketTimeoutTest {
         // send buffer parks the caller forever and ignores Thread.interrupt().
         val park = InterruptProofLatch()
         val socket = AdbSocketFactory.bounded(pool) { _, _ -> parkedWriteStream(park) }.createSocket()
-        socket.connect(InetSocketAddress("webview_devtools_remote_12345", 9222))
+        socket.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_12345", 9222))
         socket.soTimeout = 500
         val out = socket.getOutputStream()
 
@@ -344,7 +347,7 @@ class AdbSocketTimeoutTest {
         // saturated pool below.
         val probeStream = NeverRespondingStream()
         val probe = AdbSocketFactory.bounded(pool) { _, _ -> probeStream }.createSocket()
-        probe.connect(InetSocketAddress("webview_devtools_remote_probe", 9222))
+        probe.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_probe", 9222))
         probe.soTimeout = 500
         val probeInput = probe.getInputStream()
 
@@ -415,7 +418,7 @@ class AdbSocketTimeoutTest {
                 override fun close() = Unit
             }
             val socket = AdbSocketFactory.bounded(otherPool) { _, _ -> healthy }.createSocket()
-            socket.connect(InetSocketAddress("webview_devtools_remote_healthy", 9222))
+            socket.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_healthy", 9222))
 
             val byte = assertTimeoutPreemptively<Int>(Duration.ofSeconds(2)) { socket.getInputStream().read() }
             assertThat(byte).isEqualTo(7)
@@ -444,7 +447,7 @@ class AdbSocketTimeoutTest {
                 override fun close() = closeGate.awaitUninterruptibly()
             }
             AdbSocketFactory.bounded(pool) { _, _ -> stream }.createSocket().apply {
-                connect(InetSocketAddress("webview_devtools_remote_$n", 9222))
+                connect(InetSocketAddress.createUnresolved("webview_devtools_remote_$n", 9222))
             }
         }
 
@@ -487,7 +490,7 @@ class AdbSocketTimeoutTest {
             }
         }
         val socket = AdbSocketFactory.bounded(pool) { _, _ -> stream }.createSocket()
-        socket.connect(InetSocketAddress("webview_devtools_remote_12345", 9222))
+        socket.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_12345", 9222))
 
         try {
             assertTimeoutPreemptively(Duration.ofSeconds(5)) { socket.close() }
@@ -506,7 +509,7 @@ class AdbSocketTimeoutTest {
         // soTimeout abandons the read.
         InterruptProofNeverRespondingStream().let { stream ->
             val socket = AdbSocketFactory.bounded(pool) { _, _ -> stream }.createSocket()
-            socket.connect(InetSocketAddress("webview_devtools_remote_12345", 9222))
+            socket.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_12345", 9222))
             socket.soTimeout = 500
             val input = socket.getInputStream()
             try {
@@ -522,7 +525,7 @@ class AdbSocketTimeoutTest {
         // An external interrupt abandons the read the same way.
         InterruptProofNeverRespondingStream().let { stream ->
             val socket = AdbSocketFactory.bounded(pool) { _, _ -> stream }.createSocket()
-            socket.connect(InetSocketAddress("webview_devtools_remote_12345", 9222))
+            socket.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_12345", 9222))
             val input = socket.getInputStream()
             val reader = ParkedReader(input)
             reader.thread.interrupt()
@@ -546,7 +549,7 @@ class AdbSocketTimeoutTest {
         // later write would interleave with them and corrupt the exchange.
         val park = InterruptProofLatch()
         val socket = AdbSocketFactory.bounded(pool) { _, _ -> parkedWriteStream(park) }.createSocket()
-        socket.connect(InetSocketAddress("webview_devtools_remote_12345", 9222))
+        socket.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_12345", 9222))
         socket.soTimeout = 500
         val out = socket.getOutputStream()
 
@@ -564,7 +567,7 @@ class AdbSocketTimeoutTest {
     fun `a JVM error on the worker surfaces as the error itself, not IOException`() {
         val failure = OutOfMemoryError("simulated JVM error")
         val socket = AdbSocketFactory.bounded(pool) { _, _ -> failingReadStream(failure) }.createSocket()
-        socket.connect(InetSocketAddress("webview_devtools_remote_12345", 9222))
+        socket.connect(InetSocketAddress.createUnresolved("webview_devtools_remote_12345", 9222))
         val input = socket.getInputStream()
 
         val thrown = assertTimeoutPreemptively<OutOfMemoryError>(Duration.ofSeconds(5)) {
@@ -604,7 +607,7 @@ class AdbSocketTimeoutTest {
             stream
         }.createSocket()
 
-        socket.connect(InetSocketAddress("localhost", 7001))
+        socket.connect(InetSocketAddress.createUnresolved("localhost", 7001))
         val byte = socket.getInputStream().read()
         socket.close()
 
@@ -634,7 +637,7 @@ class AdbSocketTimeoutTest {
             override fun close() = Unit
         }
         val socket = AdbSocketFactory.raw { _, _ -> stream }.createSocket()
-        socket.connect(InetSocketAddress("localhost", 7001))
+        socket.connect(InetSocketAddress.createUnresolved("localhost", 7001))
         socket.soTimeout = 100
 
         // A bounded socket would throw SocketTimeoutException after ~100ms; the raw
