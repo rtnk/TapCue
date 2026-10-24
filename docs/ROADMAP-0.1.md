@@ -292,8 +292,8 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
   (cache w `~/.tapcue`, przebudowa po zmianie wersji lub źródła); JAR zawiera teraz też `MaestroDriverLib/` (brakowało go
   także dla urządzeń fizycznych) i dołączony pakiet FlyingFox (`Vendor/`, `XCLocalSwiftPackageReference`) — build nie
   pobiera niczego (N-36). `scripts/verify-dist.sh` + testy negatywne `scripts/fork/test-verify-dist.sh`; CI: job Linux
-  (archiwum, weryfikacja, testy negatywne, artefakt) i job `macos-dist` na `macos-26` arm64 (paczka pod `sandbox-exec` bez
-  sieci, build sterownika symulatora ze źródła, `hierarchy` na symulatorze). Wersja CLI pozostaje `2.11.0` (zmiana na
+  (archiwum, weryfikacja, testy negatywne, artefakt) i job `macos-dist` na `macos-26` arm64 (polecenia CLI/MCP z paczki pod `sandbox-exec` bez
+  sieci, build sterownika symulatora ze źródła bez pobierania pakietów, `hierarchy` na symulatorze — zielone w PR #13). Wersja CLI pozostaje `2.11.0` (zmiana na
   `0.1.0` — PR-08).
 
 ### STEP-06 — GitHub Actions CI i testy offline (PR-06)
