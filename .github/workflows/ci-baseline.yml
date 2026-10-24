@@ -150,13 +150,21 @@ jobs:
         run: |
           xcodebuild -version
           "$TAPCUE" driver-setup --simulator
+          set -x
           build="$HOME/.tapcue/maestro-iphonesimulator-driver-build"
           products="$build/driver-iPhoneSimulator/Build/Products"
+          ls -la "$build" "$build/driver-iPhoneSimulator" "$products"
           ls "$products"/*.xctestrun
           test -d "$products/Debug-iphonesimulator/maestro-driver-iosUITests-Runner.app"
           cat "$build/version.properties"
-          test ! -d "$build/driver-iPhoneSimulator/SourcePackages/checkouts"
-          ! grep -nE "Fetching|Cloning|Updating https?://|github\.com" "$build/output.log"
+          if [ -d "$build/driver-iPhoneSimulator/SourcePackages/checkouts" ]; then
+            ls -la "$build/driver-iPhoneSimulator/SourcePackages/checkouts"
+            test -z "$(ls -A "$build/driver-iPhoneSimulator/SourcePackages/checkouts")"
+          fi
+          if grep -nE "Fetching|Cloning|Updating https?://|https?://github\.com" "$build/output.log"; then
+            echo "the iOS driver build fetched a package"
+            exit 1
+          fi
 
       - name: Drive a simulator with the driver built from source
         env:
