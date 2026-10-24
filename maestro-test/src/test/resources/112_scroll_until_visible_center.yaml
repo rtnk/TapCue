@@ -7,4 +7,5 @@ appId: com.example.app
     speed: 100
     visibilityPercentage: 100
     direction: DOWN
-    timeout: 10
+    # 10 s, not 10 ms: one swipe brings the element into view; 10 ms timed out under load (STEP-06 offline run under strace)
+    timeout: 10000
