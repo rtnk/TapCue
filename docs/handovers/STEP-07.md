@@ -119,6 +119,22 @@ gh workflow run release.yml --ref main
   — `android` czerwony: flow `settings` padł na pierwszym `assertVisible: "Network & internet"` zaraz po `launchApp`
   (emulator po zimnym starcie, 2 CPU; ten sam flow trwał 108–133 s w zielonych runach). Pozostałe 7 scenariuszy i joby
   `build`/`egress`/`macos` zielone. Poprawka w osobnym PR: `extendedWaitUntil` 60 s zamiast domyślnego oczekiwania.
+- **Pierwszy `workflow_dispatch` na `main` (2026-10-24, [run 40115219200](https://github.com/rtnk/TapCue/actions/runs/40115219200))**
+  — `build` czerwony wyłącznie na rejestrze sandboxa: testy, archiwum, `verify-dist`, licencje i polecenia TapCue bez sieci
+  przeszły, ale log systemowy nie pokazał jeszcze odmowy sondy `curl` po stałych 2 s, a w release (`REQUIRE_REGISTER=true`)
+  to błąd. Poprawka w osobnym PR: `macos-offline-test.sh` czeka do 60 s (`LOG_WAIT`) na wpis sondy i powtarza sondę po
+  poleceniach TapCue, więc brak odmów `java` jest sprawdzany dopiero, gdy log dogonił te polecenia.
+  Run walidacji na gałęzi poprawki ([40115909754](https://github.com/rtnk/TapCue/actions/runs/40115909754)) — log nie pokazał
+  odmowy `curl` nawet po 60 s, choć w `ci.yml` (`macos`, ten sam skrypt i obraz `macos26 20261013.0424.1`) pokazuje ją od razu
+  w każdym sprawdzonym runie. Różnica: w `release.yml` test offline szedł po ~5 min `./gradlew test` na macOS (zostają demony
+  Gradle/Kotlin i `adb`). Hipoteza (bez Maca nie do potwierdzenia lokalnie): log systemowy gubi komunikaty sandboxa po
+  testach. Zmiana: w jobie `build` test offline przed testami jednostkowymi, strażnik simulator-server po testach.
+  Po tej zmianie rejestr działa (runy 40116549263, 40117452808: odmowy sondy widoczne, zero odmów `java`), ale ujawniły się
+  testy czasowe uruchamiane w `release.yml` po raz pierwszy na macOS (CI uruchamia testy tylko na Linux):
+  `AndroidDriverScreenRecordingTest` (tolerancja 2 ms, zmierzone 3 ms — podniesiona do 20 ms; odróżnienie środka okna od chwili
+  wykrycia pliku, ≥ 50 ms, bez zmian) i `McpStdioTest` (brak odpowiedzi MCP w 90 s — runy 40116549263 i, przy testach przed testem offline,
+  40116758695; poprawione w PR #18 dłuższym oczekiwaniem na `list_devices`). Job wypisuje nieudane testy z komunikatami. Ryzyko: kolejne testy czasowe na
+  obciążonym runnerze macOS mogą zatrzymać wydanie — wtedy poprawka testu w PR, nigdy pomijanie.
 - Koszt: każdy run `release.yml` to ok. 6 min `macos-26` + ~6 min ubuntu (repozytorium prywatne, D-9).
 - Otwarte po stronie właściciela (bez zmian, blokują STEP-08/G-3): przegląd `THIRD-PARTY-NOTICES.md`/suplementu, ocena Google
   Play services i JUnit (EPL-1.0) w APK sterownika (L-05), akceptacja polityki `scripts/fork/allowed-licenses.tsv`,

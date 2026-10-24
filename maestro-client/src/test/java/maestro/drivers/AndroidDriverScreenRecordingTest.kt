@@ -94,8 +94,9 @@ class AndroidDriverScreenRecordingTest {
         val lastMissSent = checkTimes[1].first
         val hitReturned = checkTimes[2].second
         val startedAtMs = recording.startedAt.toEpochMilli()
-        // Within a couple of ms of the midpoint: the driver reads the clock just outside the fake.
-        assertThat(Math.abs(startedAtMs - (lastMissSent + hitReturned) / 2)).isAtMost(2L)
+        // Near the midpoint: the driver reads the clock just outside the fake. 20 ms rather than 2: a loaded CI runner (macOS in
+        // release.yml) took 3. The midpoint is still told apart from the moment of sight, which is at least 50 ms later.
+        assertThat(Math.abs(startedAtMs - (lastMissSent + hitReturned) / 2)).isAtMost(20L)
         assertThat(startedAtMs).isLessThan(hitReturned - 50)
     }
 
