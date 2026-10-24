@@ -19,13 +19,12 @@ _h3() { printf "==> [%s] [%s] => %s\n" "$1" "$2" "$3"; }
 
 cloud="android_device_configuration,ios_device_configuration" # Maestro Cloud specific tests
 platform="${1:-}"
-# platform_args carries whatever that platform needs on every tapcue invocation. Web runs
-# headless because CI has no display; the device platforms need nothing.
+# platform_args carries whatever that platform needs on every tapcue invocation; the device
+# platforms need nothing. The web platform is not supported in TapCue 0.1.0 (decision D-4).
 case "$platform" in
 	android) exclude_tags="ios,web,$cloud";     platform_args="" ;;
 	ios)     exclude_tags="android,$cloud,web"; platform_args="" ;;
-	web)     exclude_tags="android,ios,$cloud"; platform_args="--headless" ;;
-	*)       echo "usage: $0 <android|ios|web>"; exit 1 ;;
+	*)       echo "usage: $0 <android|ios>"; exit 1 ;;
 esac
 
 app_filter="${MAESTRO_APP:-}"
@@ -57,14 +56,8 @@ _supports_platform() {
 	esac
 }
 
-fixtures_pid=""
-
 _cleanup() {
 	rm -f pipe
-	# Only ours: a server that was already running when we started is left alone.
-	if [ -n "$fixtures_pid" ]; then
-		kill "$fixtures_pid" 2>/dev/null || true
-	fi
 }
 
 mkfifo pipe
@@ -123,12 +116,6 @@ _run_single_flow() {
 	tapcue --verbose --no-ansi --platform "$platform" test --flatten-debug-output --debug-output="$HOME/.tapcue/tests/${app_name}/flow" $platform_args "$target_yaml" 1>pipe 2>&1 \
 		|| { _h2 "$app_name" "FAIL! Single-flow run failed"; ALL_PASS=false; }
 }
-
-if [ "$platform" = "web" ]; then
-	# Prints the pid only when it starts one, so _cleanup stops a server we started and leaves
-	# alone one that was already running.
-	fixtures_pid="$(./ensure_fixtures)" || exit 1
-fi
 
 if [ -n "$flow_path" ]; then
 	###

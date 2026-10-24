@@ -2,8 +2,8 @@
 #
 #   name       MAESTRO_APP value, and the name used for debug-output directories
 #   path       flow directory, relative to e2e/
-#   platforms  where it runs: android, ios or web, or several joined by commas with no
-#              spaces, e.g. android,ios
+#   platforms  where it runs: android or ios, or both joined by a comma with no
+#              spaces (android,ios). The web platform is not supported in TapCue 0.1.0 (D-4).
 #   failing    yes when it carries `failing`-tagged flows, which are expected to fail
 #              and so are run with inverted polarity
 #
@@ -21,7 +21,3 @@ demo_app           demo_app/.tapcue            android    yes
 # carries failing flows.
 simple_web_view    workspaces/simple_web_view  ios        no
 wikipedia          workspaces/wikipedia        ios        no
-
-# Browser flows: the only workspace with no app behind it, so there is nothing to install
-# and nothing that could fail on a device.
-web                workspaces/web              web        no

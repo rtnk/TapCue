@@ -154,6 +154,42 @@ class McpStdioTest {
         assertThat(home.resolve("state").resolve("maestro").toFile().exists()).isFalse()
     }
 
+    @Test
+    fun `requests followed by an immediate end of input are all answered`() {
+        // STEP-06: as with `printf '…' | tapcue mcp` — STDIN closes right after the last request.
+        val process = startMcpProcess()
+        try {
+            process.outputStream.writer(Charsets.UTF_8).use { stdin ->
+                stdin.sendRequest(1, "initialize") {
+                    put("protocolVersion", "2025-06-18")
+                    putJsonObject("capabilities") {}
+                    putJsonObject("clientInfo") {
+                        put("name", "McpStdioTest")
+                        put("version", "1.0.0")
+                    }
+                }
+                stdin.sendNotification("notifications/initialized")
+                stdin.sendRequest(2, "tools/list") {}
+                stdin.sendRequest(3, "tools/call") {
+                    put("name", "cheat_sheet")
+                    putJsonObject("arguments") {}
+                }
+            }
+            val lines = process.inputStream.bufferedReader(Charsets.UTF_8).readLines().filter { it.isNotBlank() }
+            assertThat(process.waitFor(30, TimeUnit.SECONDS)).isTrue()
+            assertThat(process.exitValue()).isEqualTo(0)
+
+            val ids = lines.map { Json.parseToJsonElement(it).jsonObject }
+                .filter { it.containsKey("result") }
+                .map { it["id"]!!.jsonPrimitive.int }
+            assertWithMessage("stdout: %s", lines).that(ids).containsExactly(1, 2, 3)
+        } finally {
+            process.destroyForcibly()
+        }
+        assertThat(httpProxy.requestCount).isEqualTo(0)
+        assertThat(socksConnections.get()).isEqualTo(0)
+    }
+
     private fun startMcpProcess(): Process {
         val java = File(System.getProperty("java.home"), "bin/java").absolutePath
         val proxyHost = httpProxy.hostName

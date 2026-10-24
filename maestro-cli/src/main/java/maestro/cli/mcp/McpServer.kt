@@ -82,9 +82,11 @@ fun runMaestroMcpServer() {
         CheatSheetTool.create(),
     ))
 
+    // A client may close STDIN right after its last request; the responses still go out (see PendingRequests).
+    val pendingRequests = PendingRequests()
     val transport = StdioServerTransport(
-        System.`in`.asSource().buffered(),
-        mcpProtocolOut.asSink().buffered()
+        pendingRequests.input(System.`in`).asSource().buffered(),
+        pendingRequests.output(mcpProtocolOut).asSink().buffered()
     )
 
     System.err.println("MCP Server: Started. Waiting for messages. Working directory: ${WorkingDirectory.baseDir}")

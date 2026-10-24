@@ -1,0 +1,8 @@
+# Expected to fail: the on-device driver is stopped while this flow waits (android-integration.sh kills it).
+appId: com.android.settings
+name: The driver dies mid-flow
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "TapCue element that is not on any screen"
+    timeout: 150000

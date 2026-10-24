@@ -1,0 +1,13 @@
+// Init script for the offline unit-test run in CI (STEP-06, .github/workflows/ci.yml job `egress`):
+// `resolveTestRuntime` downloads every JAR the test tasks need, so they can then run with --offline
+// in a network namespace without any route outside loopback.
+allprojects {
+    tasks.register("resolveTestRuntime") {
+        def configuration = project.configurations.findByName("testRuntimeClasspath")
+        doLast {
+            if (configuration != null) {
+                logger.lifecycle("${project.path}: ${configuration.files.size()} test runtime files")
+            }
+        }
+    }
+}

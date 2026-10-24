@@ -1,0 +1,23 @@
+# AT-03/AT-05 on a system app every Android image has: launch, assert, scroll, tap, text input, screenshot.
+appId: com.android.settings
+name: Settings - launch, scroll, tap, input text, screenshot
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Network & internet"
+- scrollUntilVisible:
+    element:
+      text: "System"
+- tapOn: "System"
+- assertVisible: "Languages.*"
+- back
+- scroll
+- scrollUntilVisible:
+    element:
+      text: "Network & internet"
+    direction: UP
+- tapOn: "Search settings"
+- inputText: "battery"
+- assertVisible:
+    text: "Battery.*"
+- takeScreenshot: settings-search

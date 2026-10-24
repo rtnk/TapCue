@@ -1,0 +1,5 @@
+# Expected to fail: the app under test is not installed.
+appId: dev.tapcue.not.installed
+name: Launching an app that is not installed fails
+---
+- launchApp
