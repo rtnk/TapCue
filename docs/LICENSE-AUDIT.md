@@ -1,6 +1,6 @@
 # Audyt licencji — TapCue (repozytorium `rtnk/TapCue`)
 
-Wersja: **7 (STEP-06, CI: skan licencji i lista bibliotek APK sterownika)**. Baseline: upstream `v2.11.0` (`c8c361be`); opisy źródeł odnoszą się do baseline.
+Wersja: **8 (STEP-07, pipeline wydania: `verify-dist.sh` i skan licencji archiwum wydania)**. Baseline: upstream `v2.11.0` (`c8c361be`); opisy źródeł odnoszą się do baseline.
 Status audytu: **OTWARTY — Release zablokowany** (gate G-3 w `ROADMAP-0.1.md`). Po STEP-06 otwarte zostają wyłącznie
 decyzje właściciela (§5): przegląd `THIRD-PARTY-NOTICES.md`/suplementu, ocena `play-services-location` w APK sterownika
 (L-05) i akceptacja polityki listy dozwolonych licencji (§3, `scripts/fork/allowed-licenses.tsv`). Pełna lista bibliotek APK
@@ -13,7 +13,10 @@ wszystkie teksty licencji i pliki NOTICE zawarte w tych JAR-ach, Apache-2.0 §4(
 [`audit/notices-supplement.md`](audit/notices-supplement.md)) i `README.md`. Task kończy build błędem, jeśli jakaś zależność
 nie deklaruje licencji (i nie ma wpisu w `thirdPartyLicenseOverrides`). `scripts/verify-dist.sh` sprawdza archiwum (§4).
 Od STEP-06 job CI `build` (`.github/workflows/ci.yml`) porównuje każdą licencję z tabeli `THIRD-PARTY-NOTICES.md` w paczce
-z listą dozwolonych (`scripts/fork/check-licenses.py`, §3) — nowa licencja kończy CI błędem.
+z listą dozwolonych (`scripts/fork/check-licenses.py`, §3) — nowa licencja kończy CI błędem. Od STEP-07 te same kontrole
+(`verify-dist.sh --smoke`, `check-licenses.py`, `check-forbidden-deps.sh`, strażnik simulator-server) przechodzi archiwum
+wydania w jobie `build` workflowu `.github/workflows/release.yml` przed publikacją (gate G-4); Release zawiera wyłącznie to
+archiwum i `SHA256SUMS`.
 
 > Ten dokument jest analizą techniczną wykonaną na potrzeby projektu, a nie poradą prawną.
 > Pozycje oznaczone jako wymagające decyzji prawnej powinny zostać ocenione przez właściciela
@@ -135,7 +138,8 @@ binarium/archiwum zagnieżdżone kończy weryfikację błędem):
 `verify-dist.sh` sprawdza ścieżki w archiwum i w każdym JAR-ze z `lib/` (wzorce poniżej), binaria natywne (lista dozwolonych
 w §3), kompletność `THIRD-PARTY-NOTICES.md` (każdy JAR z `lib/`), `NOTICE`/`LICENSE`/`README.md`, start-scripty (bez linków
 producenta, sprawdzenie Javy 17) i `SHA256SUMS`; z `--smoke` uruchamia `bin/tapcue --version` z rozpakowanego archiwum.
-Uruchamiany w CI (`.github/workflows/ci.yml`: job `build` i job `macos`; do STEP-05 `ci-baseline.yml`).
+Uruchamiany w CI (`.github/workflows/ci.yml`: job `build` i job `macos`; do STEP-05 `ci-baseline.yml`) i w pipeline wydania
+(`.github/workflows/release.yml`, job `build` na `macos-26` arm64 — przed publikacją, od STEP-07).
 
 | Wzorzec | Powód | Od kroku |
 |---|---|---|

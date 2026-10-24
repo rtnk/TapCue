@@ -1,6 +1,6 @@
 # ROADMAP 0.1.0 — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Status dokumentu: **STEP-06 w review ([#14](https://github.com/rtnk/TapCue/pull/14)); następny: STEP-07**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23, STEP-03B ([#8](https://github.com/rtnk/TapCue/pull/8)), STEP-04 ([#9](https://github.com/rtnk/TapCue/pull/9)) STEP-04B ([#12](https://github.com/rtnk/TapCue/pull/12)) i STEP-05 ([#13](https://github.com/rtnk/TapCue/pull/13)) — 2026-10-24. Ostatnia aktualizacja: 2026-10-24.
+Status dokumentu: **STEP-07 w review ([#15](https://github.com/rtnk/TapCue/pull/15)); następny: STEP-08**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23, STEP-03B ([#8](https://github.com/rtnk/TapCue/pull/8)), STEP-04 ([#9](https://github.com/rtnk/TapCue/pull/9)) STEP-04B ([#12](https://github.com/rtnk/TapCue/pull/12)) STEP-05 ([#13](https://github.com/rtnk/TapCue/pull/13)) i STEP-06 ([#14](https://github.com/rtnk/TapCue/pull/14)) — 2026-10-24. Ostatnia aktualizacja: 2026-10-24.
 
 ## 0. Punkt wyjścia
 
@@ -46,7 +46,7 @@ pliku (PR-00).
 | D-6 | GraalJS `truffle-enterprise` (Oracle GFTC, L-03) | **Artefakty community** (UPL: `js-community`/`js-language` + `polyglot`, wykluczenie `truffle-enterprise`) — **już w STEP-03B** | STEP-03B (`js-community` + `js-language` + `polyglot`) |
 | D-7 | JRE w paczce | **Wymagany systemowy JDK/JRE 17+** (README, launcher sprawdza wersję); paczka nie jest nazywana samowystarczalną | STEP-05 — zrealizowane w PR-05 (`README.md` w paczce, `bin/tapcue` sprawdza Javę 17; `StartScriptsTest`, `verify-dist.sh`) |
 | D-8 | STEP-00B „Legal containment” przed dalszymi krokami | Tak (wykonany po PR-01, scalony jako #3). Flagi `-x downloadSimulatorServer …` zbędne i błędne | — |
-| D-9 | Widoczność repozytorium i koszt runnerów macOS | **Repozytorium może być publiczne już teraz** (zmiana ustawień — po stronie właściciela). W repo publicznym minuty standardowych runnerów (także macOS) są bezpłatne, więc ograniczenie testów macOS do release/`workflow_dispatch` nie jest już wymuszone kosztem | STEP-06: job `macos` w `ci.yml` na każdym PR (poza PR zmieniającymi wyłącznie dokumentację — wtedy jawnie `skipped`), push `main` i `workflow_dispatch`; repozytorium 2026-10-24 nadal **prywatne** (minuty macOS płatne — przy upublicznieniu reguła „tylko dokumentacja” może zostać). STEP-07: release |
+| D-9 | Widoczność repozytorium i koszt runnerów macOS | **Repozytorium może być publiczne już teraz** (zmiana ustawień — po stronie właściciela). W repo publicznym minuty standardowych runnerów (także macOS) są bezpłatne, więc ograniczenie testów macOS do release/`workflow_dispatch` nie jest już wymuszone kosztem | STEP-06: job `macos` w `ci.yml` na każdym PR (poza PR zmieniającymi wyłącznie dokumentację — wtedy jawnie `skipped`), push `main` i `workflow_dispatch`; repozytorium 2026-10-24 nadal **prywatne** (minuty macOS płatne — przy upublicznieniu reguła „tylko dokumentacja” może zostać). STEP-07: `release.yml` buduje i testuje wydanie na `macos-26` arm64 przy każdym tagu i `workflow_dispatch` (niezależnie od widoczności repozytorium) |
 
 Uwaga do D-9: historia repozytorium zawiera prekompilowane ZIP-y sterownika iOS z frameworkami Apple (L-04, zatwierdzone
 w upstream i publiczne w `mobile-dev-inc/Maestro`). Upublicznienie forka udostępnia je tak samo jak upstream; usunięcie
@@ -67,8 +67,8 @@ Legenda statusu: `TODO` · `IN PROGRESS` · `IN REVIEW` · `MERGED` · `BLOCKED`
 | STEP-04 | PR-04 | Local-only MCP, usunięcie Viewera | PR-03B | MERGED ([#9](https://github.com/rtnk/TapCue/pull/9)) | 1–2 sesje |
 | STEP-04B | PR-04B | TapCue: nazwa, polecenie `tapcue`, katalogi `~/.tapcue` i `.tapcue/` | PR-04, D-1, D-2 | MERGED ([#12](https://github.com/rtnk/TapCue/pull/12)) | 1–2 sesje |
 | STEP-05 | PR-05 | Dystrybucja lokalna macOS arm64 + audyt licencji | PR-04B, D-5, D-7 | MERGED ([#13](https://github.com/rtnk/TapCue/pull/13)) | 2 sesje |
-| STEP-06 | PR-06 | GitHub Actions CI + testy offline | PR-05 | IN REVIEW ([#14](https://github.com/rtnk/TapCue/pull/14)) | 2 sesje |
-| STEP-07 | PR-07 | Release pipeline | PR-06 | TODO | 1 sesja |
+| STEP-06 | PR-06 | GitHub Actions CI + testy offline | PR-05 | MERGED ([#14](https://github.com/rtnk/TapCue/pull/14)) | 2 sesje |
+| STEP-07 | PR-07 | Release pipeline | PR-06 | IN REVIEW ([#15](https://github.com/rtnk/TapCue/pull/15)) | 1 sesja |
 | STEP-08 | PR-08 + tag | Release candidate i publikacja v0.1.0 | PR-07, wszystkie gate'y | TODO | 1 sesja + operacja release |
 
 Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki dodane w wyniku audytu, STEP-04B — w wyniku decyzji D-1/D-2
@@ -330,6 +330,18 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
   (`needs: build`, jedyny z `contents: write`, `GITHUB_TOKEN`) tworzy Release tylko z tagu i tylko jeśli
   Release/tag nie istnieje (bez nadpisywania). Zero `pull_request_target`.
 - `docs/RELEASING.md`: odtworzenie builda, procedury awaryjne (wycofanie Release, nowy patch zamiast nadpisania).
+- **Realizacja (PR-07, szczegóły w `docs/handovers/STEP-07.md`):** `.github/workflows/release.yml` — `push` tagu
+  `v[0-9]+.[0-9]+.[0-9]+` (tryb publish) i `workflow_dispatch` (tryb validate; job `publish` pomijany), `permissions: contents: read`,
+  akcje przypięte do SHA, bez cache. Joby: `prepare` (`scripts/fork/release-context.sh`: tag adnotowany = `v<CLI_VERSION>`,
+  wskazuje budowany commit z `main`; brak Release dla tagu; sekcja `### <wersja>` w części TapCue `CHANGELOG.md` ze „Znanymi
+  ograniczeniami” — G-8; testy skryptów), `build` na `macos-26` (asercja `arm64`, JDK Zulu 17.0.21, detekt + `./gradlew test`,
+  `macosArm64DistZip`, zgodność nazwy archiwum i `--version` z wersją, `verify-dist.sh --smoke`, skan licencji, zakazane GAV,
+  strażnik simulator-server, paczka pod `sandbox-exec` z wymaganym rejestrem odmów — `scripts/fork/macos-offline-test.sh`,
+  wspólny z `ci.yml` — notatki `scripts/fork/release-notes.py`, artefakty), `egress` (to samo archiwum na Linux pod
+  `egress-test.sh`), `reproduce` (build na Linux tym samym JDK, identyczne bajty — `scripts/fork/compare-archives.py`) i `publish`
+  (jedyny z `contents: write`; `scripts/fork/publish-release.sh`: tylko wypchnięty tag, tag nadal na zbudowanym commicie, brak
+  Release także w szkicach, `gh release create --verify-tag`, pobranie i porównanie zasobów). Testy skryptów:
+  `scripts/fork/test-release.sh` (także w jobie `build` `ci.yml`). `docs/RELEASING.md` — pełna procedura.
 
 ### STEP-08 — Release candidate i v0.1.0 (PR-08 + operacja release)
 

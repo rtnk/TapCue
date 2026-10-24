@@ -187,3 +187,11 @@ Zasady architektoniczne:
   w toku). Usunięte: `maestro-cli/src/test/mcp/` (ewaluacje LLM upstream), `e2e/workspaces/web` z serwerem fixture'ów,
   `e2e/update_samples`. Bez zmian: pakiety `maestro.*`, moduły Gradle, format flow, katalogi `~/.tapcue`/`.tapcue/`,
   zawartość paczki, `Vendor/`, `verify-dist.sh`.
+- STEP-07 (pipeline wydania): drugi workflow `.github/workflows/release.yml` — tag `vX.Y.Z` (adnotowany, `= v<CLI_VERSION>`,
+  na `main`) → build i testy na `macos-26` arm64, kontrole archiwum (`verify-dist.sh`, licencje, zakazane GAV, paczka bez
+  sieci z rejestrem odmów sandboxa), egress na Linux, powtórny build na Linux z porównaniem bajtów, a na końcu GitHub Release
+  (`tapcue-<wersja>-macos-arm64.zip` + `SHA256SUMS`, notatki z `CHANGELOG.md`) — bez nadpisywania istniejącego Release;
+  `workflow_dispatch` = walidacja bez publikacji. Nowe skrypty w `scripts/fork/`: `release-context.sh`, `release-notes.py`,
+  `publish-release.sh`, `compare-archives.py`, `macos-offline-test.sh` (krok offline joba `macos` z `ci.yml` przeniesiony do
+  skryptu), `test-release.sh`. Bez zmian: kod produktu, pakiety `maestro.*`, moduły Gradle, format flow, katalogi
+  `~/.tapcue`/`.tapcue/`, zawartość paczki, `Vendor/`, wersja CLI `2.11.0`.
