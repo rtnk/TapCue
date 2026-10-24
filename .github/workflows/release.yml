@@ -176,6 +176,18 @@ jobs:
       - name: Detekt and unit tests
         run: ./gradlew --no-build-cache --continue :maestro-orchestra:detektMain :maestro-client:detektMain test
 
+      - name: List failed tests
+        if: failure()
+        run: |
+          python3 -I - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          for path in sorted(glob.glob("*/build/test-results/test/*.xml")):
+              for case in ET.parse(path).getroot().iter("testcase"):
+                  for problem in list(case.findall("failure")) + list(case.findall("error")):
+                      print(f"FAILED {case.get('classname')} > {case.get('name')}")
+                      print("    " + (problem.text or problem.get("message") or "").strip().replace("\n", "\n    ")[:6000])
+          PY
+
       - name: Guard - no simulator-server or Viewer in build outputs
         run: scripts/fork/check-no-simulator-server.sh
 
