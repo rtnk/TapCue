@@ -1,0 +1,28 @@
+# AT-03/AT-05 on a system app every Android image has: launch, assert, scroll, tap, text input, screenshot.
+appId: com.android.settings
+name: Settings - launch, scroll, tap, input text, screenshot
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Network & internet"
+# Generous limits: the CI emulator is slow, and "System" is near the end of a long list on a small screen.
+- scrollUntilVisible:
+    element:
+      text: "System"
+    timeout: 60000
+    visibilityPercentage: 50
+- tapOn: "System"
+- assertVisible: "Languages.*"
+- back
+- scroll
+- scrollUntilVisible:
+    element:
+      text: "Network & internet"
+    direction: UP
+    timeout: 60000
+    visibilityPercentage: 50
+- tapOn: "Search settings"
+- inputText: "battery"
+- assertVisible:
+    text: "Battery.*"
+- takeScreenshot: settings-search

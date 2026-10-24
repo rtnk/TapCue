@@ -1,0 +1,5 @@
+# Expected to fail before touching the device: not valid YAML.
+appId: com.android.settings
+---
+- launchApp
+- tapOn: [unclosed

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
-export MAESTRO_CLI_NO_ANALYTICS=1
 PASS=0; FAIL=0
 
 trap 'echo "ERROR: script failed at line $LINENO" >&2' ERR
@@ -49,7 +48,7 @@ check "tapcue test subcommand gives usage instructions when called with --help" 
   "tapcue test --help" includes "Usage: tapcue test"
 
 check "tapcue bugreport gives instruction" \
-  "tapcue bugreport" includes "https://github.com/mobile-dev-inc/Maestro/issues"
+  "tapcue bugreport" includes "https://github.com/rtnk/TapCue/issues"
 
 echo ""
 echo "$PASS passed, $FAIL failed"

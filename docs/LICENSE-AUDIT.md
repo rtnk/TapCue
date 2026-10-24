@@ -1,9 +1,10 @@
 # Audyt licencji — TapCue (repozytorium `rtnk/TapCue`)
 
-Wersja: **6 (STEP-05, dystrybucja lokalna i audyt licencji)**. Baseline: upstream `v2.11.0` (`c8c361be`); opisy źródeł odnoszą się do baseline.
-Status audytu: **OTWARTY — Release zablokowany** (gate G-3 w `ROADMAP-0.1.md`). Po STEP-05 otwarte zostają: pełna lista
-bibliotek w APK sterownika Android (L-05, wymaga Google Maven — CI), automatyczny skan licencji z listą dozwolonych (STEP-06)
-i przegląd właściciela (§5).
+Wersja: **7 (STEP-06, CI: skan licencji i lista bibliotek APK sterownika)**. Baseline: upstream `v2.11.0` (`c8c361be`); opisy źródeł odnoszą się do baseline.
+Status audytu: **OTWARTY — Release zablokowany** (gate G-3 w `ROADMAP-0.1.md`). Po STEP-06 otwarte zostają wyłącznie
+decyzje właściciela (§5): przegląd `THIRD-PARTY-NOTICES.md`/suplementu, ocena `play-services-location` w APK sterownika
+(L-05) i akceptacja polityki listy dozwolonych licencji (§3, `scripts/fork/allowed-licenses.tsv`). Pełna lista bibliotek APK
+sterownika (L-05) i automatyczny skan licencji działają w CI od STEP-06.
 
 Od STEP-05 paczka `tapcue-<wersja>-macos-arm64.zip` zawiera `LICENSE`, `NOTICE` (atrybucja upstream, dopisek
 „based on Maestro (Apache-2.0), not affiliated with mobile.dev”), `THIRD-PARTY-NOTICES.md` (generowany przez
@@ -11,6 +12,8 @@ Od STEP-05 paczka `tapcue-<wersja>-macos-arm64.zip` zawiera `LICENSE`, `NOTICE` 
 wszystkie teksty licencji i pliki NOTICE zawarte w tych JAR-ach, Apache-2.0 §4(d), oraz ręczny suplement
 [`audit/notices-supplement.md`](audit/notices-supplement.md)) i `README.md`. Task kończy build błędem, jeśli jakaś zależność
 nie deklaruje licencji (i nie ma wpisu w `thirdPartyLicenseOverrides`). `scripts/verify-dist.sh` sprawdza archiwum (§4).
+Od STEP-06 job CI `build` (`.github/workflows/ci.yml`) porównuje każdą licencję z tabeli `THIRD-PARTY-NOTICES.md` w paczce
+z listą dozwolonych (`scripts/fork/check-licenses.py`, §3) — nowa licencja kończy CI błędem.
 
 > Ten dokument jest analizą techniczną wykonaną na potrzeby projektu, a nie poradą prawną.
 > Pozycje oznaczone jako wymagające decyzji prawnej powinny zostać ocenione przez właściciela
@@ -40,7 +43,14 @@ nie deklaruje licencji (i nie ma wpisu w `thirdPartyLicenseOverrides`). `scripts
 | L-02 | `maestro-cli/src/main/resources/deps/applesimutils` (Mach-O universal x86_64+arm64, AppleSimulatorUtils 0.9.10, dodany w upstream `c1a9f5a8`) | zatwierdzony w repo, rozpakowywany do `~/.maestro/deps` (`Dependencies.kt`) | MIT, © 2017 Wix.com. Tekst: `https://raw.githubusercontent.com/wix/AppleSimulatorUtils/master/LICENSE`, SHA-256 `b9c6cf767b922ff04cc2ea2a8cdd4e3a42a61cb6d32251f7c8eb7de5a7b9108a` | Potwierdzone (licencja). **STEP-05:** wydanie 0.9.10 (`github.com/wix/AppleSimulatorUtils/releases/download/0.9.10/AppleSimulatorUtils-0.9.10.tar.gz`, SHA-256 `0c63ecae…98dd9`) to **wyłącznie źródła** (instalacja przez Homebrew = kompilacja) — oficjalnego binarium do porównania nie ma. Binarium w repo: SHA-256 `a60cccbd98c285320f848e90d9e4daecbd93670dd8a08aee30f8173e298bcfa3`, zawiera symbole FMDB (`FMDatabase`, 328 wystąpień w `strings`) — zgodne ze źródłem (ObjCCLIInfra, DTXLoggingInfra: MIT © 2017 Wix.com; FMDB: MIT © 2008-2014 Flying Meat Inc.). Pochodzenie binarium: Hipoteza (zbudowane przez upstream z tego źródła) | **OK** — noty MIT (AppleSimulatorUtils, FMDB) w `THIRD-PARTY-NOTICES.md` §3.1; binarium na liście dozwolonych `verify-dist.sh` |
 | **L-03** | `org.graalvm.truffle:truffle-enterprise:24.2.0` | przechodnio z `org.graalvm.js:js:24.2.0` (`libs.graaljs`, `maestro-client/build.gradle.kts:56`) | GraalVM Free Terms and Conditions (GFTC) — licencja własnościowa Oracle z warunkami redystrybucji (m.in. bez opłat) — nie Apache/UPL | Potwierdzone (POM) | **USUNIĘTE (STEP-03B, D-6)** — `maestro-client` deklaruje `org.graalvm.js:js-community`, `js-language` i `org.graalvm.polyglot:polyglot` 24.2.0 (UPL-1.0) zamiast `org.graalvm.js:js` (który dokłada `truffle-enterprise` i `nativebridge`); nieużywany `js-scriptengine` usunięty. Z `runtimeClasspath` CLI zniknęły `org.graalvm.truffle:truffle-enterprise` i `org.graalvm.sdk:nativebridge` (porównanie `dependencies` w handover STEP-03B). Bez kompilatora JIT GraalJS działa w trybie interpretera (`engine.WarnInterpreterOnly=false`). Test: `WebPlatformDisabledTest` (brak JAR-a `truffle-enterprise` i pakietu `com/oracle/truffle/enterprise/` na classpath) |
 | **L-04** | Prekompilowane ZIP-y sterownika iOS: `maestro-ios-driver/src/main/resources/driver-iPhoneSimulator/Debug-iphonesimulator/*.zip`, `driver-iphoneos/Debug-iphoneos/*.zip` | zbudowane przez CI upstream z `maestro-ios-xctest-runner` (źródło Apache-2.0) | zawierają kod forka (Apache-2.0), FlyingFox (MIT) **oraz frameworki Apple skopiowane z Xcode**: `XCTest.framework`, `XCTestCore.framework`, `XCTestSupport.framework`, `XCTAutomationSupport.framework`, `XCUIAutomation.framework`, `XCUnit.framework`, `Testing.framework`, `libXCTestSwiftSupport.dylib`, `libswift_Concurrency.dylib` — redystrybucja podlega licencji Xcode/Apple SDK | Potwierdzone (zawartość ZIP), Hipoteza (zakres zgody Apple na redystrybucję) | **USUNIĘTE (STEP-05, D-5)** — ZIP-y i katalogi `driver-iPhoneSimulator/`, `driver-iphoneos/` usunięte z `maestro-ios-driver/src/main/resources` (razem z taskiem `buildIosDriver` i skryptami `build-maestro-ios-runner*.sh`, które je generowały). Runner dla symulatora budowany przy pierwszym użyciu z kodu w JAR CLI (`driver/ios`, teraz z `MaestroDriverLib/` i dołączonym FlyingFox w `Vendor/`) lokalnym Xcode, bez sieci (`IOSSimulatorDriver` → `~/.tapcue/maestro-iphonesimulator-driver-build`); urządzenia fizyczne — jak dotąd (`driver-setup --apple-team-id`). Testy: `CliJarContentsTest`, `IOSBuildProductsExtractorTest`, `IOSSimulatorDriverTest`, `DriverBuilderTest`; `verify-dist.sh` (zakaz `driver-*/`, `*.xctestrun`, `.app/`, `.framework/`); job CI `macos-dist` buduje runner ze źródła z rozpakowanej paczki. Historia git nadal zawiera ZIP-y (ROADMAP §2, uwaga do D-9) |
-| L-05 | `maestro-client/src/main/resources/maestro-app.apk`, `maestro-server.apk` (+ `maestro-android-source.sha256`) | zbudowane z `maestro-android` (Apache-2.0) | kod forka + biblioteki AndroidX/uiautomator, gRPC, protobuf (Apache-2.0 / BSD-3) wkompilowane w APK | Potwierdzone (pochodzenie, zależności bezpośrednie z `maestro-android/build.gradle.kts`), Hipoteza (pełna lista przechodnia — `./gradlew :maestro-android:dependencies` wymaga Google Maven, zablokowanego w sesjach agenta) | **OK** — STEP-05: nota w `THIRD-PARTY-NOTICES.md` §3.2 (gRPC, protobuf-lite BSD-3, Ktor, Gson, commons-lang3, HiddenApiBypass, AndroidX Test/UI Automator, kotlin-retry ISC). Uwaga: `play-services-location` jest na licencji „Android Software Development Kit License” (własnościowa licencja Google zezwalająca na użycie w aplikacjach) — **do przeglądu właściciela**. Pełna lista przechodnia — STEP-06 (CI) |
+| L-05 | `maestro-client/src/main/resources/maestro-app.apk`, `maestro-server.apk` (+ `maestro-android-source.sha256`) | zbudowane z `maestro-android` (Apache-2.0) | kod forka + biblioteki AndroidX/uiautomator, gRPC, protobuf (Apache-2.0 / BSD-3) wkompilowane w APK | Potwierdzone (pochodzenie, zależności bezpośrednie z `maestro-android/build.gradle.kts`), Hipoteza (pełna lista przechodnia — `./gradlew :maestro-android:dependencies` wymaga Google Maven, zablokowanego w sesjach agenta) | **OK** — STEP-05: nota w `THIRD-PARTY-NOTICES.md` §3.2 (gRPC, protobuf-lite BSD-3, Ktor, Gson, commons-lang3, HiddenApiBypass, AndroidX Test/UI Automator, kotlin-retry ISC). Uwaga: `play-services-location` jest na licencji „Android Software Development Kit License” (własnościowa licencja Google zezwalająca na użycie w aplikacjach) — **do przeglądu właściciela**. **STEP-06: pełna lista przechodnia z CI** (`debugRuntimeClasspath` → `maestro-app.apk`,
+`debugAndroidTestRuntimeClasspath` → `maestro-server.apk`; `scripts/fork/android-driver-deps.py`, licencje z POM): 102 artefakty —
+Apache-2.0 (AndroidX, AndroidX Test, gRPC, Ktor, Gson, Guava, Kotlin, kotlinx-coroutines i in.), BSD-3-Clause (protobuf-lite,
+Hamcrest 1.3), MIT (checker-qual, animal-sniffer-annotations, slf4j-api), ISC (kotlin-retry), **EPL-1.0 (JUnit 4.13.2, tylko APK
+instrumentacji)**, CDDL/GPLv2-CPE (`javax.annotation-api`), **Android SDK License (Google, własnościowa): `play-services-location`
+21.3.0, `play-services-base` 18.5.0, `play-services-basement` 18.4.0, `play-services-tasks` 18.2.0**. Lista w
+`THIRD-PARTY-NOTICES.md` §3.2 (suplement). Teksty licencji EPL-1.0/CDDL/BSD bibliotek APK nie są jeszcze powielone w suplemencie.
+**Ocena Google Play services i EPL-1.0 w APK — właściciel (otwarte)** |
 | L-06 | FlyingFox 0.22.0 (`swhitty/FlyingFox`; w baseline SwiftPM pin w `project.xcworkspace/xcshareddata/swiftpm/Package.resolved`, od STEP-05 `maestro-ios-xctest-runner/Vendor/FlyingFox/`) | wkompilowany w runner iOS | MIT, © 2022 Simon Whitty. SHA-256 tekstu `d108595341bd18bb218ee3bad7eb5bdeee07c7c55e89e4488392449f84f2eef0` | Potwierdzone | **OK z notą (STEP-05; dołączenie zaakceptowane przez właściciela 2026-10-24)** — źródła FlyingFox 0.22.0 (rewizja `3ad076e081749cef043e25ac01719a503b772113`, ta sama co w usuniętym `Package.resolved`; SHA-256 `LICENSE` jak wyżej) dołączone bez zmian w `maestro-ios-xctest-runner/Vendor/FlyingFox/` (`XCLocalSwiftPackageReference` zamiast pakietu zdalnego), więc trafiają do JAR CLI (`driver/ios/Vendor/`) jako źródło. Dzięki temu build sterownika przy pierwszym użyciu nie pobiera niczego (N-36). Tekst MIT w `THIRD-PARTY-NOTICES.md` §3.3; `CSystemLinux/` (tylko Linux) — Apache-2.0 z Runtime Library Exception |
 | L-07 | `maestro-cli/jvm-version.jar` | zatwierdzony; kopiowany do `bin/` dystrybucji przez `startScripts` | źródło opisane w komentarzu `maestro-cli/build.gradle.kts` (klasa `JvmVersion`, część projektu → Apache-2.0) | Potwierdzone (opis); **STEP-05:** `jvm-version.jar` zawiera wyłącznie `META-INF/MANIFEST.MF` (`Main-Class: JvmVersion`) i `JvmVersion.class` (`javap -c`: `System.getProperty("java.version")`, `StringTokenizer`, `System.out.println`, `System.exit` — zgodne z opisem, bez sieci i plików) | OK — `THIRD-PARTY-NOTICES.md` §3.4 |
 | L-08 | `gradle/wrapper/gradle-wrapper.jar` | build | Apache-2.0 | Potwierdzone | NIE DOTYCZY paczki; walidacja `wrapper-validation` w CI |
@@ -58,6 +68,18 @@ Pełna, wygenerowana tabela baseline (186 artefaktów zewnętrznych): [`docs/aud
 `truffle-api` UPL/MIT), MIT (MCP Kotlin SDK, colormath, slf4j, i in.), BSD-2/BSD-3/FreeBSD (`apk-parser`, `jline`/`jansi`,
 `jcodec`, `HdrHistogram`), ISC (`kotlin-result`), Unicode/ICU (`icu4j`), CC0 (`LatencyUtils`), CDDL+GPLv2-CPE
 (`javax.annotation-api`), LGPL-2.1/Apache-2.0 (`jna`, `jna-platform` — wybieramy Apache-2.0). Bez GFTC/własnościowych w `lib/`.
+
+**Skan licencji (STEP-06).** `scripts/fork/check-licenses.py <archiwum>` czyta tabelę §1 `THIRD-PARTY-NOTICES.md` z paczki
+i porównuje każdą zadeklarowaną licencję (dokładny napis z POM: „nazwa (URL)”) z `scripts/fork/allowed-licenses.tsv`
+(36 wpisów: napis → identyfikator SPDX i polityka). Polityka: `allowed` — może być jedyną licencją biblioteki (Apache-2.0, MIT,
+BSD-2/3-Clause, BSD-2-Clause-FreeBSD, ISC, UPL-1.0, CC0-1.0, Unicode-3.0, CDDL-1.1 OR GPL-2.0-only WITH Classpath-exception-2.0);
+`alternative-only` — tylko jako jedna z licencji do wyboru obok dozwolonej (LGPL-2.1 przy JNA: TapCue korzysta z Apache-2.0).
+Napis spoza listy (nowa licencja albo znana licencja zapisana inaczej w POM nowej wersji) kończy CI błędem do czasu przeglądu
+i dopisania wpisu. Wynik dla paczki STEP-06 (134 biblioteki): Apache-2.0 101, UPL-1.0 10, MIT 9, BSD-3-Clause 4,
+BSD-2-Clause 2, BSD-2-Clause-FreeBSD 2, CC0-1.0 1, BSD-2-Clause/CC0-1.0 1, MIT/UPL-1.0 1, ISC 1, Unicode-3.0 1,
+CDDL-1.1/GPL-2.0-CPE 1 — wszystkie na liście. Testy negatywne (`scripts/fork/test-ci-checks.sh`): nowa licencja (GFTC),
+znana licencja zapisana inaczej, biblioteka tylko z licencją `alternative-only`, pusta tabela, niezgodna liczba wierszy —
+każde odrzucone. Polityka jest decyzją techniczną do akceptacji właściciela (§5).
 
 Podsumowanie licencji wg POM: Apache-2.0 (zdecydowana większość), MIT, UPL-1.0 (GraalVM community),
 BSD-2/BSD-3/FreeBSD (`jcodec`, `jline`, `HdrHistogram`), ISC (`kotlin-result`), Unicode/ICU (`icu4j` shadowed),
@@ -113,7 +135,7 @@ binarium/archiwum zagnieżdżone kończy weryfikację błędem):
 `verify-dist.sh` sprawdza ścieżki w archiwum i w każdym JAR-ze z `lib/` (wzorce poniżej), binaria natywne (lista dozwolonych
 w §3), kompletność `THIRD-PARTY-NOTICES.md` (każdy JAR z `lib/`), `NOTICE`/`LICENSE`/`README.md`, start-scripty (bez linków
 producenta, sprawdzenie Javy 17) i `SHA256SUMS`; z `--smoke` uruchamia `bin/tapcue --version` z rozpakowanego archiwum.
-Uruchamiany w CI (`ci-baseline.yml`: job Linux i job `macos-dist`).
+Uruchamiany w CI (`.github/workflows/ci.yml`: job `build` i job `macos`; do STEP-05 `ci-baseline.yml`).
 
 | Wzorzec | Powód | Od kroku |
 |---|---|---|
@@ -130,8 +152,10 @@ Uruchamiany w CI (`ci-baseline.yml`: job Linux i job `macos-dist`).
 1. ~~STEP-05: `THIRD-PARTY-NOTICES.md`~~ — **zrealizowane** (generowany przy buildzie; teksty z JAR-ów + suplement).
    Zostaje: artefakty, których JAR nie zawiera tekstu licencji (np. część MIT/BSD), mają w tabeli nazwę i URL licencji
    z POM, ale nie pełny tekst — przegląd właściciela przed STEP-08 (ewentualnie dopisanie tekstów do suplementu).
-2. STEP-05: drzewo zależności `maestro-android` (APK) i noty dla L-05 — **częściowo** (zależności bezpośrednie, §3.2
-   suplementu); pełna lista przechodnia i ocena `play-services-location` — STEP-06 (CI z Google Maven) / właściciel.
+2. STEP-05: drzewo zależności `maestro-android` (APK) i noty dla L-05 — **pełna lista przechodnia w STEP-06** (job CI `build`,
+   `scripts/fork/android-driver-deps.py`, §3.2 suplementu); **ocena `play-services-location` — właściciel** (otwarte).
 3. ~~STEP-05: SHA-256 `applesimutils` vs wydanie 0.9.10~~ — oficjalne wydanie to tylko źródła; porównanie niemożliwe (L-02).
 4. ~~D-5: implementacja z testami regresji~~ — **zrealizowane w STEP-05**. D-6 zrealizowana w STEP-03B.
-5. STEP-06: automatyczny skan licencji w CI (porównanie z listą dozwolonych licencji; nowa licencja → fail).
+5. ~~STEP-06: automatyczny skan licencji w CI~~ — **zrealizowane** (`scripts/fork/check-licenses.py`, §3). Do akceptacji
+   właściciela: polityka listy dozwolonych (w szczególności CDDL+GPLv2-CPE `javax.annotation-api` jako `allowed` i LGPL-2.1
+   jako `alternative-only`).

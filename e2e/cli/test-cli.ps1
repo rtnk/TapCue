@@ -1,4 +1,3 @@
-$env:MAESTRO_CLI_NO_ANALYTICS = 1
 $pass = 0; $fail = 0
 
 function Check([string]$desc, [string]$cmd, [string]$assertion, [string]$expected) {
@@ -38,7 +37,7 @@ Check "tapcue gives usage instructions when called with --help" `
 Check "tapcue test subcommand gives usage instructions when called with --help" `
     "tapcue test --help" "includes" "Usage: tapcue test"
 Check "tapcue bugreport gives instruction" `
-    "tapcue bugreport" "includes" "https://github.com/mobile-dev-inc/Maestro/issues"
+    "tapcue bugreport" "includes" "https://github.com/rtnk/TapCue/issues"
 
 Write-Host ""
 Write-Host "$pass passed, $fail failed"

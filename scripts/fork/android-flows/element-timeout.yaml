@@ -1,0 +1,8 @@
+# AT-04, expected to fail: waiting for an element that never appears ends with a timeout error.
+appId: com.android.settings
+name: Waiting for a missing element times out
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "TapCue element that is not on any screen"
+    timeout: 5000

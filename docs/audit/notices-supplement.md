@@ -105,13 +105,35 @@ THE SOFTWARE.
 ### 3.2 Android driver APKs (inside `lib/maestro-client.jar`: `maestro-app.apk`, `maestro-server.apk`)
 
 Built from the `maestro-android` module (Apache-2.0, `LICENSE`) and installed on the Android device or emulator under
-test. They contain these libraries and their transitive dependencies, all under the Apache License 2.0 unless noted:
-gRPC Java and gRPC Kotlin (`io.grpc`), Protocol Buffers lite runtime (`com.google.protobuf`, BSD-3-Clause,
-Copyright 2008 Google Inc.), Ktor server (`io.ktor`), Gson (`com.google.code.gson`), Apache Commons Lang 3
-(`org.apache.commons:commons-lang3`), HiddenApiBypass (`org.lsposed.hiddenapibypass`), Google Play services location
-(`com.google.android.gms:play-services-location`, Android Software Development Kit License), AndroidX Test, Espresso and
-UI Automator (`androidx.test`), kotlin-retry (`com.michael-bull.kotlin-retry`, ISC) and the Kotlin standard library.
-The exact list for a build is printed by `./gradlew :maestro-android:dependencies`.
+test. The libraries below are compiled into them: the resolved `debugRuntimeClasspath` (`maestro-app.apk`) and
+`debugAndroidTestRuntimeClasspath` (`maestro-server.apk`, the instrumentation APK) of `maestro-android`, 102 artifacts,
+with the license each one's Maven POM declares. CI regenerates this list on every run (`scripts/fork/android-driver-deps.py`,
+job `build` in `.github/workflows/ci.yml`); this copy is from STEP-06.
+
+- **Apache License 2.0:** AndroidX — `activity` 1.0.0, `annotation` 1.1.0, `arch.core` (`core-common` 2.1.0,
+  `core-runtime` 2.0.0), `collection` 1.1.0, `concurrent-futures`(`-ktx`) 1.1.0, `core` 1.2.0, `customview` 1.0.0,
+  `fragment` 1.1.0, `lifecycle` (`-common`, `-runtime`, `-viewmodel` 2.1.0; `-livedata`, `-livedata-core` 2.0.0), `loader`
+  1.0.0, `savedstate` 1.0.0, `tracing` 1.1.0, `versionedparcelable` 1.1.0, `viewpager` 1.0.0; AndroidX Test — `core` 1.6.1,
+  `monitor` 1.7.1, `runner` 1.6.1, `ext:junit` 1.2.1, `services:storage` 1.5.0, `espresso-core` and
+  `espresso-idling-resource` 3.6.1, `uiautomator` 2.3.0; gRPC Java and Kotlin (`io.grpc`: `grpc-api` and `grpc-stub` 1.57.2,
+  `grpc-core`, `grpc-netty-shaded`, `grpc-okhttp`, `grpc-protobuf-lite` 1.50.2, `grpc-kotlin-stub` 1.4.1); Ktor 2.3.13
+  (`io.ktor`: `ktor-server-core`, `-cio`, `-host-common`, `-content-negotiation`, `ktor-serialization`(`-gson`), `ktor-http`,
+  `-http-cio`, `ktor-io`, `ktor-network`, `ktor-utils`, `ktor-events`, `ktor-websockets`, with their `-jvm` variants); Gson
+  2.10.1; Guava 32.0.1-android, `failureaccess` 1.0.1, `listenablefuture` 9999.0; `com.google.android:annotations` 4.1.1.4;
+  `jsr305` 3.0.2; `error_prone_annotations` 2.18.0; `j2objc-annotations` 2.8; Okio 1.17.5; Typesafe Config 1.4.3; PerfMark
+  0.25.0; Apache Commons Lang 3.13.0; Jansi 2.4.1; HiddenApiBypass 4.3; `javax.inject` 1; JetBrains `annotations` 23.0.0;
+  Kotlin `kotlin-stdlib`(`-common`) 2.2.0, `kotlin-stdlib-jdk7`/`-jdk8` and `kotlin-reflect` 1.8.22; kotlinx-coroutines
+  1.7.3 (`-core`, `-core-jvm`, `-android`, `-jdk8`, `-bom`).
+- **BSD-3-Clause:** Protocol Buffers lite (`protobuf-javalite`, `protobuf-kotlin-lite` 3.21.9, Copyright 2008 Google Inc.);
+  Hamcrest 1.3 (`hamcrest-core`, `hamcrest-library`; POM: "New BSD License", Copyright 2000-2006 hamcrest.org).
+- **MIT:** Checker Framework qualifiers (`checker-qual` 3.33.0), `animal-sniffer-annotations` 1.21, SLF4J API 1.7.36.
+- **ISC:** kotlin-retry 2.0.1 (`com.michael-bull.kotlin-retry`).
+- **Eclipse Public License 1.0:** JUnit 4.13.2 (`junit:junit`, instrumentation APK only — the AndroidX Test runner needs it).
+- **CDDL 1.1 or GPL 2.0 with the Classpath Exception:** `javax.annotation-api` 1.3.2 (used under CDDL).
+- **Android Software Development Kit License** (Google, proprietary; https://developer.android.com/studio/terms.html):
+  Google Play services `play-services-location` 21.3.0 and its dependencies `play-services-base` 18.5.0,
+  `play-services-basement` 18.4.0, `play-services-tasks` 18.2.0. Whether redistributing them inside the driver APK is
+  acceptable is an open decision of the project owner (`docs/LICENSE-AUDIT.md` L-05).
 
 ### 3.3 iOS XCTest runner source (inside `lib/maestro-cli-*.jar`, `driver/ios/`)
 

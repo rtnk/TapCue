@@ -48,7 +48,7 @@ class AdbSocketFactoryTest {
 
             assertWithMessage("$variant").that(socket.isConnected).isFalse()
 
-            socket.connect(InetSocketAddress("localhost", 8080))
+            socket.connect(InetSocketAddress.createUnresolved("localhost", 8080))
 
             assertWithMessage("$variant").that(openedHost).isEqualTo("localhost")
             assertWithMessage("$variant").that(openedPort).isEqualTo(8080)
@@ -99,7 +99,7 @@ class AdbSocketFactoryTest {
                 }
             }
             val socket = variant.factory(pool) { _, _ -> stream }.createSocket()
-            socket.connect(InetSocketAddress("localhost", 8080))
+            socket.connect(InetSocketAddress.createUnresolved("localhost", 8080))
 
             socket.close()
             socket.close() // idempotent
@@ -125,7 +125,7 @@ class AdbSocketFactoryTest {
         sink: Buffer = Buffer(),
     ): Socket {
         val socket = variant.factory(pool) { _, _ -> fakeStream(source, sink) }.createSocket()
-        socket.connect(InetSocketAddress("localhost", 8080))
+        socket.connect(InetSocketAddress.createUnresolved("localhost", 8080))
         return socket
     }
 }

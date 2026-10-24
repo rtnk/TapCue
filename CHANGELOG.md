@@ -7,8 +7,8 @@ TapCue bazuje na Maestro (Apache-2.0) i nie jest powiązany z mobile.dev. Zmiany
 
 ### Unreleased
 
-- Repozytorium: workflowy upstream zaparkowane w `.github/upstream-workflows-disabled/` (nie uruchamiają się w forku).
-- CI: bazowy workflow `ci-baseline.yml` — testy jednostkowe bez pobierania simulator-server i bez budowania Viewera, ze strażnikiem `scripts/fork/check-no-simulator-server.sh`.
+- Repozytorium: workflowy upstream zaparkowane w `.github/upstream-workflows-disabled/` (nie uruchamiały się w forku; usunięte w STEP-06).
+- CI: bazowy workflow `ci-baseline.yml` — testy jednostkowe bez pobierania simulator-server i bez budowania Viewera, ze strażnikiem `scripts/fork/check-no-simulator-server.sh` (zastąpiony przez `ci.yml` w STEP-06).
 - Dokumentacja: plan `docs/ROADMAP-0.1.md`, audyty `docs/NETWORK-AUDIT.md` i `docs/LICENSE-AUDIT.md`,
   `docs/ARCHITECTURE-LOCAL.md`, szkic `docs/RELEASING.md`, handover `docs/handovers/STEP-00.md`.
 - CLI (STEP-01): usunięte komendy Maestro Cloud i Studio: `cloud`, `login`, `logout`, `list-cloud-devices`,
@@ -118,6 +118,16 @@ TapCue bazuje na Maestro (Apache-2.0) i nie jest powiązany z mobile.dev. Zmiany
   „all 16 adb I/O workers are busy”, gdy wolny worker właśnie kończy poprzednie wywołanie; przy 15 workerach
   zawieszonych na urządzeniu zdarzało się to przy niemal każdym kolejnym wywołaniu. Usuwa też niestabilność
   `AdbSocketTimeoutTest` w CI.
+- MCP (STEP-06): `tapcue mcp` odpowiada na wszystkie żądania odczytane przed końcem STDIN — klient może zamknąć wejście
+  zaraz po ostatnim żądaniu (np. `printf '…' | tapcue mcp`); wcześniej proces kończył się bez żadnej odpowiedzi.
+- CI (STEP-06): jeden workflow `.github/workflows/ci.yml` zamiast `ci-baseline.yml`; usunięte zaparkowane workflowy upstream
+  (`.github/upstream-workflows-disabled/`). Joby: testy jednostkowe i archiwum z weryfikacją, kontrola zakazanych zależności,
+  skan licencji (`scripts/fork/allowed-licenses.tsv` — nowa licencja wymaga przeglądu), lista bibliotek APK sterownika Android,
+  test offline na Linux (CLI, MCP i testy jednostkowe w przestrzeni sieciowej z samym loopbackiem, z rejestrem prób połączeń
+  przez `strace`), integracja z emulatorem Android i job macOS arm64 (paczka bez sieci, sterownik iOS ze źródła, symulator).
+- Repozytorium (STEP-06): usunięte ewaluacje LLM serwera MCP upstream (`maestro-cli/src/test/mcp/`, wymagały zdalnych modeli),
+  workspace `e2e/workspaces/web` z serwerem fixture'ów (platforma web jest wyłączona) i `e2e/update_samples` (wysyłka próbek
+  do bucketu mobile.dev). `e2e/cli/test-cli.sh` sprawdza adres zgłoszeń TapCue i jest uruchamiany w CI.
 
 ## Upstream Maestro
 

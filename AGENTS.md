@@ -10,7 +10,7 @@
 >   no longer has the `downloadSimulatorServer`, `installMcpViewerDeps` and `buildMcpViewer` tasks; do not
 >   reintroduce them, and do not pass `-x` for them (Gradle fails on unknown tasks).
 > - The web platform is disabled (STEP-03B, D-4): `maestro-web`, `CdpWebDriver`/`WebDriver` and Selenium are gone, and web
->   flows fail with `WebPlatformNotSupported`. The `e2e/workspaces/web` fixtures are upstream's and are evaluated in STEP-06.
+>   flows fail with `WebPlatformNotSupported`. The `e2e/workspaces/web` fixtures and their server were removed in STEP-06.
 > - The MCP server is local-only (STEP-04): the Viewer (`mcp/viewer/`, `maestro-cli/mcp-viewer/`) is gone and
 >   `cheat_sheet` serves `maestro-cli/src/main/resources/mcp/cheat-sheet.md` — keep its `yaml` examples valid
 >   (`CheatSheetToolTest` parses them) and do not make MCP tools call remote services.
@@ -21,9 +21,9 @@
 >   (`TapCueNameTest`). Kotlin packages (`maestro.*`), Gradle module names, the YAML flow format and the on-device
 >   driver ids (`dev.mobile.maestro*`) keep upstream names. Below, read `maestro <command>` as `tapcue <command>` and
 >   `.maestro/` as `.tapcue/`.
-> - The `release` and `bump-android-version` skills in `.claude/skills/`, root `RELEASING.md` and
->   `.github/upstream-workflows-disabled/` describe upstream processes (Maestro Cloud, Maven Central,
->   Homebrew, GCS) and do not apply here. Fork releases: `docs/RELEASING.md`.
+> - The `release` and `bump-android-version` skills in `.claude/skills/` and root `RELEASING.md` describe upstream
+>   processes (Maestro Cloud, Maven Central, Homebrew, GCS, `test-e2e.yaml`) and do not apply here. Fork releases:
+>   `docs/RELEASING.md`.
 > - Distribution (STEP-05, D-1/D-5/D-7): the only release artifact is `tapcue-<version>-macos-arm64.zip` + `SHA256SUMS`
 >   from `./gradlew :maestro-cli:macosArm64DistZip`; check it with `scripts/verify-dist.sh --smoke <zip>` (CI does). There is
 >   no `jreleaser`, `scripts/install.sh` or Maven Central publishing — do not reintroduce them. `THIRD-PARTY-NOTICES.md` is
@@ -31,6 +31,15 @@
 >   dependency whose POM has no license fails the build until it is checked and added to `thirdPartyLicenseOverrides`. A new
 >   native library or nested archive in `lib/` fails `verify-dist.sh` until it is added to its allowlist with its license.
 >   User-facing text and start scripts must not link to maestro.dev/mobile.dev (N-35).
+> - CI (STEP-06): `.github/workflows/ci.yml` is the only workflow (the parked upstream workflows and `ci-baseline.yml` are
+>   gone). Jobs: `build` (detekt, `./gradlew test`, archive + `verify-dist.sh`, `scripts/fork/check-forbidden-deps.sh`,
+>   `scripts/fork/check-licenses.py` against `scripts/fork/allowed-licenses.tsv`, Android driver library list), `egress`
+>   (`scripts/fork/egress-test.sh`: CLI, MCP and unit tests in a loopback-only network namespace under `strace` — zero
+>   attempts outside loopback), `android` (emulator, `scripts/fork/android-integration.sh` with `scripts/fork/android-flows/`)
+>   and `macos` (offline archive, iOS driver from source, simulator). A new license string fails the scan until it is reviewed
+>   and added to the allowlist. Keep actions pinned to commit SHAs, `permissions: contents: read`, no `pull_request_target`.
+>   The upstream `e2e/` suite and the MCP LLM evals (`maestro-cli/src/test/mcp/`, removed) are not run; the sections on
+>   `test-e2e.yaml` and MCP evals below describe upstream.
 > - No prebuilt iOS driver (STEP-05, D-5): the `driver-iPhoneSimulator`/`driver-iphoneos` ZIPs and the `buildIosDriver`
 >   task are gone. The CLI builds the simulator runner from the source in its JAR (`driver/ios`) with the local Xcode
 >   (`maestro.cli.driver.IOSSimulatorDriver`, `~/.tapcue/maestro-iphonesimulator-driver-build`). Swift dependencies are
@@ -61,19 +70,15 @@ Top-level Gradle modules. Code lives under each module's `src/main/`.
 
 ## E2E test fixtures (`e2e/`)
 
-Shipped fixtures used by `.github/workflows/test-e2e.yaml`. Run via `e2e/run_tests <android|ios|web>` (see `e2e/run_tests` for env-var inputs `MAESTRO_APP`, `MAESTRO_FLOW_PATH`, `FIXTURES_PORT`).
-
-**Web flows need a fixtures server.** They fetch their pages from `http://127.0.0.1:7357`, which `run_tests web` starts and stops for itself. Running one web flow directly does not, and the failure misleads: `launchApp` succeeds against the dead port — Chrome shows its own error page — so the flow reports `Element not found` for a selector that is perfectly correct. Run `e2e/ensure_fixtures` first — it is idempotent and waits until the server answers.
+Shipped fixtures used by upstream's `.github/workflows/test-e2e.yaml` (not in this fork; TapCue's CI does not run this suite — see `e2e/README.md`). Run via `e2e/run_tests <android|ios>` (see `e2e/run_tests` for env-var inputs `MAESTRO_APP`, `MAESTRO_FLOW_PATH`).
 
 | Path                     | Role                                                                                                                                                                    |
 |--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `e2e/demo_app/`          | Flutter demo app whose only purpose is to exercise Maestro features. Contains its own `CLAUDE.md`. Built binaries are uploaded to a GCS bucket and re-downloaded by CI. |
 | `e2e/demo_app/.tapcue/`  | Maestro flow YAMLs that drive the demo app.                                                                                                                             |
-| `e2e/workspaces/`        | Further workspaces, each holding its flow YAMLs directly (no `.tapcue/` subdirectory): `simple_web_view`, `wikipedia`, and `web` — which is browser flows with no app behind it. |
+| `e2e/workspaces/`        | Further workspaces, each holding its flow YAMLs directly (no `.tapcue/` subdirectory): `simple_web_view` and `wikipedia`. |
 | `e2e/workspaces.txt`     | The workspaces the suite knows about, and for each one its path, the platforms it runs on, and whether it carries `failing` flows. `run_tests` validates it before running anything. |
 | `e2e/run_tests`          | Test driver invoked by the workflow.                                                                                                                                    |
-| `e2e/ensure_fixtures`    | Starts that server unless one is already up, and waits until it answers. Call before running a web flow by hand.                                                         |
-| `e2e/serve_fixtures`     | The static server itself, in the foreground, for `workspaces/web/fixtures/`.                                                                                             |
 | `e2e/list_workspaces`    | Prints the workspace names from the manifest, so callers need not parse it.                                                                                             |
 
 ### `passing/` vs `failing/` suites
@@ -129,7 +134,7 @@ Smoke-test every Maestro command across Android, iOS, and Web on real fixture ap
 Stack: **Maestro CLI itself** (dogfood) + `e2e/run_tests` shell driver + GHA workflow (`.github/workflows/test-e2e.yaml`). Fixture and suite layout is in "E2E test fixtures (`e2e/`)" above.
 
 ```bash
-cd e2e && ./run_tests <android|ios|web>     # local
+cd e2e && ./run_tests <android|ios>         # local
 gh workflow run test-e2e.yaml --ref <branch> -f android_version=android-<N>   # CI
 ```
 
@@ -140,16 +145,14 @@ gh workflow run test-e2e.yaml --ref <branch> -f android_version=android-<N>   # 
 
 A flow breaking for either reason is a real regression — fix in `maestro-android/`, `maestro-client/`, or `e2e/demo_app/`, not in `test-e2e.yaml` (see "What NOT to do").
 
-**Multiple apps for framework-specific coverage.** `demo_app/` (Flutter) is the default fixture and exercises every Maestro command. When a target is **framework-specific** (SwiftUI, React Native, Jetpack Compose specifics, WebView quirks, etc.), add a separate workspace: flow YAMLs directly under `e2e/workspaces/<name>/`, a binary under `e2e/apps/` if there is an app to install, **and a row in `e2e/workspaces.txt`** — `validate_workspaces` fails a workspace that has flows but no row, since without one `run_tests` would never find it. Existing examples: `simple_web_view` (WebView coverage), `wikipedia` (real-world third-party app), `web` (browser flows, no app). The workflow's `app` input narrows a manual dispatch to one workspace: `... -f app=simple_web_view`.
+**Multiple apps for framework-specific coverage.** `demo_app/` (Flutter) is the default fixture and exercises every Maestro command. When a target is **framework-specific** (SwiftUI, React Native, Jetpack Compose specifics, WebView quirks, etc.), add a separate workspace: flow YAMLs directly under `e2e/workspaces/<name>/`, a binary under `e2e/apps/` if there is an app to install, **and a row in `e2e/workspaces.txt`** — `validate_workspaces` fails a workspace that has flows but no row, since without one `run_tests` would never find it. Existing examples: `simple_web_view` (WebView coverage), `wikipedia` (real-world third-party app). The workflow's `app` input narrows a manual dispatch to one workspace: `... -f app=simple_web_view`.
 
-### MCP server evals (`maestro-cli/src/test/mcp/`)
+### MCP server tests
 
-LLM-behaviour evaluations and tool-functionality tests for the MCP server inside `maestro-cli`. Stack: **`mcp-server-tester`** (npm package, run via `npx`) consuming YAML definitions (`full-evals.yaml`, `inspect-screen-evals.yaml`, `tool-tests-{with,without}-device.yaml`) plus per-platform setup scripts under `setup/`. See `maestro-cli/src/test/mcp/README.md` for the model list, scorers, and how to run.
-
-```bash
-./run_mcp_tool_tests.sh ios     # tool-functionality (fast)
-./run_mcp_evals.sh ios          # LLM behaviour (slower)
-```
+Upstream's LLM evaluations (`maestro-cli/src/test/mcp/`, `npx mcp-server-tester` against remote model APIs) were removed
+in STEP-06. The MCP server is tested locally: `McpStdioTest` (the CLI process speaking JSON-RPC over STDIO),
+`PendingRequestsTest`, the tool tests in `maestro-cli/src/test/kotlin/maestro/cli/mcp/`, and in CI the MCP handshake of
+the archive without network (`egress`) and with an emulator (`android`).
 
 ## Conventions
 

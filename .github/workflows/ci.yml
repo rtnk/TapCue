@@ -1,0 +1,482 @@
+# TapCue CI (STEP-06; replaces ci-baseline.yml and the parked upstream workflows).
+#
+#   build    unit tests (detekt, ./gradlew test — includes the MCP STDIO test), the distribution archive with
+#            verify-dist.sh, the dependency check (forbidden GAVs in the CLI runtime classpath), the license scan
+#            (THIRD-PARTY-NOTICES.md against scripts/fork/allowed-licenses.tsv), negative tests for all three, and the
+#            library list of the Android driver APKs (L-05)
+#   egress   the archive and the unit tests in a network namespace with only loopback, under strace: zero network
+#            attempts outside loopback (gate G-5, Linux part); the harness proves first that it catches attempts
+#   android  the archive against an Android emulator (KVM): flows, hierarchy, MCP with a device and the error paths
+#   macos    the archive on Apple silicon: offline run, the iOS Simulator driver built from source, a simulator
+#
+# Device jobs never turn green without having run: no KVM, or a pull request that only changes documentation, makes
+# their test steps show as skipped with the reason in the job summary. Decision D-9 (macOS cost): while the repository
+# is private, docs-only pull requests skip the macOS and Android jobs; push to main and workflow_dispatch run them all.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Classify changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      devices: ${{ steps.classify.outputs.devices }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Do the device jobs need to run?
+        id: classify
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          devices=true
+          if [ "$EVENT" = pull_request ]; then
+            changed="$(git diff --name-only "$BASE...$HEAD")"
+            echo "$changed"
+            if [ -n "$changed" ] && ! grep -Evq '(\.md$|^docs/)' <<<"$changed"; then
+              devices=false
+              echo "Only documentation changed: the Android and macOS jobs skip their test steps." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+          echo "devices=$devices" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Unit tests, archive, dependency and license checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+
+      - name: Set up Java
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: zulu
+          java-version: 17
+          cache: gradle
+
+      - name: Detekt (flow path resolution guard)
+        run: ./gradlew :maestro-orchestra:detektMain :maestro-client:detektMain
+
+      - name: Unit tests (includes the MCP STDIO test and the YAML schema tests)
+        run: ./gradlew test --continue
+
+      - name: Build distribution archive
+        run: ./gradlew :maestro-cli:macosArm64DistZip
+
+      - name: Verify distribution archive
+        run: scripts/verify-dist.sh --smoke maestro-cli/build/distributions/tapcue-*-macos-arm64.zip
+
+      - name: Negative tests for verify-dist.sh
+        run: scripts/fork/test-verify-dist.sh maestro-cli/build/distributions/tapcue-*-macos-arm64.zip
+
+      - name: Dependency check (forbidden GAVs in the CLI runtime classpath)
+        run: scripts/fork/check-forbidden-deps.sh
+
+      - name: License scan
+        run: |
+          mkdir -p build/reports/fork
+          python3 -I scripts/fork/check-licenses.py maestro-cli/build/distributions/tapcue-*-macos-arm64.zip \
+            --report build/reports/fork/license-scan.md
+          cat build/reports/fork/license-scan.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Negative tests for the license scan and the dependency check
+        run: |
+          scripts/fork/test-ci-checks.sh maestro-cli/build/distributions/tapcue-*-macos-arm64.zip \
+            build/reports/fork/cli-runtime-dependencies.txt
+
+      - name: Android driver APK libraries (L-05)
+        run: |
+          ./gradlew -q :maestro-android:dependencies --configuration debugRuntimeClasspath > build/reports/fork/android-app-dependencies.txt
+          ./gradlew -q :maestro-android:dependencies --configuration debugAndroidTestRuntimeClasspath > build/reports/fork/android-server-dependencies.txt
+          python3 -I scripts/fork/android-driver-deps.py \
+            --app build/reports/fork/android-app-dependencies.txt \
+            --server build/reports/fork/android-server-dependencies.txt \
+            --report build/reports/fork/android-driver-libraries.md > /dev/null
+          cat build/reports/fork/android-driver-libraries.md | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Guard - no simulator-server or Viewer in build outputs
+        if: always()
+        run: scripts/fork/check-no-simulator-server.sh
+
+      - name: Upload distribution archive
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tapcue-macos-arm64
+          path: |
+            maestro-cli/build/distributions/tapcue-*-macos-arm64.zip
+            maestro-cli/build/distributions/SHA256SUMS
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: build-reports
+          path: |
+            **/build/reports/tests/test
+            **/build/test-results/test
+            build/reports/fork
+          retention-days: 14
+          if-no-files-found: warn
+
+  egress:
+    name: Offline test (Linux, loopback-only network namespace)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: zulu
+          java-version: 17
+          cache: gradle
+
+      - name: Install strace
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q strace
+          strace -V | head -n 1
+
+      - name: Download distribution archive
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: tapcue-macos-arm64
+          path: dist
+
+      - name: Install the archive
+        run: |
+          (cd dist && sha256sum -c SHA256SUMS)
+          mkdir -p "$RUNNER_TEMP/tapcue"
+          unzip -q dist/tapcue-*-macos-arm64.zip -d "$RUNNER_TEMP/tapcue"
+          echo "TAPCUE=$(ls -d "$RUNNER_TEMP"/tapcue/tapcue-*/bin/tapcue)" >> "$GITHUB_ENV"
+
+      - name: The harness detects network attempts
+        run: scripts/fork/egress-test.sh self-test reports/egress-self-test
+
+      - name: The harness fails a launcher that reaches the network
+        # A copy of the archive's launcher with one planted `curl`: the same check that passes below must fail here.
+        run: |
+          cp -r "$RUNNER_TEMP/tapcue" "$RUNNER_TEMP/tapcue-planted"
+          planted="$RUNNER_TEMP/tapcue-planted/${TAPCUE#"$RUNNER_TEMP/tapcue/"}"
+          sed -i '2i curl -s --max-time 5 https://example.com > /dev/null || true' "$planted"
+          if scripts/fork/egress-test.sh run reports/egress-planted version -- "$planted" --version; then
+            echo "the planted request was not detected"
+            exit 1
+          fi
+          echo "OK: the planted request was detected"
+
+      - name: TapCue CLI and MCP without network
+        run: scripts/fork/egress-test.sh cli "$TAPCUE" reports/egress-cli
+
+      - name: Prepare the unit tests for an offline run
+        # Everything the test tasks need is compiled and downloaded here; the next step runs them with --offline.
+        # The daemon is stopped: a Gradle process in the namespace could not reach it to share the caches.
+        run: |
+          ./gradlew --init-script scripts/fork/resolve-test-runtime.gradle testClasses resolveTestRuntime
+          ./gradlew --stop
+
+      - name: Unit tests without network (T-02)
+        # Every JVM module with tests (maestro-android has none; its APKs are built in the build job).
+        run: |
+          tasks=()
+          for module in maestro-cli maestro-client maestro-ios maestro-ios-driver maestro-orchestra \
+                        maestro-orchestra-models maestro-test maestro-utils; do
+            tasks+=(":$module:test" --rerun)
+          done
+          # --rerun and no build cache: the tests must really run here, not come back from the CI cache.
+          scripts/fork/egress-test.sh run reports/egress-unit-tests unit-tests -- \
+            ./gradlew --offline --no-daemon --no-build-cache --continue "${tasks[@]}"
+
+      - name: List failed tests
+        if: failure()
+        run: |
+          python3 -I - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          for path in sorted(glob.glob("*/build/test-results/test/*.xml")):
+              for case in ET.parse(path).getroot().iter("testcase"):
+                  for problem in list(case.findall("failure")) + list(case.findall("error")):
+                      print(f"FAILED {case.get('classname')} > {case.get('name')}")
+                      print("    " + (problem.text or problem.get("message") or "").strip().replace("\n", "\n    ")[:3000])
+          PY
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: egress-reports
+          path: |
+            reports
+            **/build/test-results/test
+          retention-days: 14
+          if-no-files-found: warn
+
+  android:
+    name: Android emulator integration
+    needs: [changes, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Is there anything to run it on?
+        id: kvm
+        env:
+          DEVICES: ${{ needs.changes.outputs.devices }}
+        run: |
+          if [ "$DEVICES" != true ]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "SKIPPED: this pull request only changes documentation." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          sudo udevadm settle || true
+          # The udev rule applies asynchronously; set the mode directly too.
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+          ls -l /dev/kvm || true
+          if [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No KVM on this runner: the Android emulator tests are SKIPPED, not passed."
+            echo "SKIPPED: no KVM on this runner, the emulator cannot start." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Set up Java
+        if: steps.kvm.outputs.available == 'true'
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Download distribution archive
+        if: steps.kvm.outputs.available == 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: tapcue-macos-arm64
+          path: dist
+
+      - name: Install the archive
+        if: steps.kvm.outputs.available == 'true'
+        run: |
+          (cd dist && sha256sum -c SHA256SUMS)
+          mkdir -p "$RUNNER_TEMP/tapcue"
+          unzip -q dist/tapcue-*-macos-arm64.zip -d "$RUNNER_TEMP/tapcue"
+          echo "TAPCUE=$(ls -d "$RUNNER_TEMP"/tapcue/tapcue-*/bin/tapcue)" >> "$GITHUB_ENV"
+
+      - name: Run on the emulator
+        if: steps.kvm.outputs.available == 'true'
+        uses: ReactiveCircus/android-emulator-runner@e89f39f1abbbd05b1113a29cf4db69e7540cae5a # v2.37.0
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: scripts/fork/android-integration.sh "$TAPCUE" reports/android
+
+      - name: Upload reports
+        if: always() && steps.kvm.outputs.available == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: android-reports
+          path: reports
+          retention-days: 14
+          if-no-files-found: warn
+
+  macos:
+    name: macOS arm64 archive (offline run, iOS driver from source, simulator)
+    needs: changes
+    runs-on: macos-26
+    timeout-minutes: 60
+
+    steps:
+      - name: Should it run?
+        id: run
+        env:
+          DEVICES: ${{ needs.changes.outputs.devices }}
+        run: |
+          if [ "$DEVICES" = true ] && xcodebuild -version; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::macOS tests SKIPPED (documentation-only change or no Xcode)."
+            echo "SKIPPED: documentation-only change or no Xcode on this runner." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Checkout
+        if: steps.run.outputs.available == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Require Apple silicon
+        if: steps.run.outputs.available == 'true'
+        run: test "$(uname -m)" = arm64
+
+      - name: Set up Java
+        if: steps.run.outputs.available == 'true'
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: zulu
+          java-version: 17
+          cache: gradle
+
+      - name: Build and verify the archive
+        if: steps.run.outputs.available == 'true'
+        run: |
+          ./gradlew :maestro-cli:macosArm64DistZip
+          scripts/verify-dist.sh --smoke maestro-cli/build/distributions/tapcue-*-macos-arm64.zip
+          (cd maestro-cli/build/distributions && shasum -a 256 -c SHA256SUMS)
+
+      - name: Install the archive
+        if: steps.run.outputs.available == 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/tapcue"
+          unzip -q maestro-cli/build/distributions/tapcue-*-macos-arm64.zip -d "$RUNNER_TEMP/tapcue"
+          echo "TAPCUE=$(ls -d "$RUNNER_TEMP"/tapcue/tapcue-*/bin/tapcue)" >> "$GITHUB_ENV"
+
+      - name: Run without network access
+        if: steps.run.outputs.available == 'true'
+        # The JVM takes user.home from the account, not from $HOME, so TapCue state lands in the runner's real home.
+        # sandbox-exec denies every outbound connection except loopback (and the DNS resolver socket), so a command
+        # that needed the internet would fail here. Denials are logged by the kernel; scripts/fork/macos-sandbox-log.sh
+        # reads them back as the register of attempts, after checking that it sees curl's.
+        run: |
+          cat > "$RUNNER_TEMP/offline.sb" <<'SB'
+          (version 1)
+          (allow default)
+          (deny network-outbound)
+          (allow network-outbound (remote ip "localhost:*"))
+          (allow network-outbound (remote unix-socket))
+          (deny network-outbound (remote unix-socket (path-literal "/private/var/run/mDNSResponder")))
+          SB
+          offline() { sandbox-exec -f "$RUNNER_TEMP/offline.sb" "$@"; }
+          mkdir -p reports/macos
+          probe_start="$(date '+%Y-%m-%d %H:%M:%S')"
+          offline curl -sS --max-time 10 https://example.com >/dev/null 2>&1 && { echo "sandbox does not block the network"; exit 1; }
+          sleep 2
+          scripts/fork/macos-sandbox-log.sh "$probe_start" curl > reports/macos/sandbox-probe.txt || true
+          start="$(date '+%Y-%m-%d %H:%M:%S')"
+          mkdir -p "$RUNNER_TEMP/project/.tapcue"
+          printf 'appId: com.example\n---\n- launchApp\n' > "$RUNNER_TEMP/project/.tapcue/flow.yaml"
+          offline "$TAPCUE" --version
+          offline "$TAPCUE" --help > /dev/null
+          offline "$TAPCUE" check-syntax "$RUNNER_TEMP/project/.tapcue/flow.yaml"
+          # STDIN ends right after the requests: since STEP-06 the server answers them before it exits.
+          reply="$(printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"cheat_sheet","arguments":{}}}' \
+            | offline "$TAPCUE" mcp)"
+          echo "$reply" | head -c 600; echo
+          grep -q '"name":"tapcue"' <<<"$reply"
+          grep -q '"id":2,"result"' <<<"$reply"
+          test ! -e "$HOME/.maestro"
+          sleep 2
+          if grep -q "deny" reports/macos/sandbox-probe.txt; then
+            echo "The sandbox log shows curl's denied attempt; checking that TapCue made none:"
+            scripts/fork/macos-sandbox-log.sh "$start" java | tee reports/macos/sandbox-tapcue.txt
+            if grep -q "deny" reports/macos/sandbox-tapcue.txt; then
+              echo "TapCue attempted a network connection outside loopback"
+              exit 1
+            fi
+            echo "OK: no denied network attempt by TapCue"
+          else
+            echo "::warning::The sandbox log did not show curl's denied attempt; on this runner the macOS run proves only that the commands work without network, not the absence of attempts."
+            cat reports/macos/sandbox-probe.txt
+          fi
+
+      - name: Build the iOS Simulator driver from source without fetching anything
+        if: steps.run.outputs.available == 'true'
+        # Not under sandbox-exec: SwiftPM and the Swift macro plugin server sandbox themselves, and sandboxes cannot nest.
+        # Instead the build must not resolve any remote package: no SourcePackages checkouts, no fetch in the log.
+        run: |
+          xcodebuild -version
+          "$TAPCUE" driver-setup --simulator
+          set -x
+          build="$HOME/.tapcue/maestro-iphonesimulator-driver-build"
+          products="$build/driver-iPhoneSimulator/Build/Products"
+          ls -la "$build" "$build/driver-iPhoneSimulator" "$products"
+          ls "$products"/*.xctestrun
+          test -d "$products/Debug-iphonesimulator/maestro-driver-iosUITests-Runner.app"
+          cat "$build/version.properties"
+          if [ -d "$build/driver-iPhoneSimulator/SourcePackages/checkouts" ]; then
+            ls -la "$build/driver-iPhoneSimulator/SourcePackages/checkouts"
+            test -z "$(ls -A "$build/driver-iPhoneSimulator/SourcePackages/checkouts")"
+          fi
+          if grep -nE "Fetching|Cloning|Updating https?://|https?://github\.com" "$build/output.log"; then
+            echo "the iOS driver build fetched a package"
+            exit 1
+          fi
+          cp "$build/output.log" reports/macos/ios-driver-build.log
+
+      - name: Drive a simulator with the driver built from source
+        if: steps.run.outputs.available == 'true'
+        env:
+          MAESTRO_DRIVER_STARTUP_TIMEOUT: 240000
+        run: |
+          udid="$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          ios = sorted((r for r in devices if "iOS" in r), key=lambda r: [int(x) for x in r.rsplit("iOS-", 1)[1].split("-")], reverse=True)
+          print(next(d["udid"] for r in ios for d in devices[r] if d["name"].startswith("iPhone")))')"
+          echo "simulator: $udid"
+          xcrun simctl bootstatus "$udid" -b
+          "$TAPCUE" --device "$udid" hierarchy > reports/macos/hierarchy.json
+          grep -q '"attributes"' reports/macos/hierarchy.json
+          echo "hierarchy: $(wc -c < reports/macos/hierarchy.json) bytes"
+
+      - name: Show iOS driver build log
+        if: failure() && steps.run.outputs.available == 'true'
+        run: |
+          log="$HOME/.tapcue/maestro-iphonesimulator-driver-build/output.log"
+          grep -nE "error:|warning: .*(sandbox|network)|\*\* .* FAILED \*\*|The following build commands failed" -A3 "$log" | head -n 120 || true
+          tail -n 40 "$log" || true
+
+      - name: Upload reports
+        if: always() && steps.run.outputs.available == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: macos-reports
+          path: reports
+          retention-days: 14
+          if-no-files-found: warn
