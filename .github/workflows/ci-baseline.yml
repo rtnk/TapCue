@@ -147,6 +147,10 @@ jobs:
       - name: Build the iOS Simulator driver from source, offline
         run: |
           xcodebuild -version
+          # SwiftPM evaluates package manifests in its own sandbox-exec, which cannot nest inside ours; let it run them
+          # unsandboxed on this runner so the outer, network-denying sandbox can wrap the whole build.
+          defaults write com.apple.dt.Xcode IDEPackageSupportDisableManifestSandbox -bool YES
+          defaults write com.apple.dt.Xcode IDEPackageSupportDisablePluginExecutionSandbox -bool YES
           sandbox-exec -f "$RUNNER_TEMP/offline.sb" "$TAPCUE" driver-setup --simulator
           products="$HOME/.tapcue/maestro-iphonesimulator-driver-build/driver-iPhoneSimulator/Build/Products"
           ls "$products"/*.xctestrun
