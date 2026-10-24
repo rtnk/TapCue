@@ -1,6 +1,6 @@
 # Audyt ruchu sieciowego — TapCue (repozytorium `rtnk/TapCue`)
 
-Wersja: **8 (STEP-05, dystrybucja lokalna i audyt licencji)**. Baseline: upstream `mobile-dev-inc/Maestro` tag `v2.11.0`
+Wersja: **9 (STEP-06, CI i testy offline)**. Baseline: upstream `mobile-dev-inc/Maestro` tag `v2.11.0`
 (`c8c361be1cc89b2e742f185466a302a22778be6b`); numery linii w kolumnie „Źródło” odnoszą się do baseline.
 
 Historia zmian statusów:
@@ -55,6 +55,12 @@ Historia zmian statusów:
   `scripts/verify-dist.sh` (start-scripty w archiwum bez linków producenta) z testami negatywnymi
   `scripts/fork/test-verify-dist.sh`, job CI `macos-dist` (rozpakowana paczka: `--version`, `--help`, `check-syntax`,
   handshake MCP pod `sandbox-exec` bez dostępu do sieci poza loopback; build sterownika symulatora ze źródła bez pobierania pakietów — brak `SourcePackages/checkouts` i wpisów „Fetching/Cloning” w logu `xcodebuild` — oraz `tapcue hierarchy` na symulatorze z tym sterownikiem; [run 40080598183](https://github.com/rtnk/TapCue/actions/runs/40080598183)).
+- **STEP-06** (CI i testy offline) — „Plan weryfikacji” wykonany (sekcja „Wyniki weryfikacji” na końcu): test egress na Linux
+  z rejestrem prób (`scripts/fork/egress-test.sh`, job CI `egress`) i rejestr prób z logu sandboxa na macOS (job `macos`).
+  Usunięte: B-06 (zaparkowane workflowy upstream), B-08 (ewaluacje MCP upstream); oceniony i ograniczony: B-07 (`e2e/`);
+  potwierdzone i poprawione: T-02 (testy jednostkowe offline — jedyne zapytania DNS wysyłały `AdbSocketFactoryTest`
+  i `AdbSocketTimeoutTest`, poprawione). N-24 bez zmian (hipoteza — `start-device` wymaga Android SDK). Dowód: job `egress` (zero prób poza loopback dla CLI, MCP i testów jednostkowych;
+  harness udowadnia wykrywalność na sondach i launcherze z dopisanym `curl`), `PendingRequestsTest`, `McpStdioTest`.
 
 Dokument jest rejestrem *wszystkich* znanych ścieżek, którymi narzędzie (CLI, MCP, build) może
 nawiązać połączenie sieciowe. Każdy kolejny krok aktualizuje kolumnę **Status** i dopisuje dowody.
@@ -62,7 +68,7 @@ nawiązać połączenie sieciowe. Każdy kolejny krok aktualizuje kolumnę **Sta
 ## Legenda
 
 - **Potwierdzone** — ustalone przez odczyt kodu w tym commicie (podano `plik:linia`). Nie oznacza
-  to, że ruch został zaobserwowany na żywo — taki test (monitor DNS/połączeń) powstaje w STEP-06.
+  to, że ruch został zaobserwowany na żywo — taki test (rejestr prób DNS/połączeń) powstał w STEP-06 (wyniki na końcu).
 - **Hipoteza** — wymaga sprawdzenia (zachowanie biblioteki zewnętrznej, zależność przechodnia,
   ścieżka nieprzeczytana w całości).
 - **Opt-out?** — czy istnieje w upstream zmienna/flaga wyłączająca ruch, i czy faktycznie działa.
@@ -143,16 +149,16 @@ sterownik web (Chrome na hoście) został usunięty (N-26, N-28, N-30, D-4).
 | B-09 | wtyczka `com.vanniktech.maven.publish` (`mavenPublishing { publishToMavenCentral(); signAllPublications() }`) w modułach `maestro-*` i w katalogu głównym, metadane `POM_*`/`SONATYPE_STAGING_PROFILE` w `gradle.properties` | Maven Central / Sonatype (`dev.mobile`) | publikacja bibliotek upstream | **USUNIĘTE (STEP-05)** — wtyczka, bloki `mavenPublishing`, `maven-publish`, wpis `mavenPublish` w `libs.versions.toml`, `*/gradle.properties` z `POM_*` i metadane w `gradle.properties`; fork nie publikuje artefaktów Maven | USUŃ | 05 |
 | B-10 | `maestro-ios-driver/build.gradle.kts` (`buildIosDriver`, wpięty w `processResources`, na macOS z Xcode) | `xcodebuild` → SwiftPM (`github.com/swhitty/FlyingFox`) | budował prekompilowane ZIP-y sterownika iOS (L-04) przy każdym buildzie na Macu | **USUNIĘTE (STEP-05)** — task i skrypty `build-maestro-ios-runner*.sh` usunięte razem z ZIP-ami (D-5) | USUŃ | 05 |
 | B-11 | `:maestro-cli:generateThirdPartyNotices` (`maestro-cli/build.gradle.kts`) | repozytoria Maven z B-03 (POM-y zależności runtime i ich POM-y nadrzędne) | czas builda (archiwum dystrybucji); gotowe narzędzie nie wykonuje żądań | Potwierdzone | ZACHOWAJ (CI, jak B-03) | 05 |
-| B-06 | Workflowy upstream (`.github/upstream-workflows-disabled/`) | Maven Central, GCS, Slack/release comms, runnery macOS | w forku **zaparkowane** commitem bootstrap `6592abd3` — nie uruchamiają się | Potwierdzone | USUŃ po STEP-06 | 06 |
-| B-07 | `e2e/` (`demo_app` pobierany z bucketu GCS w CI upstream) | GCS upstream | fixture'y E2E | Potwierdzone | do oceny w STEP-06 | 06 |
-| B-08 | `maestro-cli/src/test/mcp/` (`npx mcp-server-tester`, ewaluacje LLM) | npm, API modeli | testy upstream wymagające zdalnych LLM | **CZĘŚCIOWO (STEP-04)** — lokalny test JSON-RPC na STDIO (`McpStdioTest`) w `./gradlew test`; skrypty i definicje upstream zostają w repo (nie są uruchamiane przez build ani CI forka; `tool-tests-without-device.yaml` i `maestro-mcp.json` dostosowane do lokalnego `cheat_sheet` i braku Viewera/klucza API). Usunięcie lub zastąpienie — STEP-06 | nie uruchamiać w CI forka; testy MCP zastąpić lokalnym testem JSON-RPC | 04/06 |
+| B-06 | Workflowy upstream (`.github/upstream-workflows-disabled/`) | Maven Central, GCS, Slack/release comms, runnery macOS | w forku **zaparkowane** commitem bootstrap `6592abd3` — nie uruchamiały się | **USUNIĘTE (STEP-06)** — katalog usunięty razem z `ci-baseline.yml`; jedynym workflowem jest `.github/workflows/ci.yml` (akcje przypięte do SHA, `permissions: contents: read`, bez `pull_request_target`). CI pobiera tylko zależności buildu (B-03, B-11), obraz emulatora Android (Google, job `android`), pakiet `strace` (apt, job `egress`) i POM-y bibliotek APK sterownika (lista L-05, job `build`) | USUŃ | 06 |
+| B-07 | `e2e/` (`demo_app` pobierany z bucketu GCS w CI upstream; `download_apps` — aplikacje z `manifest.txt` z `storage.googleapis.com/mobile.dev`; `update_samples` — wysyłka do tego bucketu; workspace `web` z serwerem fixture'ów na loopback) | GCS upstream | fixture'y E2E | **OCENIONE (STEP-06)** — suita upstream nie jest uruchamiana w CI forka (CI ma własne flow na aplikacji systemowej: `scripts/fork/android-flows/`). Usunięte: `update_samples` (publikacja do bucketu mobile.dev dla usuniętego `download-samples`, N-19) i workspace `web` z `serve_fixtures`/`ensure_fixtures` (platforma web wyłączona, D-4). `download_apps` zostaje jako jawna, ręczna czynność dewelopera (pobiera aplikacje Wikipedia/SimpleWebView z bucketu mobile.dev; opis w `e2e/README.md`) — nie jest częścią produktu ani CI. `e2e/cli/test-cli.sh` (bez sieci) poprawiony i uruchamiany w jobie `egress` | OGRANICZ (tylko ręcznie, poza CI) | 06 |
+| B-08 | `maestro-cli/src/test/mcp/` (`npx mcp-server-tester`, ewaluacje LLM) | npm, API modeli | testy upstream wymagające zdalnych LLM | **USUNIĘTE (STEP-06)** — katalog usunięty; zastępstwo: `McpStdioTest` i `PendingRequestsTest` w `./gradlew test`, handshake i narzędzia MCP z paczki bez sieci (job `egress`) i z emulatorem (`list_devices`, `inspect_screen`, `take_screenshot`; job `android`) | USUŃ (zastąpione lokalnymi testami) | 04/06 |
 
 ## Rejestr — testy upstream zależne od internetu
 
 | ID | Źródło | Cel | Skutek | Status | Decyzja | Krok |
 |---|---|---|---|---|---|---|
 | T-01 | `maestro-test/src/test/resources/script/multipart_request_file_script.js` (IntegrationTest „Case 136 - Relative path in http multipart script”) | `https://eu.httpbin.org/anything` | test pada bez internetu (w sesji STEP-00: `CONNECT 403` z proxy) | **USUNIĘTE (STEP-03B)** — skrypt wysyła na `UPLOAD_URL` z env flow; test uruchamia lokalny `MockWebServer` i sprawdza żądanie multipart (`imagefile` = `abc.png`, pole `name`) | przepisać na lokalny `MockWebServer` (razem z polityką D-3) | 03B |
-| T-02 | `maestro-test`/`maestro-orchestra` — URL-e `example.com` w testach | brak żądań (tylko parsowanie) | — | Hipoteza (do potwierdzenia testem egress) | weryfikacja | 06 |
+| T-02 | `maestro-test`/`maestro-orchestra` — URL-e `example.com` w testach; od STEP-06 wszystkie testy jednostkowe modułów JVM | brak żądań (tylko parsowanie) | — | **ZWERYFIKOWANE (STEP-06)** — testy wszystkich modułów JVM uruchomione `--offline` w przestrzeni sieciowej z samym loopbackiem pod `strace` (lokalnie i w jobie `egress`). `maestro-test`/`maestro-orchestra`: zero prób. Jedyne próby: `maestro-client` `AdbSocketFactoryTest`/`AdbSocketTimeoutTest` — `InetSocketAddress("webview_devtools_remote_…", port)` rozwiązywał nazwę gniazda przez DNS (144 zapytania); testy łączą się teraz z adresem nierozwiązanym (`createUnresolved`), jak kod produkcyjny (`DummyDns`). Po poprawce: zero prób | testy bez sieci; CI pilnuje (job `egress`) | 06 |
 
 ## Zmienne środowiskowe związane z ruchem (upstream)
 
@@ -163,7 +169,7 @@ sterownik web (Chrome na hoście) został usunięty (N-26, N-28, N-30, D-4).
 nie zapewnia braku ruchu zewnętrznego (N-03, N-04, N-06 nie mają działającego opt-out). Fork
 nie będzie polegał na zmiennych — kod zostanie usunięty.
 
-## Plan weryfikacji (do wykonania w STEP-06)
+## Plan weryfikacji (wykonany w STEP-06 — wyniki niżej)
 
 1. Test jednostkowy/architektoniczny: w klasach runtime brak odwołań do `api.copilot.mobile.dev`,
    `posthog`, `ngrok.io`, `openai.com`, `anthropic.com`, `storage.googleapis.com`, `jsdelivr`,
@@ -181,3 +187,16 @@ nie będzie polegał na zmiennych — kod zostanie usunięty.
    loopback (i gniazdo resolvera DNS): `--version`, `--help`, `check-syntax`, handshake MCP; `driver-setup --simulator` poza
    sandboxem (zagnieżdżenie niemożliwe, N-36) z asercją braku pobrań pakietów.
    Kryterium: polecenia kończą się sukcesem bez sieci (profil nie rejestruje prób — rejestr prób to STEP-06).
+
+## Wyniki weryfikacji (STEP-06)
+
+| Punkt planu | Realizacja | Wynik |
+|---|---|---|
+| 1. Hosty w klasach runtime | `CliJarContentsTest` (JAR CLI: brak hostów telemetrii, aktualizacji, próbek, CDN, `api.copilot.mobile.dev`), `verify-dist.sh` (zakazane ścieżki w każdym JAR-ze paczki), skan N-35 (STEP-05) | PASS (w `./gradlew test` i w jobie `build`) |
+| 2. Graf zależności | `scripts/fork/check-forbidden-deps.sh` na `./gradlew :maestro-cli:dependencies --configuration runtimeClasspath` (zakazane: `com.posthog`, `org.seleniumhq.selenium`, `truffle-enterprise`, `nativebridge`, moduły `maestro-ai`/`maestro-web`) + testy negatywne `scripts/fork/test-ci-checks.sh`; dotychczasowe `NoRemoteAiTest`, `NoTelemetryTest`, `WebPlatformDisabledTest` | PASS (job `build`) |
+| 3. Egress na Linux | `scripts/fork/egress-test.sh`: każde polecenie w `unshare --net --pid` (tylko `lo`, brak trasy dalej), pod `strace -f -e trace=connect,sendto,sendmsg,sendmmsg`, bez zmiennych proxy i opcji JVM ze środowiska; próba = adres spoza `127.0.0.0/8`/`::1`, port 53 (także do lokalnego stub-resolvera) albo zapytanie przez gniazdo systemd-resolved / działającego nscd. Najpierw dowód wykrywalności: sondy DNS (`getent`), TCP (Python), `curl`, JVM (`Socket.connect`) muszą zostać wykryte, połączenie loopback — nie; launcher z paczki z dopisanym `curl` musi zostać odrzucony. Potem z rozpakowanej paczki: `--version`, `--help`, `check-syntax` (poprawny, niepoprawny YAML, nieznana komenda), `test` bez urządzenia (bez `adb` i Android SDK), crash CLI (`--debug-output` wskazujący plik — lokalny stack trace), sesja MCP zakończona EOF (`initialize`, `tools/list`, `cheat_sheet`, `list_devices`), `e2e/cli/test-cli.sh`; na końcu testy jednostkowe wszystkich modułów JVM `--offline` (T-02) | PASS — **zero prób poza loopback** (lokalnie i w CI, linki w handover STEP-06); wykrywalność potwierdzona (sondy i launcher z `curl` → FAIL). `test` bez urządzenia łączy się tylko z `127.0.0.1:5037` (serwer ADB) |
+| 4. macOS arm64 | job `macos` (`macos-26`): rozpakowana paczka pod `sandbox-exec` (odrzuca ruch poza loopback i gniazdo resolvera DNS) — `--version`, `--help`, `check-syntax`, sesja MCP zakończona EOF; rejestr prób: odmowy `network-outbound` z logu systemowego (`scripts/fork/macos-sandbox-log.sh`), po sprawdzeniu, że log pokazuje odmowę dla `curl`; build sterownika symulatora poza sandboxem z asercją braku pobrań; `hierarchy` na symulatorze | PASS — zero odmów dla `java`; pełna blokada `pf` i paczka z Release — STEP-08 |
+
+Poza zasięgiem testu egress (bez zmian statusu): N-24 (`start-device` wymaga Android SDK — hipoteza, że
+`sdkmanager --list_installed` nie łączy się z siecią, pozostaje do sprawdzenia na maszynie z SDK), ruch urządzeń
+i symulatorów (GRANICA, N-29) i narzędzi systemowych wywoływanych na polecenie użytkownika.

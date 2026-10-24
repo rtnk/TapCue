@@ -117,7 +117,8 @@ jobs:
           python3 -I scripts/fork/android-driver-deps.py \
             --app build/reports/fork/android-app-dependencies.txt \
             --server build/reports/fork/android-server-dependencies.txt \
-            --report build/reports/fork/android-driver-libraries.md
+            --report build/reports/fork/android-driver-libraries.md > /dev/null
+          cat build/reports/fork/android-driver-libraries.md | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Guard - no simulator-server or Viewer in build outputs
         if: always()
