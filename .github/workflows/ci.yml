@@ -93,7 +93,10 @@ jobs:
         run: ./gradlew :maestro-cli:macosArm64DistZip
 
       - name: Verify distribution archive
-        run: scripts/verify-dist.sh --smoke maestro-cli/build/distributions/tapcue-*-macos-arm64.zip
+        # The printed SHA-256 is compared with release.yml's for the same commit (reproducibility, STEP-07).
+        run: |
+          scripts/verify-dist.sh --smoke maestro-cli/build/distributions/tapcue-*-macos-arm64.zip
+          cat maestro-cli/build/distributions/SHA256SUMS | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Negative tests for verify-dist.sh
         run: scripts/fork/test-verify-dist.sh maestro-cli/build/distributions/tapcue-*-macos-arm64.zip
@@ -373,6 +376,7 @@ jobs:
           ./gradlew :maestro-cli:macosArm64DistZip
           scripts/verify-dist.sh --smoke maestro-cli/build/distributions/tapcue-*-macos-arm64.zip
           (cd maestro-cli/build/distributions && shasum -a 256 -c SHA256SUMS)
+          cat maestro-cli/build/distributions/SHA256SUMS
 
       - name: Install the archive
         if: steps.run.outputs.available == 'true'

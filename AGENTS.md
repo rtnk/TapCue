@@ -31,8 +31,8 @@
 >   dependency whose POM has no license fails the build until it is checked and added to `thirdPartyLicenseOverrides`. A new
 >   native library or nested archive in `lib/` fails `verify-dist.sh` until it is added to its allowlist with its license.
 >   User-facing text and start scripts must not link to maestro.dev/mobile.dev (N-35).
-> - CI (STEP-06): `.github/workflows/ci.yml` is the only workflow (the parked upstream workflows and `ci-baseline.yml` are
->   gone). Jobs: `build` (detekt, `./gradlew test`, archive + `verify-dist.sh`, `scripts/fork/check-forbidden-deps.sh`,
+> - CI (STEP-06): `.github/workflows/ci.yml` runs on every PR and push to `main` (the parked upstream workflows and
+>   `ci-baseline.yml` are gone). Jobs: `build` (detekt, `./gradlew test`, archive + `verify-dist.sh`, `scripts/fork/check-forbidden-deps.sh`,
 >   `scripts/fork/check-licenses.py` against `scripts/fork/allowed-licenses.tsv`, Android driver library list), `egress`
 >   (`scripts/fork/egress-test.sh`: CLI, MCP and unit tests in a loopback-only network namespace under `strace` — zero
 >   attempts outside loopback), `android` (emulator, `scripts/fork/android-integration.sh` with `scripts/fork/android-flows/`)
@@ -40,6 +40,14 @@
 >   and added to the allowlist. Keep actions pinned to commit SHAs, `permissions: contents: read`, no `pull_request_target`.
 >   The upstream `e2e/` suite and the MCP LLM evals (`maestro-cli/src/test/mcp/`, removed) are not run; the sections on
 >   `test-e2e.yaml` and MCP evals below describe upstream.
+> - Releases (STEP-07): `.github/workflows/release.yml` is the only other workflow. A pushed annotated tag `vX.Y.Z` equal to
+>   `v<CLI_VERSION>` on a `main` commit builds on `macos-26` arm64 (tests, archive, `verify-dist.sh`, license scan, offline run
+>   with the sandbox register via `scripts/fork/macos-offline-test.sh`), re-checks it on Linux (`egress`, byte-identical rebuild
+>   in `reproduce`) and only then publishes a GitHub Release (job `publish`, the only one with `contents: write`;
+>   `scripts/fork/publish-release.sh` never overwrites a Release). `workflow_dispatch` is the validation mode and publishes
+>   nothing. Notes come from the `### <version>` section of the TapCue part of `CHANGELOG.md`, which must have a
+>   `Known limitations`/`Znane ograniczenia` heading. Release scripts are tested by `scripts/fork/test-release.sh`. Never
+>   create `v*` tags or Releases unless the owner asks for that release (procedure: `docs/RELEASING.md`).
 > - No prebuilt iOS driver (STEP-05, D-5): the `driver-iPhoneSimulator`/`driver-iphoneos` ZIPs and the `buildIosDriver`
 >   task are gone. The CLI builds the simulator runner from the source in its JAR (`driver/ios`) with the local Xcode
 >   (`maestro.cli.driver.IOSSimulatorDriver`, `~/.tapcue/maestro-iphonesimulator-driver-build`). Swift dependencies are

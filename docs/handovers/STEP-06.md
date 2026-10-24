@@ -2,12 +2,12 @@
 
 | Pole | Wartość |
 |---|---|
-| Krok | STEP-06 — w review |
+| Krok | STEP-06 — **scalony** (PR #14, 2026-10-24) |
 | PR | PR-06: https://github.com/rtnk/TapCue/pull/14 |
 | Gałąź | `step-06-ci` |
 | Gałąź docelowa | `main` |
 | Baza | `main` @ `40df271` (merge PR #13 — STEP-05) |
-| Commit SHA | ostatni commit gałęzi `step-06-ci` (patrz PR) |
+| Commit SHA | `77571a7` (ostatni commit gałęzi), merge `52c7c38` na `main` |
 
 ## 1. Co zrobiono
 
@@ -174,7 +174,9 @@ scripts/fork/android-integration.sh /tmp/tapcue/tapcue-*/bin/tapcue /tmp/android
 
 ## 4. Warunek rozpoczęcia następnego kroku
 
-PR-06 **scalony** do `main`; CI `ci.yml` zielone na `main` (wszystkie joby: `build`, `egress`, `android`, `macos`).
+PR-06 **scalony** do `main` (2026-10-24, merge `52c7c38`); CI `ci.yml` zielone na `main` — [run 40103408112](https://github.com/rtnk/TapCue/actions/runs/40103408112)
+(`workflow_dispatch` na `52c7c38`): `build`, `egress`, `android` (emulator uruchomiony, „Android integration passed”, kroki nie
+pominięte), `macos` — wszystkie **success** (sprawdzone na początku STEP-07). **Warunek spełniony — STEP-07 rozpoczęty.**
 Otwarte po stronie właściciela (nie blokują STEP-07, blokują STEP-08 / G-3): przegląd `THIRD-PARTY-NOTICES.md`/suplementu,
 ocena `play-services-location` i innych bibliotek Google w APK sterownika (L-05), akceptacja polityki
 `scripts/fork/allowed-licenses.tsv` (CDDL+GPLv2-CPE jako `allowed`, LGPL-2.1 jako `alternative-only`).

@@ -1,6 +1,6 @@
 # Audyt ruchu sieciowego — TapCue (repozytorium `rtnk/TapCue`)
 
-Wersja: **9 (STEP-06, CI i testy offline)**. Baseline: upstream `mobile-dev-inc/Maestro` tag `v2.11.0`
+Wersja: **10 (STEP-07, pipeline wydania)**. Baseline: upstream `mobile-dev-inc/Maestro` tag `v2.11.0`
 (`c8c361be1cc89b2e742f185466a302a22778be6b`); numery linii w kolumnie „Źródło” odnoszą się do baseline.
 
 Historia zmian statusów:
@@ -61,6 +61,11 @@ Historia zmian statusów:
   potwierdzone i poprawione: T-02 (testy jednostkowe offline — jedyne zapytania DNS wysyłały `AdbSocketFactoryTest`
   i `AdbSocketTimeoutTest`, poprawione). N-24 bez zmian (hipoteza — `start-device` wymaga Android SDK). Dowód: job `egress` (zero prób poza loopback dla CLI, MCP i testów jednostkowych;
   harness udowadnia wykrywalność na sondach i launcherze z dopisanym `curl`), `PendingRequestsTest`, `McpStdioTest`.
+- **STEP-07** (pipeline wydania) — nowe: B-12 (`.github/workflows/release.yml`: zależności buildu jak B-03/B-11 na `macos-26`
+  i ubuntu, `strace` z apt, API GitHub — odczyt Release i tagu, a w trybie publish utworzenie Release i pobranie jego zasobów
+  z `GITHUB_TOKEN`). Bez zmian statusów runtime: archiwum wydania przechodzi te same kontrole co w CI — na macOS paczka pod
+  `sandbox-exec` z **wymaganym** rejestrem odmów (`scripts/fork/macos-offline-test.sh`, `REQUIRE_REGISTER=true`), na Linux
+  `egress-test.sh self-test` i `cli` na tym samym archiwum (job `egress` w `release.yml`).
 
 Dokument jest rejestrem *wszystkich* znanych ścieżek, którymi narzędzie (CLI, MCP, build) może
 nawiązać połączenie sieciowe. Każdy kolejny krok aktualizuje kolumnę **Status** i dopisuje dowody.
@@ -149,6 +154,7 @@ sterownik web (Chrome na hoście) został usunięty (N-26, N-28, N-30, D-4).
 | B-09 | wtyczka `com.vanniktech.maven.publish` (`mavenPublishing { publishToMavenCentral(); signAllPublications() }`) w modułach `maestro-*` i w katalogu głównym, metadane `POM_*`/`SONATYPE_STAGING_PROFILE` w `gradle.properties` | Maven Central / Sonatype (`dev.mobile`) | publikacja bibliotek upstream | **USUNIĘTE (STEP-05)** — wtyczka, bloki `mavenPublishing`, `maven-publish`, wpis `mavenPublish` w `libs.versions.toml`, `*/gradle.properties` z `POM_*` i metadane w `gradle.properties`; fork nie publikuje artefaktów Maven | USUŃ | 05 |
 | B-10 | `maestro-ios-driver/build.gradle.kts` (`buildIosDriver`, wpięty w `processResources`, na macOS z Xcode) | `xcodebuild` → SwiftPM (`github.com/swhitty/FlyingFox`) | budował prekompilowane ZIP-y sterownika iOS (L-04) przy każdym buildzie na Macu | **USUNIĘTE (STEP-05)** — task i skrypty `build-maestro-ios-runner*.sh` usunięte razem z ZIP-ami (D-5) | USUŃ | 05 |
 | B-11 | `:maestro-cli:generateThirdPartyNotices` (`maestro-cli/build.gradle.kts`) | repozytoria Maven z B-03 (POM-y zależności runtime i ich POM-y nadrzędne) | czas builda (archiwum dystrybucji); gotowe narzędzie nie wykonuje żądań | Potwierdzone | ZACHOWAJ (CI, jak B-03) | 05 |
+| B-12 | `.github/workflows/release.yml` (STEP-07) | repozytoria Maven z B-03/B-11 (build na `macos-26` i powtórny na ubuntu), apt (`strace`, job `egress`), `api.github.com` (`gh`: lista Release i tag w `prepare` z `contents: read`; w jobie `publish` — tylko dla wypchniętego tagu — `gh release create --verify-tag` i `gh release download` z `GITHUB_TOKEN` z `contents: write`) | czas wydania; gotowe narzędzie nie wykonuje żądań. Bez cache Gradle i bez sekretów poza `GITHUB_TOKEN`; akcje przypięte do SHA | Potwierdzone (run walidacji w PR #15) | ZACHOWAJ (CI) | 07 |
 | B-06 | Workflowy upstream (`.github/upstream-workflows-disabled/`) | Maven Central, GCS, Slack/release comms, runnery macOS | w forku **zaparkowane** commitem bootstrap `6592abd3` — nie uruchamiały się | **USUNIĘTE (STEP-06)** — katalog usunięty razem z `ci-baseline.yml`; jedynym workflowem jest `.github/workflows/ci.yml` (akcje przypięte do SHA, `permissions: contents: read`, bez `pull_request_target`). CI pobiera tylko zależności buildu (B-03, B-11), obraz emulatora Android (Google, job `android`), pakiet `strace` (apt, job `egress`) i POM-y bibliotek APK sterownika (lista L-05, job `build`) | USUŃ | 06 |
 | B-07 | `e2e/` (`demo_app` pobierany z bucketu GCS w CI upstream; `download_apps` — aplikacje z `manifest.txt` z `storage.googleapis.com/mobile.dev`; `update_samples` — wysyłka do tego bucketu; workspace `web` z serwerem fixture'ów na loopback) | GCS upstream | fixture'y E2E | **OCENIONE (STEP-06)** — suita upstream nie jest uruchamiana w CI forka (CI ma własne flow na aplikacji systemowej: `scripts/fork/android-flows/`). Usunięte: `update_samples` (publikacja do bucketu mobile.dev dla usuniętego `download-samples`, N-19) i workspace `web` z `serve_fixtures`/`ensure_fixtures` (platforma web wyłączona, D-4). `download_apps` zostaje jako jawna, ręczna czynność dewelopera (pobiera aplikacje Wikipedia/SimpleWebView z bucketu mobile.dev; opis w `e2e/README.md`) — nie jest częścią produktu ani CI. `e2e/cli/test-cli.sh` (bez sieci) poprawiony i uruchamiany w jobie `egress` | OGRANICZ (tylko ręcznie, poza CI) | 06 |
 | B-08 | `maestro-cli/src/test/mcp/` (`npx mcp-server-tester`, ewaluacje LLM) | npm, API modeli | testy upstream wymagające zdalnych LLM | **USUNIĘTE (STEP-06)** — katalog usunięty; zastępstwo: `McpStdioTest` i `PendingRequestsTest` w `./gradlew test`, handshake i narzędzia MCP z paczki bez sieci (job `egress`) i z emulatorem (`list_devices`, `inspect_screen`, `take_screenshot`; job `android`) | USUŃ (zastąpione lokalnymi testami) | 04/06 |

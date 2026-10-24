@@ -128,6 +128,11 @@ TapCue bazuje na Maestro (Apache-2.0) i nie jest powiązany z mobile.dev. Zmiany
 - Repozytorium (STEP-06): usunięte ewaluacje LLM serwera MCP upstream (`maestro-cli/src/test/mcp/`, wymagały zdalnych modeli),
   workspace `e2e/workspaces/web` z serwerem fixture'ów (platforma web jest wyłączona) i `e2e/update_samples` (wysyłka próbek
   do bucketu mobile.dev). `e2e/cli/test-cli.sh` sprawdza adres zgłoszeń TapCue i jest uruchamiany w CI.
+- Wydania (STEP-07): workflow `.github/workflows/release.yml` — wypchnięcie adnotowanego tagu `vX.Y.Z` (równego wersji CLI,
+  na commicie z `main`) buduje archiwum `tapcue-<wersja>-macos-arm64.zip` na macOS arm64, uruchamia testy i kontrole paczki
+  (zawartość, licencje, zakazane zależności, działanie bez sieci na macOS i Linux, identyczne bajty z powtórnego builda na Linux)
+  i publikuje GitHub Release z archiwum, `SHA256SUMS` i notatkami z sekcji tej wersji w `CHANGELOG.md`. Istniejący Release nie
+  jest nigdy nadpisywany; `workflow_dispatch` uruchamia te same kontrole bez publikacji. Procedura: `docs/RELEASING.md`.
 
 ## Upstream Maestro
 
