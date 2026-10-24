@@ -1,6 +1,6 @@
 # ROADMAP 0.1.0 — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Status dokumentu: **STEP-04B w review (PR-04B); następny: STEP-05**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23, STEP-03B ([#8](https://github.com/rtnk/TapCue/pull/8)) i STEP-04 ([#9](https://github.com/rtnk/TapCue/pull/9)) — 2026-10-24. Ostatnia aktualizacja: 2026-10-24.
+Status dokumentu: **STEP-04B w review ([#12](https://github.com/rtnk/TapCue/pull/12)); następny: STEP-05**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23, STEP-03B ([#8](https://github.com/rtnk/TapCue/pull/8)) i STEP-04 ([#9](https://github.com/rtnk/TapCue/pull/9)) — 2026-10-24. Ostatnia aktualizacja: 2026-10-24.
 
 ## 0. Punkt wyjścia
 
@@ -65,7 +65,7 @@ Legenda statusu: `TODO` · `IN PROGRESS` · `IN REVIEW` · `MERGED` · `BLOCKED`
 | STEP-03 | PR-03 | Remove telemetry, error upload, update checks, auto-downloads | PR-02 | MERGED ([#6](https://github.com/rtnk/TapCue/pull/6), uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) | 1 sesja |
 | STEP-03B | PR-03B | Polityka sieci dla funkcji flow (JS `http`, web, `openLink`) + GraalJS community | PR-03, D-3, D-4, D-6 | MERGED ([#8](https://github.com/rtnk/TapCue/pull/8)) | 1 sesja |
 | STEP-04 | PR-04 | Local-only MCP, usunięcie Viewera | PR-03B | MERGED ([#9](https://github.com/rtnk/TapCue/pull/9)) | 1–2 sesje |
-| STEP-04B | PR-04B | TapCue: nazwa, polecenie `tapcue`, katalogi `~/.tapcue` i `.tapcue/` | PR-04, D-1, D-2 | IN REVIEW | 1–2 sesje |
+| STEP-04B | PR-04B | TapCue: nazwa, polecenie `tapcue`, katalogi `~/.tapcue` i `.tapcue/` | PR-04, D-1, D-2 | IN REVIEW ([#12](https://github.com/rtnk/TapCue/pull/12)) | 1–2 sesje |
 | STEP-05 | PR-05 | Dystrybucja lokalna macOS arm64 + audyt licencji | PR-04B, D-5, D-7 | TODO | 2 sesje |
 | STEP-06 | PR-06 | GitHub Actions CI + testy offline | PR-05 | TODO | 2 sesje |
 | STEP-07 | PR-07 | Release pipeline | PR-06 | TODO | 1 sesja |

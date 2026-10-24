@@ -3,7 +3,7 @@
 | Pole | Wartość |
 |---|---|
 | Krok | STEP-04B — w review |
-| PR | PR-04B (link w PR) |
+| PR | PR-04B: https://github.com/rtnk/TapCue/pull/12 |
 | Gałąź | `step-04b-tapcue` |
 | Gałąź docelowa | `main` |
 | Baza | `main` @ `358cfbf` (merge PR #11 — poprawka handovera STEP-03B; kod STEP-04 z #9) |
@@ -64,7 +64,7 @@ i `google()`) z mirrorem Maven Central jak w STEP-01 §2. **Bez flag `-x`.**
 | Smoke dystrybucji | `build/install/tapcue/bin/tapcue` z `HOME` tymczasowym, bez `JAVA_TOOL_OPTIONS`/`XDG_*`; projekt z `.maestro/flow.yaml`: `--version`, `--help`, `check-syntax .maestro/flow.yaml`, `test .maestro/flow.yaml` | **PASS**: `tapcue 2.11.0` + dopisek; nagłówek i „Usage: tapcue”; `OK`; ostrzeżenie z `mv .maestro .tapcue`, potem „Not enough devices connected (0)”, kod 1. Katalogi w `HOME`: `.tapcue/{deps,tests/<data>}`, `.cache/tapcue/logs`, `.android` (lookup ADB) — brak `maestro`/`.maestro`. `bin/tapcue` i `bin/tapcue.bat` zawierają sprawdzenie Javy 17 |
 | Strażnik | `scripts/fork/check-no-simulator-server.sh` (w kopii z wynikami builda) | **PASS** |
 | Skrypty | `bash -n` na `e2e/run_tests`, `e2e/cli/test-cli.sh`, `verify_preflight_suppressed.sh`, `./tapcue`, `installLocally.sh`; `e2e/validate_workspaces`, `e2e/list_workspaces` | **PASS** (manifest z `demo_app/.tapcue` poprawny) |
-| CI GitHub Actions (`ci-baseline.yml`, pełne repo) | PR-04B | wynik w PR |
+| CI GitHub Actions (`ci-baseline.yml`, pełne repo) | PR-04B [#12](https://github.com/rtnk/TapCue/pull/12) | wynik w PR |
 | E2E (`e2e/run_tests`, `e2e/cli/test-cli.*`), smoke z urządzeniem, Swift, Windows (`tapcue.bat`) | — | **NOT RUN**: brak SDK/Xcode/urządzeń/Windows; E2E poza CI forka do STEP-06 |
 
 Jak powtórzyć:
