@@ -2,12 +2,12 @@
 
 | Pole | Wartość |
 |---|---|
-| Krok | STEP-04 — w review |
+| Krok | STEP-04 — **scalony** (#9, 2026-10-24) |
 | PR | PR-04: https://github.com/rtnk/TapCue/pull/9 |
 | Gałąź | `step-04-local-mcp` |
 | Gałąź docelowa | `main` |
 | Baza | `main` @ `c0c143d` (merge PR #8 — STEP-03B) |
-| Commit SHA | ostatni commit gałęzi `step-04-local-mcp` (patrz PR) |
+| Commit SHA | `6acadad` (head gałęzi `step-04-local-mcp`); merge do `main`: `00808e7` |
 
 ## 1. Co zrobiono
 
@@ -68,7 +68,7 @@ MCP to nadal `maestro`, nazwy w instrukcjach i ściągawce — „Maestro”/„
 | Zawartość archiwów | `maestro-cli-*-all.jar`, `install/maestro/lib` | **PASS**: 0 wpisów `maestro/cli/mcp/viewer/`, `mcp-viewer/`, `io/ktor/server/`, `deps/simulator-server/`, `com/typesafe/config/`; 0 wystąpień `api.copilot.mobile.dev` w `*-all.jar`; `mcp/cheat-sheet.md` obecny; `lib/` bez `ktor-server-*`, netty wyłącznie 4.1.111.Final |
 | Strażnik | `scripts/fork/check-no-simulator-server.sh` (w kopii z wynikami builda) | **PASS** |
 | Smoke MCP (`strace -f -e trace=connect`) | `install/maestro/bin/maestro mcp` z `HOME` tymczasowym, bez `JAVA_TOOL_OPTIONS`; na STDIN: `initialize`, `notifications/initialized`, `tools/list`, `tools/call` `cheat_sheet`, `list_devices`, `run` (`device_id: emulator-5554`) | **PASS**: 5 odpowiedzi JSON-RPC na stdout (i nic więcej), `cheat_sheet` → treść ściągawki, `list_devices` → `{"devices":[]}`, `run` → kontrolowany błąd „Device with id emulator-5554 is not connected”; zamknięcie STDIN → kod 0. 390 wywołań `connect` `AF_INET` — wszystkie do `127.0.0.1` (dadb: serwer ADB i porty emulatorów), 0 innych adresów |
-| CI GitHub Actions (`ci-baseline.yml`, pełne repo) | PR-04 | wynik w PR |
+| CI GitHub Actions (`ci-baseline.yml`, pełne repo) | PR-04 #9, [run 40069156871](https://github.com/rtnk/TapCue/actions/runs/40069156871) na `6acadad` | **PASS**; `main` po merge (`00808e7`): [run 40070077945](https://github.com/rtnk/TapCue/actions/runs/40070077945) |
 | Smoke z urządzeniem (`run`, `inspect_screen`, `take_screenshot`), Swift | — | **NOT RUN**: brak SDK/Xcode/urządzeń; ścieżka `Orchestra`/sterowników jest ta sama co w `maestro test` (zmiana usuwa tylko wrappery publikujące zdarzenia Viewera) |
 | Ewaluacje upstream (`run_mcp_tool_tests.sh`, `run_mcp_evals.sh`) | — | **NOT RUN**: wymagają `npx` i zdalnych API modeli (B-08) |
 
@@ -101,7 +101,7 @@ scripts/fork/check-no-simulator-server.sh
 
 ## 4. Warunek rozpoczęcia następnego kroku
 
-PR-04 **scalony** do `main`, CI `ci-baseline.yml` zielone na `main`.
+PR-04 **scalony** do `main` (#9, `00808e7`) — spełnione. CI `ci-baseline.yml` na `main` po merge: [run 40070077945](https://github.com/rtnk/TapCue/actions/runs/40070077945) — sprawdź, że zielone, przed rozpoczęciem STEP-04B.
 
 ## 5. Następny krok
 
