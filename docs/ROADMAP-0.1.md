@@ -1,6 +1,6 @@
 # ROADMAP 0.1.0 — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Status dokumentu: **STEP-07 w review ([#15](https://github.com/rtnk/TapCue/pull/15)); następny: STEP-08**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23, STEP-03B ([#8](https://github.com/rtnk/TapCue/pull/8)), STEP-04 ([#9](https://github.com/rtnk/TapCue/pull/9)) STEP-04B ([#12](https://github.com/rtnk/TapCue/pull/12)) STEP-05 ([#13](https://github.com/rtnk/TapCue/pull/13)) i STEP-06 ([#14](https://github.com/rtnk/TapCue/pull/14)) — 2026-10-24. Ostatnia aktualizacja: 2026-10-24.
+Status dokumentu: **STEP-08 w realizacji (PR-08 „STEP-08: Release candidate 0.1.0”); tag `v0.1.0` — po scaleniu PR-08, na polecenie właściciela**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23, STEP-03B ([#8](https://github.com/rtnk/TapCue/pull/8)), STEP-04 ([#9](https://github.com/rtnk/TapCue/pull/9)) STEP-04B ([#12](https://github.com/rtnk/TapCue/pull/12)) STEP-05 ([#13](https://github.com/rtnk/TapCue/pull/13)) STEP-06 ([#14](https://github.com/rtnk/TapCue/pull/14)) i STEP-07 ([#15](https://github.com/rtnk/TapCue/pull/15) + poprawka CI [#16](https://github.com/rtnk/TapCue/pull/16)) — 2026-10-24. Ostatnia aktualizacja: 2026-10-24.
 
 ## 0. Punkt wyjścia
 
@@ -46,7 +46,7 @@ pliku (PR-00).
 | D-6 | GraalJS `truffle-enterprise` (Oracle GFTC, L-03) | **Artefakty community** (UPL: `js-community`/`js-language` + `polyglot`, wykluczenie `truffle-enterprise`) — **już w STEP-03B** | STEP-03B (`js-community` + `js-language` + `polyglot`) |
 | D-7 | JRE w paczce | **Wymagany systemowy JDK/JRE 17+** (README, launcher sprawdza wersję); paczka nie jest nazywana samowystarczalną | STEP-05 — zrealizowane w PR-05 (`README.md` w paczce, `bin/tapcue` sprawdza Javę 17; `StartScriptsTest`, `verify-dist.sh`) |
 | D-8 | STEP-00B „Legal containment” przed dalszymi krokami | Tak (wykonany po PR-01, scalony jako #3). Flagi `-x downloadSimulatorServer …` zbędne i błędne | — |
-| D-9 | Widoczność repozytorium i koszt runnerów macOS | **Repozytorium może być publiczne już teraz** (zmiana ustawień — po stronie właściciela). W repo publicznym minuty standardowych runnerów (także macOS) są bezpłatne, więc ograniczenie testów macOS do release/`workflow_dispatch` nie jest już wymuszone kosztem | STEP-06: job `macos` w `ci.yml` na każdym PR (poza PR zmieniającymi wyłącznie dokumentację — wtedy jawnie `skipped`), push `main` i `workflow_dispatch`; repozytorium 2026-10-24 nadal **prywatne** (minuty macOS płatne — przy upublicznieniu reguła „tylko dokumentacja” może zostać). STEP-07: `release.yml` buduje i testuje wydanie na `macos-26` arm64 przy każdym tagu i `workflow_dispatch` (niezależnie od widoczności repozytorium) |
+| D-9 | Widoczność repozytorium i koszt runnerów macOS | **Repozytorium może być publiczne już teraz** (zmiana ustawień — po stronie właściciela). W repo publicznym minuty standardowych runnerów (także macOS) są bezpłatne, więc ograniczenie testów macOS do release/`workflow_dispatch` nie jest już wymuszone kosztem | STEP-06: job `macos` w `ci.yml` na każdym PR (poza PR zmieniającymi wyłącznie dokumentację — wtedy jawnie `skipped`), push `main` i `workflow_dispatch`; repozytorium 2026-10-24 nadal **prywatne** (minuty macOS płatne — przy upublicznieniu reguła „tylko dokumentacja” może zostać). STEP-07: `release.yml` buduje i testuje wydanie na `macos-26` arm64 przy każdym tagu i `workflow_dispatch` (niezależnie od widoczności repozytorium). STEP-08: właściciel 2026-10-24 podał, że repozytorium jest już publiczne; API GitHub widziane z sesji agenta (2026-10-24 ok. 17:30 UTC, `GET /repos/rtnk/TapCue` i wyszukiwarka) zwraca `"visibility": "private"` — **do potwierdzenia przez właściciela** (Settings → General → Danger Zone) |
 
 Uwaga do D-9: historia repozytorium zawiera prekompilowane ZIP-y sterownika iOS z frameworkami Apple (L-04, zatwierdzone
 w upstream i publiczne w `mobile-dev-inc/Maestro`). Upublicznienie forka udostępnia je tak samo jak upstream; usunięcie
@@ -68,8 +68,8 @@ Legenda statusu: `TODO` · `IN PROGRESS` · `IN REVIEW` · `MERGED` · `BLOCKED`
 | STEP-04B | PR-04B | TapCue: nazwa, polecenie `tapcue`, katalogi `~/.tapcue` i `.tapcue/` | PR-04, D-1, D-2 | MERGED ([#12](https://github.com/rtnk/TapCue/pull/12)) | 1–2 sesje |
 | STEP-05 | PR-05 | Dystrybucja lokalna macOS arm64 + audyt licencji | PR-04B, D-5, D-7 | MERGED ([#13](https://github.com/rtnk/TapCue/pull/13)) | 2 sesje |
 | STEP-06 | PR-06 | GitHub Actions CI + testy offline | PR-05 | MERGED ([#14](https://github.com/rtnk/TapCue/pull/14)) | 2 sesje |
-| STEP-07 | PR-07 | Release pipeline | PR-06 | IN REVIEW ([#15](https://github.com/rtnk/TapCue/pull/15)) | 1 sesja |
-| STEP-08 | PR-08 + tag | Release candidate i publikacja v0.1.0 | PR-07, wszystkie gate'y | TODO | 1 sesja + operacja release |
+| STEP-07 | PR-07 | Release pipeline | PR-06 | MERGED ([#15](https://github.com/rtnk/TapCue/pull/15), poprawka CI [#16](https://github.com/rtnk/TapCue/pull/16)) | 1 sesja |
+| STEP-08 | PR-08 + tag | Release candidate i publikacja v0.1.0 | PR-07, wszystkie gate'y | IN REVIEW (PR-08); tag i publikacja — TODO (właściciel) | 1 sesja + operacja release |
 
 Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki dodane w wyniku audytu, STEP-04B — w wyniku decyzji D-1/D-2
 (zostały wydzielone, żeby nie mieszać zakresów i nie powiększać PR-ów).
@@ -349,19 +349,31 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
   raport licencyjny, lista znanych ograniczeń i nieprzetestowanych platform.
 - Po merge: tag `v0.1.0` na commicie `main` z PR-08 → pipeline → weryfikacja Release (pobranie, SHA256,
   instalacja z pobranego pliku, testy akceptacyjne AT-01…AT-11).
+- **Realizacja (PR-08, szczegóły w `docs/handovers/STEP-08.md`):** `CLI_VERSION=0.1.0`; `RealIOSDeviceDriver` przebudowuje
+  sterownik urządzeń fizycznych przy każdej innej wersji (wersja spadła z 2.11.0); `CHANGELOG.md` — sekcja `### 0.1.0 — 2026-10-24`
+  z `#### Znane ograniczenia` (G-8); README repozytorium (TapCue, logo `docs/assets/tapcue-logo.png` — poza paczką, instalacja
+  z Release, CLI, MCP, ograniczenia, nota D-1); suplement not §3.6 — pełne teksty licencji bibliotek APK (decyzja właściciela);
+  `LICENSE-AUDIT.md` zamknięty (decyzje właściciela 2026-10-24: noty, L-05, polityka licencji). Poprawka po pierwszym
+  `workflow_dispatch` `release.yml` na `main` (run 40115219200 czerwony 2/2 — odczyt logu sandboxa po stałych 2 s nie widział
+  odmowy sondy `curl`): `scripts/fork/macos-offline-test.sh` czeka na wpis (do 60 s) i dodaje sondę po komendach TapCue jako
+  znacznik nadrobienia logu; `release.yml` bez zmian (osobny commit, decyzja właściciela: poprawka w PR-08).
+  Następnie walidacja na gałęzi PR-08 padła na dwóch testach zależnych od czasu (przeciążone runnery macos-26) — uodpornione
+  w osobnym commicie (`awaitParkedIn` w teście devtools, dłuższe oczekiwanie na `list_devices` w `McpStdioTest`). Walidacja
+  `release.yml` na gałęzi PR-08 ([run 40118756237](https://github.com/rtnk/TapCue/actions/runs/40118756237)) zielona, `reproduce`
+  IDENTICAL, SHA-256 archiwum `e8dd01b0…ddab6ec1`.
 
 ## 4. Gate'y blokujące publikację v0.1.0
 
-| Gate | Warunek | Weryfikacja |
-|---|---|---|
-| G-1 | PR-00…PR-07 (oraz 00B/03B) scalone | historia `main` |
-| G-2 | Zielony CI na `main` | GitHub Actions |
-| G-3 | `LICENSE-AUDIT.md` zamknięty: L-01 usunięty, L-03/L-04 rozstrzygnięte, `THIRD-PARTY-NOTICES` kompletne | review + `verify-dist.sh` |
-| G-4 | Brak simulator-server i innych zakazanych artefaktów w paczce | `verify-dist.sh` w `release.yml` |
-| G-5 | Test offline (egress) zielony na Linux CI i na macOS arm64 | logi CI / handover STEP-08 |
-| G-6 | Paczka zainstalowana i uruchomiona z pliku pobranego z Release | handover STEP-08 |
-| G-7 | Decyzje D-1, D-2, D-5, D-6, D-7 rozstrzygnięte (2026-10-23) i zrealizowane | ten plik |
-| G-8 | Release notes wymieniają braki pokrycia i nieprzetestowane platformy | Release |
+| Gate | Warunek | Weryfikacja | Status (STEP-08, przed tagiem) |
+|---|---|---|---|
+| G-1 | PR-00…PR-07 (oraz 00B/03B) scalone | historia `main` | **PASS** — #1…#16 scalone (PR-08 — w review) |
+| G-2 | Zielony CI na `main` | GitHub Actions | **PASS** dla `aeaebc5` (run 40112502799); do powtórzenia na commicie scalenia PR-08 |
+| G-3 | `LICENSE-AUDIT.md` zamknięty: L-01 usunięty, L-03/L-04 rozstrzygnięte, `THIRD-PARTY-NOTICES` kompletne | review + `verify-dist.sh` | **PASS** — decyzje właściciela 2026-10-24, teksty dopisane (§3.6), audyt zamknięty |
+| G-4 | Brak simulator-server i innych zakazanych artefaktów w paczce | `verify-dist.sh` w `release.yml` | **PASS** lokalnie (archiwum 0.1.0), w CI PR-08 i w walidacji `release.yml` (run 40118756237); w runie publish — po tagu |
+| G-5 | Test offline (egress) zielony na Linux CI i na macOS arm64 | logi CI / handover STEP-08 | **PASS** — Linux (`egress-test.sh` lokalnie, `ci.yml`, `release.yml`), macOS (krok offline z rejestrem odmów w `release.yml` run 40118756237 i `ci.yml`); `pf` na Macu — NOT RUN |
+| G-6 | Paczka zainstalowana i uruchomiona z pliku pobranego z Release | handover STEP-08 | **NOT RUN** — po publikacji |
+| G-7 | Decyzje D-1, D-2, D-5, D-6, D-7 rozstrzygnięte (2026-10-23) i zrealizowane | ten plik | **PASS** |
+| G-8 | Release notes wymieniają braki pokrycia i nieprzetestowane platformy | Release | **PASS** — `release-notes.py 0.1.0 --require-section` lokalnie, `prepare` bez ostrzeżeń o sekcji; w Release — po publikacji |
 
 ## 5. Testy akceptacyjne produktu
 

@@ -195,3 +195,10 @@ Zasady architektoniczne:
   `publish-release.sh`, `compare-archives.py`, `macos-offline-test.sh` (krok offline joba `macos` z `ci.yml` przeniesiony do
   skryptu), `test-release.sh`. Bez zmian: kod produktu, pakiety `maestro.*`, moduły Gradle, format flow, katalogi
   `~/.tapcue`/`.tapcue/`, zawartość paczki, `Vendor/`, wersja CLI `2.11.0`.
+- STEP-08 (wydanie 0.1.0): `CLI_VERSION=0.1.0` (archiwum `tapcue-0.1.0-macos-arm64.zip`, `tapcue --version` → `tapcue 0.1.0`).
+  `RealIOSDeviceDriver` przebudowuje sterownik dla urządzeń fizycznych przy każdej wersji różnej od zapisanej w
+  `version.properties` (wcześniej tylko przy wyższej — wersja spadła z 2.11.0 do 0.1.0; dla symulatora `IOSSimulatorDriver`
+  porównywał już równość). Suplement not (`docs/audit/notices-supplement.md` §3.6) z pełnymi tekstami licencji bibliotek APK
+  sterownika Android. README repozytorium opisuje TapCue (instalacja z Release, CLI, MCP, ograniczenia) z logo
+  `docs/assets/tapcue-logo.png` — logo nie trafia do paczki (zawartość archiwum i `verify-dist.sh` bez zmian). Bez zmian:
+  pakiety `maestro.*`, moduły Gradle, format flow, katalogi `~/.tapcue`/`.tapcue/`, `Vendor/`, `release.yml`, `ci.yml`.

@@ -16,6 +16,7 @@ import maestro.android.FakeDadb
 import maestro.android.InterruptProofLatch
 import maestro.android.NeverRespondingStream
 import maestro.android.awaitParked
+import maestro.android.awaitParkedIn
 import maestro.android.socketListing
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okio.Buffer
@@ -191,8 +192,9 @@ class DadbChromeDevToolsClientTest {
                 }
 
                 // The listing socket opens, the request write completes into the Buffer sink, then the
-                // read parks: that read is the only lasting park, so awaitParked lands on it.
-                awaitParked(capture)
+                // read parks: that read is the only lasting park. Wait for that one: a brief park on the way there
+                // (seen on a loaded macOS runner) would take the interrupt instead.
+                awaitParkedIn(capture, "maestro.android.BoundedAdbSocket\$getInputStream")
                 capture.interrupt()
 
                 assertWithMessage("the capture did not finish within 10s of the interrupt")

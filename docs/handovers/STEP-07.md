@@ -2,12 +2,12 @@
 
 | Pole | Wartość |
 |---|---|
-| Krok | STEP-07 — w review |
+| Krok | STEP-07 — **scalony** 2026-10-24 (PR #15, merge `610568a`; poprawka CI PR #16, merge `aeaebc5`) |
 | PR | PR-07: https://github.com/rtnk/TapCue/pull/15 |
 | Gałąź | `step-07-release` |
 | Gałąź docelowa | `main` |
 | Baza | `main` @ `52c7c38` (merge PR #14 — STEP-06) |
-| Commit SHA | ostatni commit gałęzi `step-07-release` (patrz PR) |
+| Commit SHA | `2c558a3` (ostatni commit gałęzi), merge `610568a` |
 
 ## 1. Co zrobiono
 
@@ -129,6 +129,12 @@ gh workflow run release.yml --ref main
 PR-07 **scalony** do `main`; `ci.yml` zielone na `main`; `release.yml` uruchomiony na `main` przez `workflow_dispatch`
 (tryb walidacji) — zielony, `publish` `skipped`, bez Release. Decyzje właściciela z §3 (L-05, polityka licencji, przegląd not)
 — przed tagiem `v0.1.0` (G-3).
+
+**Stan po scaleniu (sprawdzony na początku STEP-08, 2026-10-24):** PR #15 i #16 MERGED. `ci.yml` na `main` (`aeaebc5`,
+[run 40112502799](https://github.com/rtnk/TapCue/actions/runs/40112502799)) zielony: `build`, `egress`, `android` (żaden krok
+nie pominięty, emulator API 34, 8/8 scenariuszy, `settings` PASS w 116 s), `macos`. `release.yml` bez wyzwalacza
+`pull_request`. Pierwszy `workflow_dispatch` na `main` ([run 40115219200](https://github.com/rtnk/TapCue/actions/runs/40115219200)):
+patrz `docs/handovers/STEP-08.md` §2. Decyzje właściciela (G-3) podjęte 2026-10-24 — `docs/LICENSE-AUDIT.md`.
 
 ## 5. Następny krok
 

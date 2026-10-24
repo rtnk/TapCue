@@ -5,8 +5,18 @@
 TapCue bazuje na Maestro (Apache-2.0) i nie jest powiązany z mobile.dev. Zmiany własne forka. Fork bazuje na upstream `mobile-dev-inc/Maestro` `v2.11.0`
 (`c8c361be1cc89b2e742f185466a302a22778be6b`); historia upstream znajduje się poniżej, bez zmian.
 
-### Unreleased
+### 0.1.0 — 2026-10-24
 
+Pierwsze wydanie TapCue: lokalne CLI `tapcue` i lokalny serwer MCP (`tapcue mcp`) do testów UI aplikacji mobilnych,
+bez Maestro Cloud, zdalnego AI, telemetrii, wysyłania błędów, sprawdzania aktualizacji i komponentów o zamkniętym źródle.
+Jedyny artefakt: `tapcue-0.1.0-macos-arm64.zip` (wymaga Javy 17+) z `SHA256SUMS`. Instalacja: `README.md` w archiwum
+i w repozytorium. Wersjonowanie TapCue zaczyna się od 0.1.0 (wcześniejsze buildy forka nosiły numer upstream 2.11.0).
+
+- CLI (STEP-08): `--version` → `tapcue 0.1.0`. Sterownik iOS dla urządzeń fizycznych w `~/.tapcue` jest przebudowywany
+  przy każdej innej wersji CLI (wcześniej tylko przy wyższej — build forka 2.11.0 nie zostałby zastąpiony przez 0.1.0).
+- Licencje (STEP-08): `THIRD-PARTY-NOTICES.md` zawiera pełne teksty wszystkich licencji bibliotek w paczce i w APK
+  sterownika Android (także tych, których JAR nie zawiera tekstu licencji).
+- Repozytorium (STEP-08): README TapCue (instalacja z Release, CLI, MCP, ograniczenia) z logo `docs/assets/tapcue-logo.png`.
 - Repozytorium: workflowy upstream zaparkowane w `.github/upstream-workflows-disabled/` (nie uruchamiały się w forku; usunięte w STEP-06).
 - CI: bazowy workflow `ci-baseline.yml` — testy jednostkowe bez pobierania simulator-server i bez budowania Viewera, ze strażnikiem `scripts/fork/check-no-simulator-server.sh` (zastąpiony przez `ci.yml` w STEP-06).
 - Dokumentacja: plan `docs/ROADMAP-0.1.md`, audyty `docs/NETWORK-AUDIT.md` i `docs/LICENSE-AUDIT.md`,
@@ -133,6 +143,29 @@ TapCue bazuje na Maestro (Apache-2.0) i nie jest powiązany z mobile.dev. Zmiany
   (zawartość, licencje, zakazane zależności, działanie bez sieci na macOS i Linux, identyczne bajty z powtórnego builda na Linux)
   i publikuje GitHub Release z archiwum, `SHA256SUMS` i notatkami z sekcji tej wersji w `CHANGELOG.md`. Istniejący Release nie
   jest nigdy nadpisywany; `workflow_dispatch` uruchamia te same kontrole bez publikacji. Procedura: `docs/RELEASING.md`.
+
+#### Znane ograniczenia
+
+Przetestowane w 0.1.0: archiwum macOS arm64 (CLI, MCP, build sterownika iOS Simulator ze źródła — bez sieci, runnery
+GitHub Actions `macos-26`), Android na emulatorze API 34 (CI) i CLI/MCP bez sieci na Linux (CI).
+
+- **Nieprzetestowane platformy:** Windows; Linux jako platforma uruchamiania TapCue (Linux służy tylko kontrolom CI, nie ma
+  archiwum dla Linux); macOS x64 (Intel — brak archiwum); fizyczne urządzenia iOS (`driver-setup --apple-team-id`); fizyczne
+  urządzenia Android.
+- **Web nie jest wspierany** (D-4): flow dla przeglądarki kończy się błędem „The web platform is not supported in TapCue 0.1.0”.
+- Pokrycie iOS Simulator: CI buduje sterownik ze źródła i odczytuje hierarchię UI symulatora; flow na iOS nie są uruchamiane
+  w CI (AT-03, AT-04 i zrzut ekranu z AT-05 na iOS — bez pokrycia). Pierwsze uruchomienie na iOS wymaga Xcode i trwa kilka minut.
+- Pokrycie Android w CI: jeden obraz emulatora (API 34) i aplikacja Ustawienia (`launchApp`, `tapOn`, `assertVisible`,
+  `scroll`, `inputText`, `takeScreenshot`, hierarchia, MCP z urządzeniem, ścieżki błędów).
+- Suita E2E upstream (`e2e/`, aplikacja demo) nie jest uruchamiana; ewaluacje LLM serwera MCP upstream usunięte.
+- JavaScript `http.*` we flow łączy się tylko z loopback, sieciami prywatnymi i link-local (D-3); `openLink`/`launchApp`
+  z adresem URL wykonuje urządzenie, nie TapCue.
+- Usunięte względem Maestro: Maestro Cloud, Maestro Studio, komendy AI, Maestro Viewer, `download-samples`, automatyczne
+  pobieranie obrazów systemu Android, prekompilowany sterownik iOS.
+- APK sterownika Android są podpisane publicznie znanym kluczem debug z repozytorium (jak w upstream, R-8).
+- Java nie jest dołączona (wymagana 17+); archiwum nie jest podpisane ani notaryzowane przez Apple (`xattr -dr
+  com.apple.quarantine …` po pobraniu, jeśli macOS je blokuje).
+- Bez synchronizacji z upstream po `v2.11.0` (poprawki sterowników z nowszych wersji Maestro nie są zawarte).
 
 ## Upstream Maestro
 

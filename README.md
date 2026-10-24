@@ -1,147 +1,134 @@
-> [!TIP]
-> Great things happen when testers connect — [Join the Maestro Community](https://maestrodev.typeform.com/to/FelIEe8A)
-
-
 <p align="center">
-  <a href="https://www.maestro.dev">
-    <img width="1200" alt="Maestro logo" src="https://github.com/mobile-dev-inc/Maestro/blob/main/assets/banne_logo.png" />
-  </a>
+  <img src="docs/assets/tapcue-logo.png" alt="TapCue logo" width="160" />
 </p>
 
+# TapCue
 
-**Maestro** is an open-source framework that makes UI and end-to-end testing for Android, iOS, and web apps simple and fast.
+**TapCue** is a local command-line tool for mobile UI tests and a local MCP server for coding agents. You write a test
+as a flat list of YAML commands (`launchApp`, `tapOn`, `assertVisible`, …) and TapCue runs it on an Android emulator or
+device or on an iOS Simulator on your machine.
 
-Hand-write your first YAML flow with the CLI in under 5 minutes, build flows visually in Maestro Studio, or add **Maestro MCP** to your coding agent for agentic UI testing.
+TapCue is based on [Maestro](https://github.com/mobile-dev-inc/Maestro) (Apache-2.0), not affiliated with mobile.dev.
+It is an independent fork of Maestro 2.11.0 that runs **only locally**: it has no cloud service, no remote AI, no
+telemetry, no error upload and no update checks, and it ships no closed-source components. Flows use the Maestro flow
+format unchanged.
 
-Flows run on any emulator, simulator, browser, or physical Android device. Physical iOS devices are not yet supported.
+## Install
 
-<p align="center">
-  <img src="assets/twitch2-small.gif" alt="A Maestro flow in plain YAML running on the Twitch Android app in an emulator" width="760" />
-</p>
+TapCue 0.1.0 is published as a GitHub Release with two files: `tapcue-0.1.0-macos-arm64.zip` and `SHA256SUMS`.
 
-&nbsp;
+Requirements:
 
-## Table of Contents
+- macOS on Apple silicon (arm64).
+- **Java 17 or newer** on `PATH` or in `JAVA_HOME` (`java -version`). The archive does not include a Java runtime.
+- Android: the Android SDK platform tools (`adb`) and an emulator or device.
+- iOS Simulator: Xcode with its command-line tools. TapCue has no prebuilt iOS driver: on the first iOS run it builds
+  the XCTest runner from the source it ships with your Xcode (a few minutes, no network needed) and keeps it in
+  `~/.tapcue`. `tapcue driver-setup --simulator` builds it ahead of time.
 
-- [Why Maestro?](#why-maestro)
-- [Getting Started](#getting-started)
-- [Maestro MCP – Agentic UI Testing](#maestro-mcp--agentic-ui-testing)
-- [Maestro Studio – Test IDE](#maestro-studio--test-ide)
-- [Maestro Cloud – Parallel Execution & Scalability](#maestro-cloud--parallel-execution--scalability)
-- [Resources & Community](#resources--community)
-- [Contributing](#contributing)
-
-&nbsp;
-
-## Why Maestro?
-
-Maestro is built on learnings from its predecessors (Appium, Espresso, UIAutomator, XCTest, Selenium, Playwright), plus 3 decisions made early: drive the app through the platform's accessibility layer, install as a single binary with no drivers or SDK, and keep every test a flat list of YAML commands.
-
-- **Human-readable YAML flows** – express interactions as commands like `launchApp`, `tapOn`, and `assertVisible`.
-- **Built for coding agents** – the Maestro MCP server ships inside the Maestro CLI (`maestro mcp`, nothing else to install). Claude Code, Cursor, Codex, Grok Build, or any MCP client can control your app on a live device: inspect the screen, tap, scroll, assert, and check its own work while it builds. Ask for a flow when you want a repeatable test — that's agentic UI testing.
-- **Framework agnostic** – React Native, Flutter, native iOS and Android, Ionic, and hybrid apps all use the same commands. Meta uses Maestro to test React Native itself, and Expo supports Maestro as its preferred E2E testing platform.
-- **Cross-platform coverage** – one flow syntax for Android, iOS, and web, on emulators, simulators, browsers, and physical Android devices.
-- **Resilience & smart waiting** – built-in flakiness tolerance and automatic waiting handle dynamic UIs without manual `sleep()` calls.
-- **Fast iteration & simple install** – one install line, no drivers, no SDK, no dependencies; flows are interpreted, so there's no compilation step. First test in 5 minutes.
-
-**Simple Example:**
+```sh
+gh release download v0.1.0 --repo rtnk/TapCue --dir tapcue-dl   # or download both files from the Release page
+cd tapcue-dl
+shasum -a 256 -c SHA256SUMS
+unzip tapcue-0.1.0-macos-arm64.zip -d ~/opt
+export PATH="$HOME/opt/tapcue-0.1.0-macos-arm64/bin:$PATH"
+tapcue --version
 ```
-# flow_contacts_android.yaml
 
+The archive is not signed or notarized by Apple. If macOS blocks it as downloaded from the internet, clear the
+quarantine flag once: `xattr -dr com.apple.quarantine ~/opt/tapcue-0.1.0-macos-arm64`.
+
+To uninstall, delete the unpacked directory and, if you no longer need its state, `~/.tapcue`.
+
+## Run tests
+
+Keep a project's flows in a `.tapcue/` directory:
+
+```yaml
+# .tapcue/contacts.yaml
 appId: com.android.contacts
 ---
 - launchApp
 - tapOn: "Create new contact"
 - tapOn: "First Name"
 - inputText: "John"
-- tapOn: "Last Name"
-- inputText: "Snow"
 - tapOn: "Save"
+- assertVisible: "John"
 ```
 
-&nbsp;
-
-## Getting Started
-
-Maestro requires Java 17 or higher to be installed on your system. You can verify your Java version by running:
-
-```
-java -version
-```
-
-Installing the CLI:
-
-Run the following command to install Maestro on macOS, Linux or Windows (WSL):
-
-```
-curl -fsSL "https://get.maestro.mobile.dev" | bash
+```sh
+tapcue list-devices                 # local emulators, devices and simulators
+tapcue test .tapcue/                # run every flow in the directory
+tapcue test --device <id> .tapcue/contacts.yaml
+tapcue check-syntax .tapcue/contacts.yaml
+tapcue hierarchy                    # the UI hierarchy of the current screen
+tapcue --help
 ```
 
-The links below will guide you through the next steps.
+Reports: `tapcue test --format junit --output report.xml` or `--format html`. State, logs and test artifacts live in
+`~/.tapcue` (artifacts in `$XDG_STATE_HOME/tapcue` when that variable is set). TapCue does not read or write
+`~/.maestro`, so it can be installed next to Maestro. A project's old `.maestro/` directory is not read: rename it
+with `mv .maestro .tapcue`.
 
-- [Installing Maestro](https://docs.maestro.dev/maestro-cli/how-to-install-maestro-cli) (includes regular Windows installation)
-- [Add Maestro MCP to your coding agent](https://docs.maestro.dev/get-started/maestro-mcp)
-- [Run your first test with the Maestro CLI](https://docs.maestro.dev/maestro-cli/run-your-first-test-with-the-maestro-cli) (or just ask your agent to do it for you)
+## MCP server
 
-&nbsp;
+`tapcue mcp` is an MCP server on STDIO. It runs on your machine, talks only to local devices and makes no requests to
+remote services. Tools: `list_devices`, `inspect_screen`, `take_screenshot`, `run` (runs flow commands or files) and
+`cheat_sheet` (the flow syntax reference, bundled with TapCue).
 
-## Maestro MCP – Agentic UI Testing
+Add it to an MCP client, e.g. Claude Code:
 
-<img src="assets/maestro-mcp-demo.gif" alt="A coding agent checking its work on an Android emulator through Maestro MCP, with every command shown live in the Maestro Viewer" />
-
-Maestro MCP ships inside the Maestro CLI and works with Claude Code, Cursor, Codex, Gemini CLI, Copilot, Grok Build, or any MCP client. It gives your agent a live device (an emulator, simulator, or physical Android device), and Maestro Viewer embeds that device inside your coding agent, showing every MCP command as it runs.
-
-With Maestro MCP, your agent can control the app directly: inspect the screen, tap, scroll, and assert. While it builds or changes a feature, it checks its own work on the device.
-
-Your agent can also write tests. Ask for an end-to-end flow and it writes plain YAML, runs it until it passes, and the flow stays in your repo as a deterministic test for CI.
-
-Setup for each coding agent is in the [Maestro MCP docs](https://docs.maestro.dev/get-started/maestro-mcp).
-
-&nbsp;
-
-## Maestro Studio – Test IDE
-
-**Maestro Studio Desktop** is a lightweight IDE that lets you design and execute tests visually — no terminal needed. It is also free, even though Studio is not an open-source project. So you won't find the Maestro Studio code here.
-
-- **Simple setup** – just download the native app for macOS, Windows, or Linux.
-- **Visual flow builder & inspector** – record interactions, inspect elements, and build flows visually.
-
-[Download Maestro Studio](https://maestro.dev/?utm_source=github-readme#maestro-studio)
-
-&nbsp;
-
-## [Maestro Cloud](https://maestro.dev/cloud?utm_source=github-readme) – Parallel Execution & Scalability
-
-When your test suite grows, run hundreds of tests in parallel on dedicated infrastructure, cutting execution times by up to 90%. Includes built-in notifications, deterministic environments, and complete debugging tools.
-
-Pricing for Maestro Cloud is completely transparent and can be found on the [pricing page](https://maestro.dev/pricing?utm_source=github-readme).
-
-👉 [Start your free 7-day trial](https://maestro.dev/cloud?utm_source=github-readme)
-
-&nbsp;
-
-## Resources & Community
-
-- 💬 [Join the Slack Community](https://slack.maestro.dev)
-- 📘 [Documentation](https://docs.maestro.dev)
-- 📰 [Blog](https://maestro.dev/blog?utm_source=github-readme)
-- 🐦 [Follow us on X](https://twitter.com/maestro__dev)
-- ⏯️ [Check out our YouTube channel](https://www.youtube.com/@mobile-dev)
-
-&nbsp;
-
-## Contributing
-
-Maestro is open-source under the Apache 2.0 license — contributions are welcome!
-
-- Check [good first issues](https://github.com/mobile-dev-inc/maestro/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
-- Read the [Contribution Guide](https://github.com/mobile-dev-inc/Maestro/blob/main/CONTRIBUTING.md)
-- Fork, create a branch, and open a Pull Request.
-
-If you find Maestro useful, ⭐ star the repository to support the project.
-
-
-
+```sh
+claude mcp add tapcue -- tapcue mcp
 ```
-  Built with ❤️ by Maestro.dev
+
+or in a client's JSON configuration:
+
+```json
+{ "mcpServers": { "tapcue": { "command": "tapcue", "args": ["mcp"] } } }
 ```
+
+## Known limitations
+
+TapCue 0.1.0 is the first release. Tested: the macOS arm64 archive (CLI, MCP and the iOS Simulator driver built from
+source, on GitHub Actions `macos-26` runners, without network), Android on an API 34 emulator (CI), and the CLI and MCP
+server without network on Linux (CI).
+
+- **Untested platforms:** Windows, Linux as a platform to run TapCue on (Linux is used only in CI checks; there is no
+  Linux archive), macOS on Intel (x64; there is no archive for it), physical iOS devices, physical Android devices.
+- **Web is not supported:** flows for web browsers end with "The web platform is not supported".
+- iOS Simulator coverage is small: CI builds the driver from source and reads the UI hierarchy of a simulator; flows on
+  iOS are not run in CI. The first iOS run needs Xcode and takes a few minutes.
+- Android coverage in CI is one emulator image (API 34) and the Settings app.
+- Upstream's end-to-end suite (`e2e/`) is not run.
+- JavaScript `http.*` in flows reaches only loopback, private and link-local addresses.
+- Removed from Maestro: Maestro Cloud, Maestro Studio, AI commands (`assertWithAI`, `assertNoDefectsWithAI`,
+  `extractTextWithAI`), Maestro Viewer, `download-samples`.
+- The Android driver APKs are signed with the debug key that is public in the repository (as upstream).
+- Java is not bundled (Java 17+ must be installed).
+
+The full list is in the `0.1.0` section of [`CHANGELOG.md`](CHANGELOG.md) and in the Release notes.
+
+## Build from source
+
+```sh
+./gradlew :maestro-cli:macosArm64DistZip    # JDK 17; writes maestro-cli/build/distributions/
+scripts/verify-dist.sh --smoke maestro-cli/build/distributions/tapcue-0.1.0-macos-arm64.zip
+./gradlew test
+```
+
+The release archive is reproducible: the same commit gives the same bytes ([`docs/RELEASING.md`](docs/RELEASING.md)).
+Kotlin packages (`maestro.*`) and Gradle modules keep their upstream names.
+
+## Documentation
+
+- [`docs/RELEASING.md`](docs/RELEASING.md) — how releases are built, checked and verified
+- [`docs/ROADMAP-0.1.md`](docs/ROADMAP-0.1.md), [`docs/ARCHITECTURE-LOCAL.md`](docs/ARCHITECTURE-LOCAL.md) — plan and architecture of the fork (Polish)
+- [`docs/NETWORK-AUDIT.md`](docs/NETWORK-AUDIT.md), [`docs/LICENSE-AUDIT.md`](docs/LICENSE-AUDIT.md) — network and license audits (Polish)
+- Issues: https://github.com/rtnk/TapCue/issues
+
+## License
+
+Apache License 2.0 — see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE). TapCue is a modified version of Maestro by
+mobile.dev inc. "Maestro" is a trademark of its owner; TapCue is not affiliated with or endorsed by mobile.dev. Licenses
+of bundled libraries: `THIRD-PARTY-NOTICES.md` in the archive.

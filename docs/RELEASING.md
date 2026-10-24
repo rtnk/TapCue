@@ -1,6 +1,6 @@
 # Wydawanie TapCue (repozytorium `rtnk/TapCue`)
 
-Status: **pipeline gotowy (STEP-07, `.github/workflows/release.yml`)**; pierwsze wydanie `v0.1.0` — STEP-08 (PR-08 + tag).
+Status: **pipeline gotowy (STEP-07, `.github/workflows/release.yml`)**; pierwsze wydanie `v0.1.0` przygotowane w PR-08 (STEP-08); tag po scaleniu PR-08.
 Do scalenia PR-08 **nie tworzymy tagów `v*` ani GitHub Release** (tryb walidacji przez `workflow_dispatch` — bez ograniczeń).
 
 Plik `RELEASING.md` w katalogu głównym oraz skille `.claude/skills/release/` i `bump-android-version` opisują procesy
@@ -15,7 +15,7 @@ Plik `RELEASING.md` w katalogu głównym oraz skille `.claude/skills/release/` i
 | Komenda | `./gradlew :maestro-cli:macosArm64DistZip` (JDK 17; `SHA256SUMS` powstaje w tym samym przebiegu) |
 | Zawartość | `tapcue-<wersja>-macos-arm64/`: `bin/tapcue`, `bin/jvm-version.jar`, `lib/*.jar`, `LICENSE`, `NOTICE`, `THIRD-PARTY-NOTICES.md`, `README.md` |
 | Wymagania użytkownika | systemowa Java 17+ (D-7, JRE nie jest dołączane); Xcode dla iOS Simulator (sterownik budowany przy pierwszym użyciu, D-5); `adb` dla Androida |
-| Wersja | `CLI_VERSION` w `maestro-cli/gradle.properties` (obecnie `2.11.0` z upstream; `0.1.0` ustawia PR-08). Tag wydania = `v<CLI_VERSION>` |
+| Wersja | `CLI_VERSION` w `maestro-cli/gradle.properties` (`0.1.0` od PR-08; wcześniej `2.11.0` z upstream). Tag wydania = `v<CLI_VERSION>` |
 | Weryfikacja | `scripts/verify-dist.sh --smoke <archiwum>`; testy negatywne `scripts/fork/test-verify-dist.sh <archiwum>` |
 | Licencje | `THIRD-PARTY-NOTICES.md` z `:maestro-cli:generateThirdPartyNotices` (ręczna część: `docs/audit/notices-supplement.md`); skan `scripts/fork/check-licenses.py` vs `scripts/fork/allowed-licenses.tsv` |
 | CI | `.github/workflows/ci.yml` na każdym PR i pushu `main`. Artefakt `tapcue-macos-arm64` z joba `build` **nie jest wydaniem** |
@@ -44,7 +44,8 @@ Instalacja i uruchomienie z archiwum — `maestro-cli/src/dist/README.md` (w pac
 | `workflow_dispatch` (dowolna gałąź) | **validate** — te same joby; `publish` jest pomijany (`skipped`), Release nie powstaje |
 
 `workflow_dispatch` działa dopiero, gdy `release.yml` jest na gałęzi domyślnej (przed scaleniem PR-07 API zwraca 404); w PR-07
-tryb walidacji uruchamiał tymczasowy wyzwalacz `pull_request`, usunięty przed scaleniem (handover STEP-07).
+tryb walidacji uruchamiał tymczasowy wyzwalacz `pull_request`, usunięty przed scaleniem (handover STEP-07). Od scalenia PR-07
+`workflow_dispatch` działa na dowolnej gałęzi (w STEP-08: na `main` i na gałęzi PR-08).
 
 | Job | Runner | Co robi |
 |---|---|---|
