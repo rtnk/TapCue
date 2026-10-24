@@ -31,7 +31,7 @@ Once your PR is merged, it usually takes about a week until it becomes publicly 
 Maestro's minimal deployment target is Java 17, and for development, you need to use Java 17 or newer.
 
 If you made changes to the CLI, rebuilt it with `./gradlew :maestro-cli:installDist`. This will generate a startup shell
-script in `./maestro-cli/build/install/maestro/bin/maestro`. Use it instead of globally installed `maestro`.
+script in `./maestro-cli/build/install/tapcue/bin/tapcue`. Use it instead of a globally installed `tapcue`.
 
 If you made changes to the iOS XCTest runner app, make sure they are compatible with the version of Xcode used by the GitHub Actions build step. It is currently built using the default version of Xcode listed in the macos runner image [readme][macos_builder_readme].
 If you introduce changes that work locally but fail to build when you make a PR, check if you used a feature used in a newer version of Swift or some other new Xcode setting.
@@ -133,7 +133,7 @@ There are 3 ways to test your changes:
   - Run them via `./gradlew :maestro-test:test` (or from IDE)
   - Tests are using real implementation of most components except for `Driver`. We use `FakeDriver` which pretends to be a real device.
 - Manual testing
-  - Run `./maestro` instead of `maestro` to use your local code.
+  - Run `./tapcue` instead of `tapcue` to use your local code.
 - Unit tests
   - All the other tests in the projects. Run them via `./gradlew test` (or from IDE)
 

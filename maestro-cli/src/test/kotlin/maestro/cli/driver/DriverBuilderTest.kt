@@ -33,7 +33,7 @@ class DriverBuilderTest {
         every { mockProcess.exitValue() } returns 0
         every { mockProcessBuilderFactory.createProcess(any(), any(), any()) }  answers {
             val derivedDataPath = Files.createDirectories(
-                Paths.get(sourceCodeRoot , ".maestro", "maestro-iphoneos-driver-build", "driver-iphoneos", "Build", "Products")
+                Paths.get(sourceCodeRoot , ".tapcue", "maestro-iphoneos-driver-build", "driver-iphoneos", "Build", "Products")
             )
             val debugIphoneDir = Files.createDirectories(Paths.get(derivedDataPath.pathString, "Debug-iphoneos"))
             // Simulate creating build products
@@ -70,7 +70,7 @@ class DriverBuilderTest {
     }
 
     @Test
-    fun `should write error output to file inside _maestro on build failure`() {
+    fun `should write error output to file inside _tapcue on build failure`() {
         // given
         val sourceCodeRoot = System.getenv("GITHUB_WORKSPACE") ?: System.getProperty("user.home")
         val driverBuildConfig = mockk<DriverBuildConfig>()
@@ -103,8 +103,8 @@ class DriverBuilderTest {
 
         // then
         assertThat(error.message).contains("Failed to build iOS driver for connected iOS device")
-        // Verify that the error log has been written inside the `.maestro` directory
-        val maestroDir = Paths.get(sourceCodeRoot, ".maestro")
+        // Verify that the error log has been written inside the `.tapcue` directory
+        val maestroDir = Paths.get(sourceCodeRoot, ".tapcue")
         val errorLog = maestroDir.resolve("maestro-iphoneos-driver-build").resolve("output.log")
 
         // Verify file exists and contains error output

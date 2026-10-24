@@ -97,9 +97,11 @@ class McpStdioTest {
             }
             val initialize = stdout.awaitResponse(1)
             val serverInfo = initialize.result()["serverInfo"]!!.jsonObject
-            assertThat(serverInfo["name"]!!.jsonPrimitive.content).isEqualTo("maestro")
+            assertThat(serverInfo["name"]!!.jsonPrimitive.content).isEqualTo("tapcue")
             val instructions = initialize.result()["instructions"]!!.jsonPrimitive.content
             assertThat(instructions).contains("cheat_sheet")
+            assertThat(instructions).contains("TapCue")
+            assertThat(instructions).contains(".tapcue/")
             assertThat(instructions).doesNotContain("docs.maestro.dev")
             assertThat(instructions).doesNotContain("http")
 
@@ -147,6 +149,9 @@ class McpStdioTest {
 
         assertThat(httpProxy.requestCount).isEqualTo(0)
         assertThat(socksConnections.get()).isEqualTo(0)
+        // STEP-04B: state goes to ~/.tapcue only, never to upstream Maestro's directories.
+        assertThat(home.resolve(".maestro").toFile().exists()).isFalse()
+        assertThat(home.resolve("state").resolve("maestro").toFile().exists()).isFalse()
     }
 
     private fun startMcpProcess(): Process {

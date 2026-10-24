@@ -6,7 +6,7 @@ AI Command Not Available: extractTextWithAI at /tmp/WorkspaceExecutionPlannerErr
                                     ^
        7 | 
 
-  `extractTextWithAI` is an AI command. AI commands are not available in Maestro Local: they relied on a
+  `extractTextWithAI` is an AI command. AI commands are not available in TapCue: they relied on a
   remote AI service, which this build does not include.
   
   Remove the command, or replace it with a local assertion such as `assertVisible` or `assertTrue`.

@@ -96,7 +96,7 @@ class LocalNetworkPolicy(
     )
 
     companion object {
-        const val POLICY = "Maestro Local lets JavaScript http requests reach only loopback, private and link-local " +
+        const val POLICY = "TapCue lets JavaScript http requests reach only loopback, private and link-local " +
             "addresses (127.0.0.0/8, ::1, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, fc00::/7, 169.254.0.0/16, fe80::/10)."
 
         fun isAllowed(address: InetAddress): Boolean {

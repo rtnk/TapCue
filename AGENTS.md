@@ -1,8 +1,8 @@
 # AGENTS.md — Maestro
 
-> **Fork notice (Maestro Local, `rtnk/TapCue`).** This repository is an independent fork of
+> **Fork notice (TapCue, `rtnk/TapCue`; formerly "Maestro Local").** This repository is an independent fork of
 > `mobile-dev-inc/Maestro` that removes Maestro Cloud, remote AI, telemetry, update checks and the
-> closed-source simulator-server/Viewer. Before any work, read `docs/ROADMAP-0.1.md` and the latest
+> closed-source simulator-server/Viewer. TapCue is based on Maestro (Apache-2.0) and is not affiliated with mobile.dev. Before any work, read `docs/ROADMAP-0.1.md` and the latest
 > `docs/handovers/STEP-XX.md`; they take precedence over this file where they conflict. In particular:
 >
 > - Work happens one roadmap step per PR; never merge automatically.
@@ -14,6 +14,13 @@
 > - The MCP server is local-only (STEP-04): the Viewer (`mcp/viewer/`, `maestro-cli/mcp-viewer/`) is gone and
 >   `cheat_sheet` serves `maestro-cli/src/main/resources/mcp/cheat-sheet.md` — keep its `yaml` examples valid
 >   (`CheatSheetToolTest` parses them) and do not make MCP tools call remote services.
+> - The product is TapCue (STEP-04B, D-1/D-2): the command is `tapcue` (dev wrapper `./tapcue`, launcher
+>   `maestro-cli/build/install/tapcue/bin/tapcue`), state lives in `~/.tapcue` / `$XDG_STATE_HOME/tapcue` and projects
+>   keep flows in `.tapcue/` (the demo app's flows are in `e2e/demo_app/.tapcue/`). All of these come from
+>   `maestro.utils.TapCueDirs`; never write to `~/.maestro`, `$XDG_STATE_HOME/maestro` or `~/.mobiledev`
+>   (`TapCueNameTest`). Kotlin packages (`maestro.*`), Gradle module names, the YAML flow format and the on-device
+>   driver ids (`dev.mobile.maestro*`) keep upstream names. Below, read `maestro <command>` as `tapcue <command>` and
+>   `.maestro/` as `.tapcue/`.
 > - The `release` and `bump-android-version` skills in `.claude/skills/`, root `RELEASING.md` and
 >   `.github/upstream-workflows-disabled/` describe upstream processes (Maestro Cloud, Maven Central,
 >   Homebrew, GCS) and do not apply here. Fork releases: `docs/RELEASING.md`.
@@ -49,8 +56,8 @@ Shipped fixtures used by `.github/workflows/test-e2e.yaml`. Run via `e2e/run_tes
 | Path                     | Role                                                                                                                                                                    |
 |--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `e2e/demo_app/`          | Flutter demo app whose only purpose is to exercise Maestro features. Contains its own `CLAUDE.md`. Built binaries are uploaded to a GCS bucket and re-downloaded by CI. |
-| `e2e/demo_app/.maestro/` | Maestro flow YAMLs that drive the demo app.                                                                                                                             |
-| `e2e/workspaces/`        | Further workspaces, each holding its flow YAMLs directly (no `.maestro/` subdirectory): `simple_web_view`, `wikipedia`, and `web` — which is browser flows with no app behind it. |
+| `e2e/demo_app/.tapcue/`  | Maestro flow YAMLs that drive the demo app.                                                                                                                             |
+| `e2e/workspaces/`        | Further workspaces, each holding its flow YAMLs directly (no `.tapcue/` subdirectory): `simple_web_view`, `wikipedia`, and `web` — which is browser flows with no app behind it. |
 | `e2e/workspaces.txt`     | The workspaces the suite knows about, and for each one its path, the platforms it runs on, and whether it carries `failing` flows. `run_tests` validates it before running anything. |
 | `e2e/run_tests`          | Test driver invoked by the workflow.                                                                                                                                    |
 | `e2e/ensure_fixtures`    | Starts that server unless one is already up, and waits until it answers. Call before running a web flow by hand.                                                         |

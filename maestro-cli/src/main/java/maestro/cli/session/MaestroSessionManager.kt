@@ -29,6 +29,7 @@ import maestro.MaestroException
 import maestro.device.Device
 import maestro.cli.CliError
 import maestro.cli.device.PickDeviceInteractor
+import maestro.cli.util.EnvUtils
 import maestro.device.Platform
 import maestro.utils.CliInsights
 import maestro.cli.report.TestDebugReporter
@@ -45,7 +46,6 @@ import xcuitest.XCTestDriverClient
 import xcuitest.installer.Context
 import xcuitest.installer.LocalXCTestInstaller
 import xcuitest.installer.LocalXCTestInstaller.*
-import java.nio.file.Paths
 import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -347,8 +347,7 @@ object MaestroSessionManager {
         }
         val iOSDriverConfig = when (deviceType) {
             Device.DeviceType.REAL -> {
-                val maestroDirectory = Paths.get(System.getProperty("user.home"), ".maestro")
-                val driverPath = maestroDirectory.resolve("maestro-iphoneos-driver-build").resolve("driver-iphoneos")
+                val driverPath = EnvUtils.tapcueHome().resolve("maestro-iphoneos-driver-build").resolve("driver-iphoneos")
                     .resolve("Build").resolve("Products")
                 IOSDriverConfig(
                     prebuiltRunner = false,

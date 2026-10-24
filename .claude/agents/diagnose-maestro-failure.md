@@ -57,7 +57,7 @@ For each candidate flow returned by the grep above:
 
 | Screen at failure | Class | Where the fix lives |
 |---|---|---|
-| Expected app screen, but selector wouldn't match | Test flow issue | `e2e/demo_app/.maestro/**/*.yaml` |
+| Expected app screen, but selector wouldn't match | Test flow issue | `e2e/demo_app/.tapcue/**/*.yaml` |
 | Android / GMS system dialog blocking the app | Maestro driver gap (auto-grant / auto-dismiss missing) | `maestro-client/src/main/java/maestro/drivers/AndroidDriver.kt` or `.github/workflows/test-e2e.yaml` (emulator pre-config) |
 | Pixel launcher visible behind a system dialog | Same — dialog stole focus across `launchApp` / `clearState` / `stopApp` | Same as above |
 | App crash dialog / blank screen | App-side issue | Out of scope — report only |

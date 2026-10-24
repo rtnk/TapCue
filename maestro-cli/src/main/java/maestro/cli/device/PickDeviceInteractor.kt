@@ -84,7 +84,7 @@ object PickDeviceInteractor {
         }
 
         PrintUtils.message("No running devices found. Launch a device manually or select a number from the options below:\n")
-        PrintUtils.message("[1] Start or create a Maestro recommended device\n[2] List existing devices\n[3] Quit")
+        PrintUtils.message("[1] Start or create a recommended device\n[2] List existing devices\n[3] Quit")
         val input = readlnOrNull()?.lowercase()?.trim()
 
         when(input) {
@@ -103,7 +103,7 @@ object PickDeviceInteractor {
                 return PickDeviceView.pickDeviceToStart(availableDevices)
             }
             else -> {
-                throw CliError("Please either start a device manually or via running maestro start-device to proceed running your flows")
+                throw CliError("Please either start a device manually or via running tapcue start-device to proceed running your flows")
             }
         }
     }

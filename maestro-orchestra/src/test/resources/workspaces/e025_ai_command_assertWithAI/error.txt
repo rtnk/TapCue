@@ -7,7 +7,7 @@ AI Command Not Available: assertWithAI at /tmp/WorkspaceExecutionPlannerErrorsTe
        5 |     assertion: The login button is visible
        6 | 
 
-  `assertWithAI` is an AI command. AI commands are not available in Maestro Local: they relied on a
+  `assertWithAI` is an AI command. AI commands are not available in TapCue: they relied on a
   remote AI service, which this build does not include.
   
   Remove the command, or replace it with a local assertion such as `assertVisible` or `assertTrue`.

@@ -2,6 +2,7 @@ package maestro.debuglog
 
 import maestro.Driver
 import maestro.utils.FileUtils
+import maestro.utils.TapCueDirs
 import net.harawata.appdirs.AppDirsFactory
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -18,8 +19,8 @@ import java.util.logging.SimpleFormatter
 
 object DebugLogStore {
 
-    private const val APP_NAME = "maestro"
-    private const val APP_AUTHOR = "mobile_dev"
+    private const val APP_NAME = TapCueDirs.NAME
+    private const val APP_AUTHOR = TapCueDirs.NAME
     private const val LOG_DIR_DATE_FORMAT = "yyyy-MM-dd_HHmmss"
     private const val KEEP_LOG_COUNT = 6
 

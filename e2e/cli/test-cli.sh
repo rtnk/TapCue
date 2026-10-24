@@ -33,20 +33,23 @@ VERSION=$(grep '^CLI_VERSION=' maestro-cli/gradle.properties | cut -d= -f2)
 
 # TESTS START HERE:
 
-check "maestro -v equals gradle.properties version" \
-  "maestro -v" equals "$VERSION"
+check "tapcue -v prints the name and gradle.properties version" \
+  "tapcue -v" includes "tapcue $VERSION"
 
-check "maestro gives usage instructions when called without parameters" \
-  "maestro" includes "Usage: maestro"
+check "tapcue -v states its origin" \
+  "tapcue -v" includes "based on Maestro (Apache-2.0), not affiliated with mobile.dev"
 
-check "maestro gives usage instructions when called with --help" \
-  "maestro --help" includes "Usage: maestro"
+check "tapcue gives usage instructions when called without parameters" \
+  "tapcue" includes "Usage: tapcue"
 
-check "maestro test subcommand gives usage instructions when called with --help" \
-  "maestro test --help" includes "Usage: maestro test"
+check "tapcue gives usage instructions when called with --help" \
+  "tapcue --help" includes "Usage: tapcue"
 
-check "maestro bugreport gives instruction" \
-  "maestro bugreport" includes "https://github.com/mobile-dev-inc/Maestro/issues"
+check "tapcue test subcommand gives usage instructions when called with --help" \
+  "tapcue test --help" includes "Usage: tapcue test"
+
+check "tapcue bugreport gives instruction" \
+  "tapcue bugreport" includes "https://github.com/mobile-dev-inc/Maestro/issues"
 
 echo ""
 echo "$PASS passed, $FAIL failed"

@@ -30,10 +30,10 @@ class TestDebugReporterTest {
     @Test
     fun `will delete old files`() {
         // Create directory structure, and an old test directory
-        val oldDir = Files.createDirectories(tempDir.resolve(".maestro/tests/old"))
+        val oldDir = Files.createDirectories(tempDir.resolve(".tapcue/tests/old"))
         Files.setLastModifiedTime(oldDir, java.nio.file.attribute.FileTime.fromMillis(System.currentTimeMillis() - 1000 * 60 * 60 * 24 * 15))
 
-        // Initialise a new test reporter, which will create ./maestro/tests/<datestamp>
+        // Initialise a new test reporter, which will create ./.tapcue/tests/<datestamp>
         TestDebugReporter.install(debugOutputPathAsString = tempDir.pathString, flattenDebugOutput = false, printToConsole = false)
 
         // Run the deleteOldFiles method, which happens at the end of each test run
@@ -49,7 +49,7 @@ class TestDebugReporterTest {
 
         val path = TestDebugReporter.getDebugOutputPath()
 
-        assertThat(path.startsWith(tempDir.resolve(".maestro/tests"))).isTrue()
+        assertThat(path.startsWith(tempDir.resolve(".tapcue/tests"))).isTrue()
     }
 
     @Test
@@ -107,7 +107,7 @@ class TestDebugReporterTest {
 
     @Test
     fun `getDebugOutputPath defaults to xdgStateHome when no custom path provided`() {
-        val xdgMaestroDir = tempDir.resolve("xdg/maestro")
+        val xdgMaestroDir = tempDir.resolve("xdg/tapcue")
         mockkObject(EnvUtils)
         try {
             every { EnvUtils.xdgStateHome() } returns xdgMaestroDir

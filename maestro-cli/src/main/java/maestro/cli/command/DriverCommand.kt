@@ -8,7 +8,7 @@ import java.util.concurrent.Callable
 @CommandLine.Command(
     name = "driver-setup",
     description = [
-        "Setup maestro drivers on your devices. Right now works for real iOS devices"
+        "Set up TapCue drivers on your devices. Right now works for real iOS devices"
     ],
     hidden = true
 )

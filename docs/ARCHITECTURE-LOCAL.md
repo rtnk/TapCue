@@ -49,7 +49,7 @@ z lokalną ścieżką wykonania w kilku miejscach, które trzeba rozciąć w odp
 
 ```
                 ┌────────────────────────── host (macOS arm64) ──────────────────────────┐
- użytkownik ──► │ maestro-local CLI (JVM 17+)                                             │
+ użytkownik ──► │ tapcue CLI (JVM 17+)                                                    │
  agent MCP  ──► │   ├─ test / check-syntax / hierarchy / query / record --local / ...     │
    (STDIO)      │   ├─ mcp: list_devices, inspect_screen, take_screenshot, run,           │
                 │   │       cheat_sheet (zasób lokalny w JAR)                             │
@@ -72,8 +72,12 @@ Zasady architektoniczne:
   sieci prywatne (RFC 1918, `fc00::/7`) i link-local, sprawdzane przed żądaniem, przy każdym przekierowaniu
   i przy łączeniu gniazda (`LocalNetworkPolicy`, D-3); inne adresy → błąd skryptu. Sterownika web nie ma (D-4).
 - **Odrębny stan od oficjalnego Maestro.** Upstream używa `~/.maestro` (sesje, deps, logi),
-  `~/.mobiledev/authtoken`, `$XDG_STATE_HOME/maestro`. Fork zainstalowany obok oficjalnego Maestro
-  nie powinien współdzielić tych katalogów ani nazwy pliku wykonywalnego `maestro` (decyzja D-2).
+  `~/.mobiledev/authtoken`, `$XDG_STATE_HOME/maestro` i `.maestro/` w projektach. TapCue (D-1, D-2) ma polecenie
+  `tapcue`, stan w `~/.tapcue` (sesje, `deps/`, build sterownika iOS dla urządzeń fizycznych), artefakty testów
+  w `$XDG_STATE_HOME/tapcue/tests` (bez zmiennej: `~/.tapcue/tests`), logi w katalogu logów systemu dla aplikacji
+  `tapcue`, a w projektach — `.tapcue/`. Jedno źródło ścieżek: `maestro.utils.TapCueDirs` (moduł `maestro-utils`,
+  bo korzystają z niego też `maestro-client` i `maestro-ios-driver`; `EnvUtils.xdgStateHome()`/`tapcueHome()` w CLI
+  delegują do niego). Katalogów upstream CLI nie czyta i nie zapisuje (STEP-04B).
 - **STDIO MCP jest czyste.** `claimMcpStdout()` przekierowuje `System.out` na `stderr` przed
   inicjalizacją; po usunięciu analityki i update-checka znika najczęstsze źródło zanieczyszczeń. MCP używa
   wyłącznie STDIO (bez portu HTTP); `McpStdioTest` sprawdza, że stdout zawiera tylko ramki JSON-RPC.
@@ -145,3 +149,11 @@ Zasady architektoniczne:
   `list_devices`, `inspect_screen`, `take_screenshot`, `run`, `cheat_sheet` na STDIO; ruch tylko lokalny (ADB, XCTest
   na loopback). Po STEP-04 host CLI nie ma znanych ścieżek do usług producenta w runtime (pozostają linki w komunikatach,
   N-35 — STEP-05).
+- STEP-04B (TapCue: nazwa, polecenie i katalogi): polecenie `tapcue` (picocli, start-script `bin/tapcue`, `--help`
+  i `--version` z dopiskiem „based on Maestro (Apache-2.0), not affiliated with mobile.dev”), serwer MCP przedstawia się
+  jako `tapcue`. Stan i artefakty — `~/.tapcue`, `$XDG_STATE_HOME/tapcue`, logi `tapcue` (`TapCueDirs`); katalog projektu
+  `.tapcue/` (w tym fixture'y `e2e/demo_app/.tapcue/`), `--debug-output <dir>` → `<dir>/.tapcue/tests`. Stary `.maestro/`
+  w projekcie: ostrzeżenie `tapcue test` z poleceniem `mv .maestro .tapcue` (`LegacyProjectDir`), bez automatycznego
+  odczytu. `LegacyAnalyticsState` usunięty — CLI nie dotyka `~/.maestro` ani `$XDG_STATE_HOME/maestro`. Bez zmian:
+  pakiety `maestro.*`, moduły Gradle, format YAML flow, zmienne JS `maestro.*`, identyfikatory sterowników na urządzeniu
+  (`dev.mobile.maestro*`), nazwy archiwów dystrybucji `maestro.zip`/`maestro.tar` i `jreleaser` (STEP-05).

@@ -2,8 +2,8 @@
 
 ./gradlew :maestro-cli:installDist
 
-rm -rf ~/.maestro/bin
-rm -rf ~/.maestro/lib
+rm -rf ~/.tapcue/bin
+rm -rf ~/.tapcue/lib
 
-cp -r ./maestro-cli/build/install/maestro/bin ~/.maestro/bin
-cp -r ./maestro-cli/build/install/maestro/lib ~/.maestro/lib
+cp -r ./maestro-cli/build/install/tapcue/bin ~/.tapcue/bin
+cp -r ./maestro-cli/build/install/tapcue/lib ~/.tapcue/lib

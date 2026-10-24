@@ -25,7 +25,7 @@ class HtmlTestSuiteReporterTest : TestSuiteReporterTest() {
             <html>
               <head>
                 <meta charset="utf-8">
-                <title>Maestro Test Report</title>
+                <title>TapCue Test Report</title>
                 <style>REPORT_CSS</style>
               </head>
               <body>
@@ -102,7 +102,7 @@ class HtmlTestSuiteReporterTest : TestSuiteReporterTest() {
             <html>
               <head>
                 <meta charset="utf-8">
-                <title>Maestro Test Report</title>
+                <title>TapCue Test Report</title>
                 <style>REPORT_CSS</style>
               </head>
               <body>

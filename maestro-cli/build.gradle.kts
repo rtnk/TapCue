@@ -18,10 +18,10 @@ group = "dev.mobile"
 val CLI_VERSION: String by project
 
 application {
-    applicationName = "maestro"
+    applicationName = "tapcue"
     mainClass.set("maestro.cli.AppKt")
     // Suppresses the Java 24+ "restricted method" warning that Jansi/jline trip when loading
-    // their native library. Only takes effect for the generated bin/maestro launcher scripts
+    // their native library. Only takes effect for the generated bin/tapcue launcher scripts
     // (i.e. Homebrew, the install.sh distribution zip, and the documented Dockerfile that adds
     // /opt/maestro/bin to PATH). Users invoking the shadow jar with `java -jar` directly will
     // still see the warning on Java 24+ and need to pass --enable-native-access=ALL-UNNAMED
@@ -141,7 +141,7 @@ tasks.named<CreateStartScripts>("startScripts") {
         unixScript.writeText(replacedUnix)
 
         val currentWindows = windowsScript.readText()
-        val windowsExec = "@rem Execute maestro"
+        val windowsExec = "@rem Execute $applicationName"
         val replacedWindows = currentWindows.replaceFirst(windowsExec,
             windowsMinimumJavaText(minimumJavaVersion) + "\r\n\r\n" + windowsExec)
         windowsScript.writeText(replacedWindows)
