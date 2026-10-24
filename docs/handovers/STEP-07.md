@@ -129,6 +129,12 @@ gh workflow run release.yml --ref main
   w każdym sprawdzonym runie. Różnica: w `release.yml` test offline szedł po ~5 min `./gradlew test` na macOS (zostają demony
   Gradle/Kotlin i `adb`). Hipoteza (bez Maca nie do potwierdzenia lokalnie): log systemowy gubi komunikaty sandboxa po
   testach. Zmiana: w jobie `build` test offline przed testami jednostkowymi, strażnik simulator-server po testach.
+  Po tej zmianie rejestr działa (runy 40116549263, 40117452808: odmowy sondy widoczne, zero odmów `java`), ale ujawniły się
+  testy czasowe uruchamiane w `release.yml` po raz pierwszy na macOS (CI uruchamia testy tylko na Linux):
+  `AndroidDriverScreenRecordingTest` (tolerancja 2 ms, zmierzone 3 ms — podniesiona do 20 ms; odróżnienie środka okna od chwili
+  wykrycia pliku, ≥ 50 ms, bez zmian) i jednorazowo `McpStdioTest` (brak odpowiedzi MCP w 90 s w runie 40116549263; w kolejnym
+  przeszedł, przyczyna nieustalona — job wypisuje teraz nieudane testy z komunikatami). Ryzyko: kolejne testy czasowe na
+  obciążonym runnerze macOS mogą zatrzymać wydanie — wtedy poprawka testu w PR, nigdy pomijanie.
 - Koszt: każdy run `release.yml` to ok. 6 min `macos-26` + ~6 min ubuntu (repozytorium prywatne, D-9).
 - Otwarte po stronie właściciela (bez zmian, blokują STEP-08/G-3): przegląd `THIRD-PARTY-NOTICES.md`/suplementu, ocena Google
   Play services i JUnit (EPL-1.0) w APK sterownika (L-05), akceptacja polityki `scripts/fork/allowed-licenses.tsv`,
