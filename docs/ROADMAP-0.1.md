@@ -1,6 +1,6 @@
 # ROADMAP 0.1.0 — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Status dokumentu: **STEP-05 w realizacji (PR-05); następny: STEP-06**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23, STEP-03B ([#8](https://github.com/rtnk/TapCue/pull/8)), STEP-04 ([#9](https://github.com/rtnk/TapCue/pull/9)) i STEP-04B ([#12](https://github.com/rtnk/TapCue/pull/12)) — 2026-10-24. Ostatnia aktualizacja: 2026-10-24.
+Status dokumentu: **STEP-05 w review ([#13](https://github.com/rtnk/TapCue/pull/13)); następny: STEP-06**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23, STEP-03B ([#8](https://github.com/rtnk/TapCue/pull/8)), STEP-04 ([#9](https://github.com/rtnk/TapCue/pull/9)) i STEP-04B ([#12](https://github.com/rtnk/TapCue/pull/12)) — 2026-10-24. Ostatnia aktualizacja: 2026-10-24.
 
 ## 0. Punkt wyjścia
 
@@ -66,7 +66,7 @@ Legenda statusu: `TODO` · `IN PROGRESS` · `IN REVIEW` · `MERGED` · `BLOCKED`
 | STEP-03B | PR-03B | Polityka sieci dla funkcji flow (JS `http`, web, `openLink`) + GraalJS community | PR-03, D-3, D-4, D-6 | MERGED ([#8](https://github.com/rtnk/TapCue/pull/8)) | 1 sesja |
 | STEP-04 | PR-04 | Local-only MCP, usunięcie Viewera | PR-03B | MERGED ([#9](https://github.com/rtnk/TapCue/pull/9)) | 1–2 sesje |
 | STEP-04B | PR-04B | TapCue: nazwa, polecenie `tapcue`, katalogi `~/.tapcue` i `.tapcue/` | PR-04, D-1, D-2 | MERGED ([#12](https://github.com/rtnk/TapCue/pull/12)) | 1–2 sesje |
-| STEP-05 | PR-05 | Dystrybucja lokalna macOS arm64 + audyt licencji | PR-04B, D-5, D-7 | IN REVIEW (PR-05) | 2 sesje |
+| STEP-05 | PR-05 | Dystrybucja lokalna macOS arm64 + audyt licencji | PR-04B, D-5, D-7 | IN REVIEW ([#13](https://github.com/rtnk/TapCue/pull/13)) | 2 sesje |
 | STEP-06 | PR-06 | GitHub Actions CI + testy offline | PR-05 | TODO | 2 sesje |
 | STEP-07 | PR-07 | Release pipeline | PR-06 | TODO | 1 sesja |
 | STEP-08 | PR-08 + tag | Release candidate i publikacja v0.1.0 | PR-07, wszystkie gate'y | TODO | 1 sesja + operacja release |

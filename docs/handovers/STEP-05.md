@@ -3,7 +3,7 @@
 | Pole | Wartość |
 |---|---|
 | Krok | STEP-05 — w review |
-| PR | PR-05: (link w PR i w ROADMAP po utworzeniu) |
+| PR | PR-05: https://github.com/rtnk/TapCue/pull/13 |
 | Gałąź | `step-05-local-dist` |
 | Gałąź docelowa | `main` |
 | Baza | `main` @ `ad15449` (merge PR #12 — STEP-04B) |
