@@ -3,7 +3,7 @@
 | Pole | Wartość |
 |---|---|
 | Krok | STEP-04 — w review |
-| PR | PR-04: (link w opisie PR i w `ROADMAP-0.1.md`) |
+| PR | PR-04: https://github.com/rtnk/TapCue/pull/9 |
 | Gałąź | `step-04-local-mcp` |
 | Gałąź docelowa | `main` |
 | Baza | `main` @ `c0c143d` (merge PR #8 — STEP-03B) |
