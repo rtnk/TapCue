@@ -23,7 +23,7 @@ first:
 
 ```sh
 e2e/ensure_fixtures
-maestro --platform web test workspaces/web/date_input.yaml
+tapcue --platform web test workspaces/web/date_input.yaml
 ```
 
 `ensure_fixtures` is idempotent and waits until the server actually answers, so it is safe to

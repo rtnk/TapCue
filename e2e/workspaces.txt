@@ -15,7 +15,7 @@
 # name             path                        platforms  failing
 
 # Skipped on ios: the Flutter demo app hits OOM on GHA's macOS runners.
-demo_app           demo_app/.maestro           android    yes
+demo_app           demo_app/.tapcue            android    yes
 
 # Prebuilt apps downloaded from manifest.txt. Both are iOS-only here, and neither
 # carries failing flows.

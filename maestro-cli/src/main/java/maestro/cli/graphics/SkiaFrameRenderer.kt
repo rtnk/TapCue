@@ -23,7 +23,7 @@ class SkiaFrameRenderer : FrameRenderer {
     private val headerHeight = 60f
     private val headerFont = Font(SkiaFonts.SANS_SERIF_TYPEFACE, 22f)
     private val headerTextColor = Color.makeARGB(200, 0, 0, 0)
-    private val headerText = "Record your own using ${'$'} maestro record YourFlow.yaml"
+    private val headerText = "Record your own using ${'$'} tapcue record YourFlow.yaml"
 
     private val headerButtonColor = Color.makeARGB(50, 255, 255, 255)
     private val headerButtonSize = 20f

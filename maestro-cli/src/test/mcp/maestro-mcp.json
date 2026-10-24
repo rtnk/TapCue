@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "maestro-mcp": {
-      "command": "../../../build/install/maestro/bin/maestro",
+      "command": "../../../build/install/tapcue/bin/tapcue",
       "args": [
         "mcp",
         "--working-dir",

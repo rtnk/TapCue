@@ -38,7 +38,7 @@ runs:
     # .dart_tool, Pods, build/) if pub get / gradle restore had already run. Keep this
     # before "Cache pub" / "Cache Gradle" / "Set up Flutter" below. Reordering breaks the
     # key SILENTLY (no error, just permanent misses). The globs deliberately exclude
-    # .maestro/** (and test/, docs) so flow-only PRs hit the cache. No restore-keys: a
+    # .tapcue/** (and test/, docs) so flow-only PRs hit the cache. No restore-keys: a
     # partial match must never skip the build and serve a stale binary. Bump the v1- prefix
     # HERE only to invalidate.
     - name: Cache demo_app build

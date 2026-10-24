@@ -59,10 +59,10 @@ class RecordCommand : Callable<Int> {
     @CommandLine.Parameters(index = "0", description = ["The Flow file to record."])
     private lateinit var flowFile: File
 
-    @CommandLine.Parameters(description = ["Output file for the rendered video. Defaults to maestro-recording.mp4 in the debug output directory."], arity = "0..1", index = "1")
+    @CommandLine.Parameters(description = ["Output file for the rendered video. Defaults to tapcue-recording.mp4 in the debug output directory."], arity = "0..1", index = "1")
     private var outputFile: File? = null
 
-    @Option(names = ["--config"], description = ["Optional .yaml configuration file for Flows. If not provided, Maestro will look for a config.yaml file in the root directory."])
+    @Option(names = ["--config"], description = ["Optional .yaml configuration file for Flows. If not provided, TapCue will look for a config.yaml file in the root directory."])
     private var configFile: File? = null
 
     // Rendering is always local; the flag is still accepted so existing invocations keep working.
@@ -129,7 +129,7 @@ class RecordCommand : Callable<Int> {
                 if (flowFile.isDirectory) {
                     throw CommandLine.ParameterException(
                         commandSpec.commandLine(),
-                        "Only single Flows are supported by \"maestro record\". $flowFile is a directory.",
+                        "Only single Flows are supported by \"tapcue record\". $flowFile is a directory.",
                     )
                 }
 
@@ -151,7 +151,7 @@ class RecordCommand : Callable<Int> {
 
                 val frames = resultView.getFrames()
 
-                val localOutputFile = outputFile ?: path.resolve("maestro-recording.mp4").toFile()
+                val localOutputFile = outputFile ?: path.resolve("tapcue-recording.mp4").toFile()
                 val videoRenderer = LocalVideoRenderer(
                     frameRenderer = SkiaFrameRenderer(),
                     outputFile = localOutputFile,

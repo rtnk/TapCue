@@ -1,8 +1,8 @@
 # Changelog
 
-## Maestro Local (fork `rtnk/TapCue`)
+## TapCue (fork `rtnk/TapCue`, roboczo „Maestro Local”)
 
-Zmiany własne forka. Fork bazuje na upstream `mobile-dev-inc/Maestro` `v2.11.0`
+TapCue bazuje na Maestro (Apache-2.0) i nie jest powiązany z mobile.dev. Zmiany własne forka. Fork bazuje na upstream `mobile-dev-inc/Maestro` `v2.11.0`
 (`c8c361be1cc89b2e742f185466a302a22778be6b`); historia upstream znajduje się poniżej, bez zmian.
 
 ### Unreleased
@@ -77,6 +77,23 @@ Zmiany własne forka. Fork bazuje na upstream `mobile-dev-inc/Maestro` `v2.11.0`
 - Build (STEP-04): CLI nie zależy już od `ktor-server-core`, `ktor-server-netty`, `ktor-server-cors`
   i `ktor-server-status-pages` (używał ich tylko Viewer); usunięte `Unpacker.unpackTree` (rozpakowywało simulator-server).
   Netty używany przez gRPC zostaje na 4.1.111.Final (`netty-bom`), bez natywnych transportów epoll/kqueue.
+- **Zmiana łamiąca — CLI (STEP-04B, D-1/D-2): polecenie `tapcue` zamiast `maestro`.** Start-script dystrybucji to
+  `bin/tapcue` (`bin/tapcue.bat`); `--help` pokazuje „Usage: tapcue …” z dopiskiem „based on Maestro (Apache-2.0), not
+  affiliated with mobile.dev”, a `--version` — `tapcue <wersja>` i ten dopisek w drugiej linii. Komunikaty CLI, tytuł
+  raportu HTML („TapCue Test Report”), domyślny plik `record` (`tapcue-recording.mp4`) i komunikaty błędów („not
+  supported in TapCue 0.1.0”) używają nowej nazwy. Format YAML flow, nazwy komend YAML i zmienne JS (`maestro.platform`,
+  `maestro.copiedText`) bez zmian.
+- **Zmiana łamiąca — katalogi (STEP-04B, D-2):** stan CLI w `~/.tapcue` (sesje, rozpakowane `applesimutils`, build
+  sterownika iOS dla urządzeń fizycznych), artefakty testów w `$XDG_STATE_HOME/tapcue/tests` albo `~/.tapcue/tests`,
+  logi w katalogu logów systemu dla aplikacji `tapcue` (np. `~/.cache/tapcue/logs`, `~/Library/Logs/tapcue`),
+  `--debug-output <dir>` → `<dir>/.tapcue/tests`. CLI nie czyta ani nie zapisuje `~/.maestro`, `$XDG_STATE_HOME/maestro`
+  i `~/.mobiledev`, więc może działać obok oficjalnego Maestro. Dawny stan nie jest przenoszony (odtwarza się sam).
+- **Zmiana łamiąca — katalog w projektach (STEP-04B, D-2):** konwencja `.tapcue/` zamiast `.maestro/`. `tapcue test`
+  wypisuje ostrzeżenie z poleceniem `mv .maestro .tapcue`, gdy flow leży w katalogu `.maestro/` albo gdy katalog roboczy
+  ma `.maestro/` bez `.tapcue/`; `.maestro/` nie jest odczytywany automatycznie.
+- CLI (STEP-04B): usunięte kasowanie `analytics.json` Maestro (`LegacyAnalyticsState`, STEP-03) — TapCue nie dotyka już
+  katalogów oficjalnego Maestro, także tych, które mogą należeć do jego równoległej instalacji.
+- MCP (STEP-04B): `serverInfo.name` to `tapcue`; instrukcje serwera i `cheat_sheet` mówią o TapCue i katalogu `.tapcue/`.
 - Android (poprawka): pula wątków I/O klienta devtools (`newAdbIoExecutor`) nie odrzuca już wywołania jako
   „all 16 adb I/O workers are busy”, gdy wolny worker właśnie kończy poprzednie wywołanie; przy 15 workerach
   zawieszonych na urządzeniu zdarzało się to przy niemal każdym kolejnym wywołaniu. Usuwa też niestabilność

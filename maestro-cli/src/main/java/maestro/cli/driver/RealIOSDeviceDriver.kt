@@ -6,7 +6,6 @@ import maestro.cli.util.EnvUtils
 import maestro.cli.util.PrintUtils.message
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.Properties
 
 class RealIOSDeviceDriver(private val teamId: String?, private val destination: String, private val driverBuilder: DriverBuilder) {
@@ -77,7 +76,6 @@ class RealIOSDeviceDriver(private val teamId: String?, private val destination: 
     }
 
     private fun getDefaultVersionPropertiesFile(): Path {
-        val maestroDirectory = Paths.get(System.getProperty("user.home"), ".maestro")
-        return maestroDirectory
+        return EnvUtils.tapcueHome()
     }
 }

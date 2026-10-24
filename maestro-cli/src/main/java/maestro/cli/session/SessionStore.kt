@@ -1,8 +1,8 @@
 package maestro.cli.session
 
 import maestro.cli.db.KeyValueStore
+import maestro.cli.util.EnvUtils
 import maestro.device.Platform
-import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 
 class SessionStore(private val keyValueStore: KeyValueStore) {
@@ -79,8 +79,8 @@ class SessionStore(private val keyValueStore: KeyValueStore) {
         val default by lazy {
             SessionStore(
                 KeyValueStore(
-                    dbFile = Paths
-                        .get(System.getProperty("user.home"), ".maestro", "sessions")
+                    dbFile = EnvUtils.tapcueHome()
+                        .resolve("sessions")
                         .toFile()
                         .also { it.parentFile.mkdirs() }
                 )

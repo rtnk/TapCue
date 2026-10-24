@@ -14,7 +14,7 @@
 # Prereqs:
 #   - xcodegen, xcodebuild on PATH.
 #   - iPhone simulator booted with the given UDID.
-#   - `maestro` on PATH, or runnable from repo root via `./maestro`.
+#   - `tapcue` on PATH, or runnable from repo root via `./tapcue`.
 #
 # Usage (local):
 #   e2e/alert-repro-swiftui/verify_preflight_suppressed.sh <iPhone-sim-UDID>
@@ -31,8 +31,8 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
 # Maestro writes per-run debug output (including the xctest runner log) under
 # this tree by default; honor XDG_STATE_HOME if set, matching EnvUtils.kt.
-DEBUG_ROOT="${XDG_STATE_HOME:+$XDG_STATE_HOME/maestro}"
-DEBUG_ROOT="${DEBUG_ROOT:-$HOME/.maestro}"
+DEBUG_ROOT="${XDG_STATE_HOME:+$XDG_STATE_HOME/tapcue}"
+DEBUG_ROOT="${DEBUG_ROOT:-$HOME/.tapcue}"
 LOG_GLOB="$DEBUG_ROOT/tests/*/xctest_runner_*.log"
 FLOW="$HERE/flows/ui_interruption_preflight.yaml"
 
@@ -50,26 +50,26 @@ xcrun simctl install "$SIM_UDID" "$APP"
 
 echo "[3/4] Running regression flow via Maestro"
 # Pick the Maestro binary to exercise:
-#   * On GitHub Actions, use the `maestro` already on PATH. CI builds the CLI
+#   * On GitHub Actions, use the `tapcue` already on PATH. CI builds the CLI
 #     from this same commit in the `build` job and unzips it onto PATH, so its
-#     already fresh. If we used `./maestro` here, it would trigger a redundant
+#     already fresh. If we used `./tapcue` here, it would trigger a redundant
 #     `./gradlew :maestro-cli:installDist` which, with no Gradle cache, adds
 #     minutes to this step.
-#   * Locally, use ./maestro from the repo root so we rebuild and exercise the
-#     freshly-built runner; a globally installed `maestro` could carry a stale
+#   * Locally, use ./tapcue from the repo root so we rebuild and exercise the
+#     freshly-built runner; a globally installed `tapcue` could carry a stale
 #     runner zip.
 if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
-    if ! command -v maestro >/dev/null 2>&1; then
-        echo "error: running under GitHub Actions but 'maestro' is not on PATH" >&2
+    if ! command -v tapcue >/dev/null 2>&1; then
+        echo "error: running under GitHub Actions but 'tapcue' is not on PATH" >&2
         exit 2
     fi
-    maestro test "$FLOW" >/dev/null
-elif [[ -x "$REPO/maestro" ]]; then
-    (cd "$REPO" && ./maestro test "$FLOW" >/dev/null)
-elif command -v maestro >/dev/null 2>&1; then
-    maestro test "$FLOW" >/dev/null
+    tapcue test "$FLOW" >/dev/null
+elif [[ -x "$REPO/tapcue" ]]; then
+    (cd "$REPO" && ./tapcue test "$FLOW" >/dev/null)
+elif command -v tapcue >/dev/null 2>&1; then
+    tapcue test "$FLOW" >/dev/null
 else
-    echo "error: neither ./maestro in repo root nor 'maestro' on PATH is available" >&2
+    echo "error: neither ./tapcue in repo root nor 'tapcue' on PATH is available" >&2
     exit 2
 fi
 

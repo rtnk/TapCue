@@ -26,7 +26,7 @@ import java.util.zip.ZipFile
 
 /**
  * STEP-03B, owner decision D-4: the web platform (Chrome driven by Selenium on the host) is not part of
- * Maestro Local 0.1.0. Every way into it ends in [MaestroException.WebPlatformNotSupported] before a
+ * TapCue 0.1.0. Every way into it ends in [MaestroException.WebPlatformNotSupported] before a
  * browser, Selenium Manager or the network is touched, and Selenium is not on the CLI classpath.
  */
 class WebPlatformDisabledTest {
@@ -59,7 +59,7 @@ class WebPlatformDisabledTest {
         val (exitCode, err) = execute("test", resource("workspaces/test_command_test/01_web_only/webflow.yaml"))
 
         assertThat(exitCode).isEqualTo(1)
-        assertThat(err).contains("The web platform is not supported in Maestro Local 0.1.0")
+        assertThat(err).contains("The web platform is not supported in TapCue 0.1.0")
         assertThat(err).doesNotContain("The stack trace was:")
         assertThat(requestedUris).isEmpty()
     }
@@ -69,7 +69,7 @@ class WebPlatformDisabledTest {
         val (exitCode, err) = execute("test", resource("workspaces/test_command_test/00_mixed_web_mobile_flow_tests"))
 
         assertThat(exitCode).isEqualTo(1)
-        assertThat(err).contains("The web platform is not supported in Maestro Local 0.1.0")
+        assertThat(err).contains("The web platform is not supported in TapCue 0.1.0")
         assertThat(requestedUris).isEmpty()
     }
 
@@ -78,7 +78,7 @@ class WebPlatformDisabledTest {
         val (exitCode, err) = execute("record", resource("workspaces/test_command_test/01_web_only/webflow.yaml"))
 
         assertThat(exitCode).isEqualTo(1)
-        assertThat(err).contains("The web platform is not supported in Maestro Local 0.1.0")
+        assertThat(err).contains("The web platform is not supported in TapCue 0.1.0")
         assertThat(requestedUris).isEmpty()
     }
 

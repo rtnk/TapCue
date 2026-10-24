@@ -15,19 +15,25 @@ class EnvUtilsTest {
     private val environmentVariables = EnvironmentVariables()
 
     @Test
-    fun `xdgStateHome returns user home maestro when XDG_STATE_HOME is not set`() {
+    fun `xdgStateHome returns user home tapcue when XDG_STATE_HOME is not set`() {
         val path = EnvUtils.xdgStateHome()
 
-        assertThat(path).isEqualTo(Paths.get(System.getProperty("user.home"), ".maestro"))
+        assertThat(path).isEqualTo(Paths.get(System.getProperty("user.home"), ".tapcue"))
     }
 
     @Test
-    fun `xdgStateHome returns XDG_STATE_HOME maestro when XDG_STATE_HOME is set`() {
+    fun `xdgStateHome returns XDG_STATE_HOME tapcue when XDG_STATE_HOME is set`() {
         environmentVariables.set("XDG_STATE_HOME", "/custom/state")
 
         val path = EnvUtils.xdgStateHome()
 
-        assertThat(path).isEqualTo(Paths.get("/custom/state", "maestro"))
+        assertThat(path).isEqualTo(Paths.get("/custom/state", "tapcue"))
     }
 
+    @Test
+    fun `tapcueHome is under user home even when XDG_STATE_HOME is set`() {
+        environmentVariables.set("XDG_STATE_HOME", "/custom/state")
+
+        assertThat(EnvUtils.tapcueHome()).isEqualTo(Paths.get(System.getProperty("user.home"), ".tapcue"))
+    }
 }

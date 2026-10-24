@@ -1,6 +1,6 @@
 # Audyt ruchu sieciowego — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Wersja: **6 (STEP-04, Local-only MCP i usunięcie Viewera)**. Baseline: upstream `mobile-dev-inc/Maestro` tag `v2.11.0`
+Wersja: **7 (STEP-04B, TapCue: nazwa i katalogi — bez zmian statusów)**. Baseline: upstream `mobile-dev-inc/Maestro` tag `v2.11.0`
 (`c8c361be1cc89b2e742f185466a302a22778be6b`); numery linii w kolumnie „Źródło” odnoszą się do baseline.
 
 Historia zmian statusów:
@@ -43,6 +43,9 @@ Historia zmian statusów:
 - **STEP-00B** — usunięte: B-01, B-02 (build bez simulator-server i npm); częściowo: N-18. Dowód:
   `CliJarContentsTest` (JAR i classpath bez `deps/simulator-server/**`, `mcp-viewer/**`), strażnik
   `scripts/fork/check-no-simulator-server.sh`, smoke `maestro mcp` przez STDIO bez `mcp_viewer_ready`.
+- **STEP-04B** (TapCue: nazwa, polecenie i katalogi) — bez zmian statusów: krok nie dotyczy ruchu sieciowego. Linki
+  `maestro.dev`/`mobile.dev` w komunikatach (N-35: `PickDeviceInteractor`, `SkiaFrameRenderer` stopka, `ChatCommand`,
+  `BugReportCommand`, start-scripty) zostają do STEP-05; zmienione są tylko nazwa polecenia i produktu w tekstach.
 
 Dokument jest rejestrem *wszystkich* znanych ścieżek, którymi narzędzie (CLI, MCP, build) może
 nawiązać połączenie sieciowe. Każdy kolejny krok aktualizuje kolumnę **Status** i dopisuje dowody.

@@ -13,7 +13,7 @@ import java.nio.file.Path
 import kotlin.io.path.writeText
 
 /**
- * STEP-02 (Remove Remote AI): the former AI commands sent screenshots to Maestro Cloud. Maestro Local
+ * STEP-02 (Remove Remote AI): the former AI commands sent screenshots to Maestro Cloud. TapCue
  * rejects them while parsing, so a flow using one fails validation before any command runs.
  */
 class RemovedAiCommandsTest {
@@ -37,7 +37,7 @@ class RemovedAiCommandsTest {
 
         assertThat(error).isInstanceOf(ValidationError::class.java)
         assertThat(error.message).contains("AI Command Not Available")
-        assertThat(error.detail).contains("AI commands are not available in Maestro Local")
+        assertThat(error.detail).contains("AI commands are not available in TapCue")
     }
 
     @Test

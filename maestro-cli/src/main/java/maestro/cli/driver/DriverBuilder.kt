@@ -1,6 +1,7 @@
 package maestro.cli.driver
 
 import maestro.MaestroException
+import maestro.utils.TapCueDirs
 import java.io.File
 import java.nio.file.*
 import java.util.*
@@ -23,8 +24,8 @@ class DriverBuilder(private val processBuilderFactory: XcodeBuildProcessBuilderF
      * @throws RuntimeException if the build process fails.
      *
      * Directory Structure:
-     *   1. workingDirectory (Path): Root working directory for Maestro stored in the user's home directory.
-     *      .maestro
+     *   1. workingDirectory (Path): Root working directory for TapCue stored in the user's home directory.
+     *      .tapcue
      *      |_ maestro-iphoneos-driver-build
      *         |_ driver-iphoneos: Consists the build products to setup iOS driver: maestro-driver-*.xctestrun,
      *            Debug-iphoneos/maestro-driver-iosUITests-Runner.app, and Debug-iphoneos/maestro-driver-ios.app
@@ -39,7 +40,7 @@ class DriverBuilder(private val processBuilderFactory: XcodeBuildProcessBuilderF
         val driverSourcePath = getDriverSourceFromResources(config)
 
         // Create temporary build directory
-        val workingDirectory = Paths.get(config.sourceCodeRoot, ".maestro")
+        val workingDirectory = TapCueDirs.home(config.sourceCodeRoot)
         val buildDir = Files.createDirectories(workingDirectory.resolve("maestro-iphoneos-driver-build")).apply {
             // Cleanup directory before we execute the build
             toFile().deleteRecursively()

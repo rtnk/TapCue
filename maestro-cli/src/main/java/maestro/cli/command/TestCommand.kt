@@ -44,7 +44,9 @@ import maestro.cli.session.MaestroSessionManager
 import maestro.cli.util.isPortAvailable
 import maestro.cli.util.EnvUtils
 import maestro.cli.util.FileUtils.isWebFlow
+import maestro.cli.util.LegacyProjectDir
 import maestro.cli.util.PrintUtils
+import maestro.cli.util.WorkingDirectory
 import maestro.cli.view.box
 import maestro.orchestra.error.ValidationError
 import maestro.orchestra.workspace.WorkspaceExecutionPlanner
@@ -82,7 +84,7 @@ class TestCommand : Callable<Int> {
 
     @Option(
         names = ["--config"],
-        description = ["Optional YAML configuration file for the workspace. If not provided, Maestro will look for a config.yaml file in the workspace's root directory."]
+        description = ["Optional YAML configuration file for the workspace. If not provided, TapCue will look for a config.yaml file in the workspace's root directory."]
     )
     private var configFile: File? = null
 
@@ -159,7 +161,7 @@ class TestCommand : Callable<Int> {
     )
     private var excludeTags: List<String> = emptyList()
 
-    // Web-only options. The web platform is not supported in Maestro Local 0.1.0; they are still accepted
+    // Web-only options. The web platform is not supported in TapCue 0.1.0; they are still accepted
     // (and ignored) so existing scripts that pass them for mobile runs keep working.
     @Suppress("unused")
     @Option(names = ["--headless"], hidden = true)
@@ -221,13 +223,16 @@ class TestCommand : Callable<Int> {
 
         @Suppress("DEPRECATION")
         if (legacyShardCount != null) {
-            PrintUtils.warn("--shards option is deprecated and will be removed in the next Maestro version. Use --shard-split or --shard-all instead.")
+            PrintUtils.warn("--shards option is deprecated and will be removed in a future version. Use --shard-split or --shard-all instead.")
             shardSplit = legacyShardCount
         }
 
         if (configFile != null && configFile?.exists()?.not() == true) {
             throw CliError("The config file ${configFile?.absolutePath} does not exist.")
         }
+
+        LegacyProjectDir.warning(WorkingDirectory.baseDir.toPath(), flowFiles.map { it.toPath() })
+            ?.let { PrintUtils.warn(it) }
 
         val executionPlan = try {
             WorkspaceExecutionPlanner.plan(

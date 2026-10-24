@@ -26,17 +26,17 @@ flutter analyze
 
 ## Maestro Flow Commands
 
-Flows live in `.maestro/`. **Prefer the Maestro MCP** for authoring, running, and debugging flows interactively (`list_devices` → `inspect_screen` / `take_screenshot` → `run`): it returns the view hierarchy and screenshots inline, which is far more effective for iterating than parsing CLI output. Use the CLI below for scripted or CI-style runs, or when no MCP is available.
+Flows live in `.tapcue/`. **Prefer the Maestro MCP** for authoring, running, and debugging flows interactively (`list_devices` → `inspect_screen` / `take_screenshot` → `run`): it returns the view hierarchy and screenshots inline, which is far more effective for iterating than parsing CLI output. Use the CLI below for scripted or CI-style runs, or when no MCP is available.
 
 ```sh
 # Run all flows
-maestro test .maestro/
+tapcue test .tapcue/
 
 # Run a single flow
-maestro test .maestro/fill_form.yaml
+tapcue test .tapcue/fill_form.yaml
 
 # Run flows with a specific tag
-maestro test --include-tags passing .maestro/
+tapcue test --include-tags passing .tapcue/
 ```
 
 **The MCP runs a *built* Maestro, not your working tree.** If you change Maestro framework code (anything outside `e2e/`) and want to validate it through the MCP against this app, the MCP will keep using the old build until Maestro is rebuilt **and the MCP is reconnected** (e.g. `/mcp reconnect maestro`). Rebuild, reconnect, then re-run. This is separate from rebuilding the demo app itself (see Build Commands) — a Dart/iOS/Android change to this app needs the app rebuilt and reinstalled on the device before the MCP will see it.
@@ -64,7 +64,7 @@ maestro test --include-tags passing .maestro/
 
 The app reads launch arguments via `flutter_launch_arguments` (e.g., `initialCounter`, `delay`) so Maestro flows can configure app state at launch.
 
-### Maestro Flows (`.maestro/`)
+### Maestro Flows (`.tapcue/`)
 
 - **Root flows** (`*.yaml`): Main passing/failing test cases, tagged `passing` or used to assert expected failures.
 - **`commands/`**: Reusable Maestro command definitions (e.g., `assertVisible.yaml`, `inputText.yaml`).
@@ -73,7 +73,7 @@ The app reads launch arguments via `flutter_launch_arguments` (e.g., `initialCou
 - **`experimental/`**: Unstable/in-progress flows not included in CI.
 - **`scripts/`**: JavaScript helpers used by `evalScript` commands.
 
-`config.yaml` configures which flow directories Maestro includes when running `maestro test .maestro/`.
+`config.yaml` configures which flow directories Maestro includes when running `tapcue test .tapcue/`.
 
 **Platform targeting.** Write flows to run on both Android and iOS by default. Add an `android` or `ios` tag only when the behaviour is genuinely platform-specific — a flow with no platform tag runs on every platform. Prefer keeping a single cross-platform flow over splitting into per-platform files: use `${maestro.platform == "android" ? ... : ...}` for platform-specific values, and `runFlow` with `when: platform:` to guard platform-specific steps.
 

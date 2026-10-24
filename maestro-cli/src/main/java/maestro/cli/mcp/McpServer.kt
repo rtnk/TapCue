@@ -17,10 +17,11 @@ import maestro.cli.mcp.tools.RunTool
 import maestro.cli.mcp.tools.InspectScreenTool
 import maestro.cli.mcp.tools.CheatSheetTool
 import maestro.cli.util.WorkingDirectory
+import maestro.utils.TapCueDirs
 import java.io.PrintStream
 
 internal val INSTRUCTIONS = """
-    Maestro MCP authors, edits and runs UI tests via declarative YAML flows on Android emulators and iOS simulators. Use when the user wants to write, run, or debug a mobile UI test, reproduce a bug, or self-validate a user-facing change you just built.
+    TapCue MCP authors, edits and runs UI tests via declarative YAML flows (the Maestro flow format) on Android emulators and iOS simulators. Use when the user wants to write, run, or debug a mobile UI test, reproduce a bug, or self-validate a user-facing change you just built.
 
     Every tool that drives a device (`take_screenshot`, `inspect_screen`, `run`) needs a `device_id` from `list_devices` first.
 
@@ -34,7 +35,7 @@ internal val INSTRUCTIONS = """
     2. `inspect_screen`: fetch the current screen's view hierarchy before targeting elements. Use `take_screenshot` when a visual helps. Re-inspect after any UI change.
     3. `run`: pass exactly one of `{ yaml }` (inline, preferred for exploration), `{ files }`, or `{ dir, include_tags, exclude_tags }`. Always include `device_id`. Pass `env` for flow variables. `run` validates syntax.
 
-    Flows declare `appId` and start with `launchApp`; web flows (`url:`) are not supported in Maestro Local 0.1.0. `include_tags`/`exclude_tags` are bare names without `@`. Prefer one full flow over many single-command calls.
+    Flows declare `appId` and start with `launchApp`; web flows (`url:`) are not supported in TapCue 0.1.0. Save flows in the project's `.tapcue/` directory. `include_tags`/`exclude_tags` are bare names without `@`. Prefer one full flow over many single-command calls.
 """.trimIndent()
 
 // Captures the real stdout so the MCP protocol channel stays pristine even after
@@ -62,7 +63,7 @@ fun runMaestroMcpServer() {
 
     val server = Server(
         serverInfo = Implementation(
-            name = "maestro",
+            name = TapCueDirs.NAME,
             version = "1.0.0"
         ),
         options = ServerOptions(

@@ -3,9 +3,9 @@ package maestro.cli.util
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import maestro.device.CPU_ARCHITECTURE
+import maestro.utils.TapCueDirs
 import java.io.IOException
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.Properties
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -17,13 +17,11 @@ object EnvUtils {
 
     val CLI_VERSION: CliVersion? = getCLIVersion()
 
-    fun xdgStateHome(): Path {
-        if (System.getenv("XDG_STATE_HOME") != null) {
-            return Paths.get(System.getenv("XDG_STATE_HOME"), "maestro")
-        }
+    /** `$XDG_STATE_HOME/tapcue`, else `~/.tapcue` (see [TapCueDirs]). */
+    fun xdgStateHome(): Path = TapCueDirs.state()
 
-        return Paths.get(System.getProperty("user.home"), ".maestro")
-    }
+    /** `~/.tapcue` (see [TapCueDirs]). */
+    fun tapcueHome(): Path = TapCueDirs.home()
 
     /**
      * @return true, if we're executing from Windows Linux shell (WSL)

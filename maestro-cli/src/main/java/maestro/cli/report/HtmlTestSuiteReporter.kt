@@ -67,7 +67,7 @@ class HtmlTestSuiteReporter(
             appendHTML().html {
                 head {
                     meta(charset = "utf-8")
-                    title { +"Maestro Test Report" }
+                    title { +"TapCue Test Report" }
                     style {
                         unsafe {
                             +REPORT_CSS

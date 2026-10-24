@@ -27,16 +27,18 @@ $version = (Select-String -Path 'maestro-cli/gradle.properties' -Pattern '^CLI_V
 
 # TESTS START HERE:
 
-Check "maestro -v equals gradle.properties version" `
-    "maestro -v" "equals" $version
-Check "maestro gives usage instructions when called without parameters" `
-    "maestro" "includes" "Usage: maestro"
-Check "maestro gives usage instructions when called with --help" `
-    "maestro --help" "includes" "Usage: maestro"
-Check "maestro test subcommand gives usage instructions when called with --help" `
-    "maestro test --help" "includes" "Usage: maestro test"
-Check "maestro bugreport gives instruction" `
-    "maestro bugreport" "includes" "https://github.com/mobile-dev-inc/Maestro/issues"
+Check "tapcue -v prints the name and gradle.properties version" `
+    "tapcue -v" "includes" "tapcue $version"
+Check "tapcue -v states its origin" `
+    "tapcue -v" "includes" "based on Maestro (Apache-2.0), not affiliated with mobile.dev"
+Check "tapcue gives usage instructions when called without parameters" `
+    "tapcue" "includes" "Usage: tapcue"
+Check "tapcue gives usage instructions when called with --help" `
+    "tapcue --help" "includes" "Usage: tapcue"
+Check "tapcue test subcommand gives usage instructions when called with --help" `
+    "tapcue test --help" "includes" "Usage: tapcue test"
+Check "tapcue bugreport gives instruction" `
+    "tapcue bugreport" "includes" "https://github.com/mobile-dev-inc/Maestro/issues"
 
 Write-Host ""
 Write-Host "$pass passed, $fail failed"

@@ -59,8 +59,8 @@ class StartDeviceCommand : Callable<Int> {
         names = ["--device-model"],
         description = [
             "Device model to run against",
-            "  iOS: iPhone-11, iPhone-17-Pro, etc. Run command: maestro list-devices",
-            "  Android: pixel_6, pixel_7, etc. Run command: maestro list-devices"
+            "  iOS: iPhone-11, iPhone-17-Pro, etc. Run command: tapcue list-devices",
+            "  Android: pixel_6, pixel_7, etc. Run command: tapcue list-devices"
         ],
     )
     private var deviceModel: String? = null
@@ -70,8 +70,8 @@ class StartDeviceCommand : Callable<Int> {
         names = ["--device-os"],
         description = [
             "OS version to use, or a full Android system image:",
-            "  iOS: iOS-18-2, iOS-26-2 etc. maestro list-devices",
-            "  Android: android-33, android-34, etc. maestro list-devices",
+            "  iOS: iOS-18-2, iOS-26-2 etc. tapcue list-devices",
+            "  Android: android-33, android-34, etc. tapcue list-devices",
             "  Android (full image): system-images;android-34;google_apis_playstore;arm64-v8a",
         ],
     )

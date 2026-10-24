@@ -8,6 +8,7 @@ import maestro.cli.util.EnvUtils
 import maestro.cli.util.IOSEnvUtils
 import maestro.debuglog.DebugLogStore
 import maestro.debuglog.LogConfig
+import maestro.utils.TapCueDirs
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.core.config.Configurator
@@ -101,7 +102,7 @@ object TestDebugReporter {
 
         val logger = LogManager.getLogger("MAESTRO")
         logger.info("---- System Info ----")
-        logger.info("Maestro Version: ${EnvUtils.CLI_VERSION ?: "Undefined"}")
+        logger.info("TapCue Version: ${EnvUtils.CLI_VERSION ?: "Undefined"}")
         logger.info("CI: ${CiUtils.getCiProvider() ?: "Undefined"}")
         logger.info("OS Name: ${EnvUtils.OS_NAME}")
         logger.info("OS Version: ${EnvUtils.OS_VERSION}")
@@ -153,7 +154,7 @@ object TestDebugReporter {
             ?: folderNameFormatter.format(LocalDateTime.now())
         return when {
             testOutputDir != null -> testOutputDir!!.resolve(foldername)
-            customRootPath != null -> Paths.get(customRootPath, ".maestro", "tests", foldername)
+            customRootPath != null -> Paths.get(customRootPath, TapCueDirs.PROJECT_DIR, "tests", foldername)
             else -> EnvUtils.xdgStateHome().resolve("tests").resolve(foldername)
         }
     }

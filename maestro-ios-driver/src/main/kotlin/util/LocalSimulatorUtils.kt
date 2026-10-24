@@ -3,6 +3,7 @@ package util
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import maestro.utils.MaestroTimer
+import maestro.utils.TapCueDirs
 import maestro.utils.TempFileHandler
 import org.rauschig.jarchivelib.ArchiveFormat
 import org.rauschig.jarchivelib.ArchiverFactory
@@ -26,7 +27,6 @@ class LocalSimulatorUtils(private val tempFileHandler: TempFileHandler) {
         private const val LOG_DIR_DATE_FORMAT = "yyyy-MM-dd_HHmmss"
     }
 
-    private val homedir = System.getProperty("user.home")
     private val dateFormatter by lazy { DateTimeFormatter.ofPattern(LOG_DIR_DATE_FORMAT) }
     private val date = dateFormatter.format(LocalDateTime.now())
 
@@ -451,7 +451,7 @@ class LocalSimulatorUtils(private val tempFileHandler: TempFileHandler) {
                 logger.info("[Start] Setting permissions via pinned applesimutils")
                 runCommand(
                     listOf(
-                        "$homedir/.maestro/deps/applesimutils",
+                        TapCueDirs.binaryDependency("applesimutils").toString(),
                         "--byId",
                         deviceId,
                         "--bundle",

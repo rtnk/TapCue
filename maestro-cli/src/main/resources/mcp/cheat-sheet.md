@@ -1,7 +1,8 @@
-# Maestro Local flow cheat sheet
+# TapCue flow cheat sheet
 
-Written for Maestro Local from the flow parser in this repository (`maestro-orchestra`, package
-`maestro.orchestra.yaml`). Every `yaml` example below is parsed by a unit test, so it is valid syntax.
+Written for TapCue from the flow parser in this repository (`maestro-orchestra`, package
+`maestro.orchestra.yaml`). TapCue is based on Maestro and reads the same YAML flow format. Every `yaml`
+example below is parsed by a unit test, so it is valid syntax.
 
 ## Flow file layout
 
@@ -22,7 +23,10 @@ env:
 - assertVisible: "Welcome"
 ```
 
-Web flows (`url:` instead of `appId:`) are not supported in Maestro Local 0.1.0.
+Web flows (`url:` instead of `appId:`) are not supported in TapCue 0.1.0.
+
+Keep a project's flows in its `.tapcue/` directory (TapCue does not read `.maestro/`; rename it with
+`mv .maestro .tapcue`) and run them with `tapcue test .tapcue`.
 
 Every command accepts `label` (text shown in reports) and `optional: true` (a failure becomes a
 warning). Variables use `${NAME}`; values come from `env` in the config, `env` passed to `run`,
@@ -231,7 +235,7 @@ variables, write `output.<name>` for later commands, and use `maestro.platform`,
 
 `http.get(url, { headers })`, `http.post(url, { body, headers, multipartForm })`, `http.put`,
 `http.delete` and `http.request(url, { method, ... })` return `{ ok, status, body, headers }`.
-In Maestro Local they may only reach loopback (`127.0.0.0/8`, `::1`), private networks
+In TapCue they may only reach loopback (`127.0.0.0/8`, `::1`), private networks
 (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `fc00::/7`) and link-local addresses; any other
 address, including after a redirect, fails the script.
 

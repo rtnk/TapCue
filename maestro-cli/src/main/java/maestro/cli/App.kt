@@ -32,9 +32,9 @@ import maestro.cli.command.RecordCommand
 import maestro.cli.command.StartDeviceCommand
 import maestro.cli.command.TestCommand
 import maestro.cli.mcp.claimMcpStdout
-import maestro.cli.util.LegacyAnalyticsState
 import maestro.debuglog.DebugLogStore
 import maestro.debuglog.LogConfig
+import maestro.utils.TapCueDirs
 import picocli.AutoComplete.GenerateCompletion
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -42,8 +42,12 @@ import picocli.CommandLine.Option
 import java.util.*
 import kotlin.system.exitProcess
 
+/** Shown by `--help` and `--version` (decision D-1 in docs/ROADMAP-0.1.md). */
+internal const val ORIGIN_NOTICE = "based on Maestro (Apache-2.0), not affiliated with mobile.dev"
+
 @Command(
-    name = "maestro",
+    name = TapCueDirs.NAME,
+    header = ["TapCue - local mobile UI test automation, $ORIGIN_NOTICE", ""],
     subcommands = [
         TestCommand::class,
         RecordCommand::class,
@@ -91,12 +95,13 @@ class App {
     var verbose: Boolean = false
 }
 
-private fun printVersion() {
+/** `tapcue <version>` followed by [ORIGIN_NOTICE]. */
+internal fun versionText(): String {
     val props = App::class.java.classLoader.getResourceAsStream("version.properties").use {
         Properties().apply { load(it) }
     }
 
-    println(props["version"])
+    return "${TapCueDirs.NAME} ${props["version"]}\n$ORIGIN_NOTICE"
 }
 
 fun main(args: Array<String>) {
@@ -117,7 +122,6 @@ fun main(args: Array<String>) {
     System.setProperty("apple.awt.UIElement", "true")
 
     Dependencies.install()
-    LegacyAnalyticsState.remove()
 
     val commandLine = createCommandLine()
 
@@ -127,7 +131,7 @@ fun main(args: Array<String>) {
     DebugLogStore.finalizeRun()
 
     if (commandLine.isVersionHelpRequested) {
-        printVersion()
+        println(versionText())
         exitProcess(0)
     }
 
