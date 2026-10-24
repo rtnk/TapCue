@@ -113,7 +113,10 @@ Wypchnięcie tagu uruchamia `release.yml` w trybie publish (workflow z otagowane
 Archiwum i JAR-y mają stałe znaczniki czasu i kolejność plików (`isPreserveFileTimestamps = false`,
 `isReproducibleFileOrder = true` w `allprojects`), `version.properties` nie zawiera daty, a `THIRD-PARTY-NOTICES.md` powstaje
 z tych samych POM-ów. Job `reproduce` w każdym runie `release.yml` buduje archiwum ponownie na Linux i wymaga identycznych bajtów
-z buildem macOS (wyniki STEP-07: `docs/handovers/STEP-07.md` §2).
+z buildem macOS. Wynik STEP-07 (`docs/handovers/STEP-07.md` §2): dla tego samego commita archiwum ma ten sam SHA-256 w `ci.yml`
+(ubuntu x64, Zulu 17.0.20, z cache) i `release.yml` (macOS arm64 i ubuntu x64, Zulu 17.0.21, bez cache) oraz w buildzie lokalnym
+(Ubuntu OpenJDK 17.0.20.1) — bajty nie zależą od systemu, architektury ani wersji poprawki JDK 17. `SHA256SUMS` jest
+wypisywany w podsumowaniu joba `build` w `ci.yml`, więc wydanie można porównać z CI commita scalenia przed tagiem.
 
 Odtworzenie wydania (dowolny system z JDK, sieć do Maven Central/Google Maven/Gradle Plugin Portal):
 
