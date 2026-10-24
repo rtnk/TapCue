@@ -174,4 +174,7 @@ jobs:
 
       - name: Show iOS driver build log
         if: failure()
-        run: tail -n 200 "$HOME/.tapcue/maestro-iphonesimulator-driver-build/output.log" || true
+        run: |
+          log="$HOME/.tapcue/maestro-iphonesimulator-driver-build/output.log"
+          grep -nE "error:|warning: .*(sandbox|network)|\*\* .* FAILED \*\*|The following build commands failed" -A3 "$log" | head -n 120 || true
+          tail -n 40 "$log" || true
