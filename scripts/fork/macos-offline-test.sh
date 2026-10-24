@@ -30,10 +30,23 @@ cat > "$work/offline.sb" <<'SB'
 SB
 offline() { sandbox-exec -f "$work/offline.sb" "$@"; }
 
-probe_start="$(date '+%Y-%m-%d %H:%M:%S')"
-offline curl -sS --max-time 10 https://example.com > /dev/null 2>&1 && { echo "sandbox does not block the network"; exit 1; }
-sleep 2
-"$root/scripts/fork/macos-sandbox-log.sh" "$probe_start" curl > "$reports/sandbox-probe.txt" || true
+# probe <report file> — a curl attempt under the sandbox; waits up to REGISTER_WAIT seconds (default 60) for the unified
+# log to show its denial. The log is written asynchronously, so a fixed short sleep can miss an entry that does arrive.
+probe() {
+  local since deadline
+  since="$(date '+%Y-%m-%d %H:%M:%S')"
+  offline curl -sS --max-time 10 https://example.com > /dev/null 2>&1 && { echo "sandbox does not block the network"; exit 1; }
+  deadline=$((SECONDS + ${REGISTER_WAIT:-60}))
+  while :; do
+    "$root/scripts/fork/macos-sandbox-log.sh" "$since" curl > "$1" || true
+    grep -q "deny" "$1" && return 0
+    [ "$SECONDS" -lt "$deadline" ] || return 1
+    sleep 3
+  done
+}
+
+registered=true
+probe "$reports/sandbox-probe.txt" || registered=false
 
 start="$(date '+%Y-%m-%d %H:%M:%S')"
 mkdir -p "$work/project/.tapcue"
@@ -50,10 +63,11 @@ echo "$reply" | head -c 600; echo
 grep -q '"name":"tapcue"' <<<"$reply"
 grep -q '"id":2,"result"' <<<"$reply"
 test ! -e "$HOME/.maestro"
-sleep 2
 
-if grep -q "deny" "$reports/sandbox-probe.txt"; then
-  echo "The sandbox log shows curl's denied attempt; checking that TapCue made none:"
+# A second probe after TapCue's commands: once its denial is in the log, the log has caught up past them, so a missing
+# java denial is not just a late entry.
+if [ "$registered" = true ] && probe "$reports/sandbox-probe-after.txt"; then
+  echo "The sandbox log shows curl's denied attempts before and after TapCue's commands; checking that TapCue made none:"
   "$root/scripts/fork/macos-sandbox-log.sh" "$start" java | tee "$reports/sandbox-tapcue.txt"
   if grep -q "deny" "$reports/sandbox-tapcue.txt"; then
     echo "TapCue attempted a network connection outside loopback"
@@ -61,10 +75,10 @@ if grep -q "deny" "$reports/sandbox-probe.txt"; then
   fi
   echo "OK: no denied network attempt by TapCue"
 elif [ "${REQUIRE_REGISTER:-false}" = true ]; then
-  echo "The sandbox log did not show curl's denied attempt, so the absence of attempts cannot be shown (REQUIRE_REGISTER)"
-  cat "$reports/sandbox-probe.txt"
+  echo "The sandbox log did not show curl's denied attempt within ${REGISTER_WAIT:-60} s, so the absence of attempts cannot be shown (REQUIRE_REGISTER)"
+  cat "$reports"/sandbox-probe*.txt
   exit 1
 else
   echo "::warning::The sandbox log did not show curl's denied attempt; on this runner the macOS run proves only that the commands work without network, not the absence of attempts."
-  cat "$reports/sandbox-probe.txt"
+  cat "$reports"/sandbox-probe*.txt
 fi

@@ -119,6 +119,11 @@ gh workflow run release.yml --ref main
   — `android` czerwony: flow `settings` padł na pierwszym `assertVisible: "Network & internet"` zaraz po `launchApp`
   (emulator po zimnym starcie, 2 CPU; ten sam flow trwał 108–133 s w zielonych runach). Pozostałe 7 scenariuszy i joby
   `build`/`egress`/`macos` zielone. Poprawka w osobnym PR: `extendedWaitUntil` 60 s zamiast domyślnego oczekiwania.
+- **Pierwszy `workflow_dispatch` na `main` (2026-10-24, [run 40115219200](https://github.com/rtnk/TapCue/actions/runs/40115219200))**
+  — `build` czerwony wyłącznie na rejestrze sandboxa: testy, archiwum, `verify-dist`, licencje i polecenia TapCue bez sieci
+  przeszły, ale log systemowy nie pokazał jeszcze odmowy sondy `curl` po stałych 2 s, a w release (`REQUIRE_REGISTER=true`)
+  to błąd. Poprawka w osobnym PR: `macos-offline-test.sh` czeka do 60 s (`REGISTER_WAIT`) na wpis sondy i powtarza sondę po
+  poleceniach TapCue, więc brak odmów `java` jest sprawdzany dopiero, gdy log dogonił te polecenia.
 - Koszt: każdy run `release.yml` to ok. 6 min `macos-26` + ~6 min ubuntu (repozytorium prywatne, D-9).
 - Otwarte po stronie właściciela (bez zmian, blokują STEP-08/G-3): przegląd `THIRD-PARTY-NOTICES.md`/suplementu, ocena Google
   Play services i JUnit (EPL-1.0) w APK sterownika (L-05), akceptacja polityki `scripts/fork/allowed-licenses.tsv`,
