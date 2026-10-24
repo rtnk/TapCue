@@ -61,7 +61,11 @@ Maestro requires 3 artifacts to run on iOS:
 - `maestro-driver-iosUITests-Runner.app` - the test runner app. Starts an HTTP server inside an infinite XCTest. 
 - `maestro-driver-ios-config.xctestrun` - the configuration file required to run the test runner app.
 
-These artifacts are built by the `build-maestro-ios-runner.sh` script. It places them in `maestro-ios-driver/src/main/resources`.
+TapCue ships none of them prebuilt (decision D-5 in `docs/ROADMAP-0.1.md`: the prebuilt ZIPs contained Apple
+frameworks). The CLI JAR carries the runner's source (`maestro-ios-xctest-runner/`, including the vendored Swift
+package in `Vendor/`), and on the first iOS Simulator run the CLI builds it with the local Xcode into
+`~/.tapcue/maestro-iphonesimulator-driver-build` (`maestro.cli.driver.IOSSimulatorDriver`). It rebuilds when the CLI
+version or the bundled source changes; `tapcue driver-setup --simulator` forces a rebuild.
 
 ### Running standalone iOS XCTest runner app
 
@@ -137,7 +141,8 @@ There are 3 ways to test your changes:
 - Unit tests
   - All the other tests in the projects. Run them via `./gradlew test` (or from IDE)
 
-If you made changes to the iOS XCUITest driver, rebuild it by running `./maestro-ios-xctest-runner/build-maestro-ios-runner.sh`.
+If you made changes to the iOS XCUITest driver, the next iOS run of `./tapcue` rebuilds it (the source fingerprint
+changed); `./tapcue driver-setup --simulator` rebuilds it right away.
 
 ## Module structure
 

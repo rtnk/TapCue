@@ -1,6 +1,6 @@
 # ROADMAP 0.1.0 — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Status dokumentu: **STEP-04B w review ([#12](https://github.com/rtnk/TapCue/pull/12)); następny: STEP-05**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23, STEP-03B ([#8](https://github.com/rtnk/TapCue/pull/8)) i STEP-04 ([#9](https://github.com/rtnk/TapCue/pull/9)) — 2026-10-24. Ostatnia aktualizacja: 2026-10-24.
+Status dokumentu: **STEP-05 w realizacji (PR-05); następny: STEP-06**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23, STEP-03B ([#8](https://github.com/rtnk/TapCue/pull/8)), STEP-04 ([#9](https://github.com/rtnk/TapCue/pull/9)) i STEP-04B ([#12](https://github.com/rtnk/TapCue/pull/12)) — 2026-10-24. Ostatnia aktualizacja: 2026-10-24.
 
 ## 0. Punkt wyjścia
 
@@ -38,13 +38,13 @@ pliku (PR-00).
 
 | ID | Pytanie | Decyzja właściciela | Realizacja |
 |---|---|---|---|
-| D-1 | Nazwa produktu („Maestro” to znak mobile.dev; Apache-2.0 §6 nie daje praw do znaków) | **TapCue**. Opis: „based on Maestro (Apache-2.0), not affiliated with mobile.dev” (README, `--help`, Release) | STEP-04B (nazwa w CLI i komunikatach — zrealizowane w PR-04B), STEP-05 (archiwum, NOTICE, README), STEP-08 |
-| D-2 | Plik wykonywalny i katalogi (upstream: `maestro`, `~/.maestro`, `~/.mobiledev`, `$XDG_STATE_HOME/maestro`, `.maestro/` w projektach) | Polecenie **`tapcue`**, katalog stanu **`~/.tapcue`** (odpowiednio `$XDG_STATE_HOME/tapcue`), katalog w projektach użytkownika **`.tapcue/`** zamiast `.maestro/` (świadomie odbiega od rekomendacji zachowania `.maestro/`; format YAML flow bez zmian). Pozostawiony przez upstream `analytics.json` jest **usuwany** | `analytics.json`: STEP-03 (`LegacyAnalyticsState`, usuwa `$XDG_STATE_HOME/maestro/analytics.json` i `~/.maestro/analytics.json` przy każdym starcie) — **wycofane w STEP-04B** (`LegacyAnalyticsState` usunięty: TapCue nie dotyka katalogów oficjalnego Maestro, patrz STEP-04B). Reszta: STEP-04B (`TapCueDirs`; zrealizowane w PR-04B) |
+| D-1 | Nazwa produktu („Maestro” to znak mobile.dev; Apache-2.0 §6 nie daje praw do znaków) | **TapCue**. Opis: „based on Maestro (Apache-2.0), not affiliated with mobile.dev” (README, `--help`, Release) | STEP-04B (nazwa w CLI i komunikatach — zrealizowane w PR-04B), STEP-05 (archiwum `tapcue-<wersja>-macos-arm64.zip`, `NOTICE`, `README.md` w paczce — zrealizowane w PR-05), STEP-08 (README repozytorium, Release) |
+| D-2 | Plik wykonywalny i katalogi (upstream: `maestro`, `~/.maestro`, `~/.mobiledev`, `$XDG_STATE_HOME/maestro`, `.maestro/` w projektach) | Polecenie **`tapcue`**, katalog stanu **`~/.tapcue`** (odpowiednio `$XDG_STATE_HOME/tapcue`), katalog w projektach użytkownika **`.tapcue/`** zamiast `.maestro/` (świadomie odbiega od rekomendacji zachowania `.maestro/`; format YAML flow bez zmian). Pozostawiony przez upstream `analytics.json` jest **usuwany** | `analytics.json`: STEP-03 (`LegacyAnalyticsState`, usuwa `$XDG_STATE_HOME/maestro/analytics.json` i `~/.maestro/analytics.json` przy każdym starcie) — **wycofane w STEP-04B** (`LegacyAnalyticsState` usunięty: TapCue nie dotyka katalogów oficjalnego Maestro, patrz STEP-04B). Reszta: STEP-04B (`TapCueDirs`; zrealizowane w PR-04B). **Właściciel potwierdził 2026-10-24 obie decyzje STEP-04B:** stary `.maestro/` w projekcie → ostrzeżenie bez automatycznego odczytu; usunięcie `LegacyAnalyticsState` (zastępuje zdanie o usuwaniu `analytics.json`) |
 | D-3 | Polityka `http.*` w JavaScript flow (N-25) | **Zgodnie z rekomendacją:** tylko loopback i sieci prywatne (RFC 1918, `fc00::/7`, link-local), sprawdzane po rozwiązaniu DNS i na każdym przekierowaniu; inne adresy → jasny błąd flow. Bez flagi opt-in w 0.1.0 | STEP-03B (`LocalNetworkPolicy`) |
 | D-4 | Platforma `web` (Chrome + Selenium na hoście, N-26…N-30) | **Wyłączona w 0.1.0** — kontrolowany błąd „platforma web nie jest wspierana w 0.1.0”; `selenium`/`selenium-manager`/`maestro-web` poza runtime classpath CLI, jeśli możliwe | STEP-03B (sterownik web, `maestro-web` i Selenium usunięte; `WebPlatformNotSupported`) |
-| D-5 | Prekompilowane ZIP-y sterownika iOS z frameworkami Apple (L-04) | **Nie dystrybuować ZIP-ów** — runner XCTest budowany lokalnie ze źródła (`xcodebuild`) przy pierwszym użyciu iOS | STEP-05 (weryfikacja ścieżki „build from source” dla symulatora) |
+| D-5 | Prekompilowane ZIP-y sterownika iOS z frameworkami Apple (L-04) | **Nie dystrybuować ZIP-ów** — runner XCTest budowany lokalnie ze źródła (`xcodebuild`) przy pierwszym użyciu iOS | STEP-05 — zrealizowane w PR-05: ZIP-y i task `buildIosDriver` usunięte, `IOSSimulatorDriver` buduje runner przy pierwszym użyciu (`tapcue driver-setup --simulator` — od razu); FlyingFox dołączony do źródeł, więc build działa offline (N-36); weryfikacja: job CI `macos-dist` |
 | D-6 | GraalJS `truffle-enterprise` (Oracle GFTC, L-03) | **Artefakty community** (UPL: `js-community`/`js-language` + `polyglot`, wykluczenie `truffle-enterprise`) — **już w STEP-03B** | STEP-03B (`js-community` + `js-language` + `polyglot`) |
-| D-7 | JRE w paczce | **Wymagany systemowy JDK/JRE 17+** (README, launcher sprawdza wersję); paczka nie jest nazywana samowystarczalną | STEP-05 |
+| D-7 | JRE w paczce | **Wymagany systemowy JDK/JRE 17+** (README, launcher sprawdza wersję); paczka nie jest nazywana samowystarczalną | STEP-05 — zrealizowane w PR-05 (`README.md` w paczce, `bin/tapcue` sprawdza Javę 17; `StartScriptsTest`, `verify-dist.sh`) |
 | D-8 | STEP-00B „Legal containment” przed dalszymi krokami | Tak (wykonany po PR-01, scalony jako #3). Flagi `-x downloadSimulatorServer …` zbędne i błędne | — |
 | D-9 | Widoczność repozytorium i koszt runnerów macOS | **Repozytorium może być publiczne już teraz** (zmiana ustawień — po stronie właściciela). W repo publicznym minuty standardowych runnerów (także macOS) są bezpłatne, więc ograniczenie testów macOS do release/`workflow_dispatch` nie jest już wymuszone kosztem | STEP-06/07 (zakres jobów macOS) |
 
@@ -65,8 +65,8 @@ Legenda statusu: `TODO` · `IN PROGRESS` · `IN REVIEW` · `MERGED` · `BLOCKED`
 | STEP-03 | PR-03 | Remove telemetry, error upload, update checks, auto-downloads | PR-02 | MERGED ([#6](https://github.com/rtnk/TapCue/pull/6), uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) | 1 sesja |
 | STEP-03B | PR-03B | Polityka sieci dla funkcji flow (JS `http`, web, `openLink`) + GraalJS community | PR-03, D-3, D-4, D-6 | MERGED ([#8](https://github.com/rtnk/TapCue/pull/8)) | 1 sesja |
 | STEP-04 | PR-04 | Local-only MCP, usunięcie Viewera | PR-03B | MERGED ([#9](https://github.com/rtnk/TapCue/pull/9)) | 1–2 sesje |
-| STEP-04B | PR-04B | TapCue: nazwa, polecenie `tapcue`, katalogi `~/.tapcue` i `.tapcue/` | PR-04, D-1, D-2 | IN REVIEW ([#12](https://github.com/rtnk/TapCue/pull/12)) | 1–2 sesje |
-| STEP-05 | PR-05 | Dystrybucja lokalna macOS arm64 + audyt licencji | PR-04B, D-5, D-7 | TODO | 2 sesje |
+| STEP-04B | PR-04B | TapCue: nazwa, polecenie `tapcue`, katalogi `~/.tapcue` i `.tapcue/` | PR-04, D-1, D-2 | MERGED ([#12](https://github.com/rtnk/TapCue/pull/12)) | 1–2 sesje |
+| STEP-05 | PR-05 | Dystrybucja lokalna macOS arm64 + audyt licencji | PR-04B, D-5, D-7 | IN REVIEW (PR-05) | 2 sesje |
 | STEP-06 | PR-06 | GitHub Actions CI + testy offline | PR-05 | TODO | 2 sesje |
 | STEP-07 | PR-07 | Release pipeline | PR-06 | TODO | 1 sesja |
 | STEP-08 | PR-08 + tag | Release candidate i publikacja v0.1.0 | PR-07, wszystkie gate'y | TODO | 1 sesja + operacja release |
@@ -266,6 +266,8 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
   identyfikatory `dev.mobile.maestro*` na urządzeniu, `maestro.zip`/`jreleaser` (STEP-05), linki `maestro.dev`
   w komunikatach (N-35, STEP-05). Test: `TapCueNameTest` (proces CLI z izolowanym `HOME`: `--version`, `--help`,
   `check-syntax`, `test` — żadnego katalogu `maestro`/`.maestro`/`.mobiledev`).
+- **Decyzje potwierdzone przez właściciela 2026-10-24** (po scaleniu PR-04B): (1) ostrzeżenie dla `.maestro/` bez
+  automatycznego odczytu, (2) usunięcie `LegacyAnalyticsState`.
 
 ### STEP-05 — Dystrybucja lokalna i audyt licencji (PR-05)
 
@@ -279,6 +281,20 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
 - Weryfikacja instalacji i uruchomienia na macOS arm64 bez internetu (wynik w handover; jeśli brak Maca —
   runner `macos-*` arm64 z blokadą egress).
 - **Wyjście:** paczka działa offline na przygotowanym Macu, kompletna licencyjnie, bez zakazanych binariów.
+- **Realizacja (PR-05, szczegóły w `docs/handovers/STEP-05.md`):** usunięte `jreleaser` (wtyczka, konfiguracja,
+  `maestro-cli/src/jreleaser/`), `scripts/install.sh`, publikacja Maven Central we wszystkich modułach (wtyczka
+  `com.vanniktech.maven.publish`, `POM_*`). Archiwum wg D-1: `tapcue-<wersja>-macos-arm64.zip` (`macosArm64DistZip`,
+  bez Skia innych platform i `tapcue.bat`) + `SHA256SUMS`; `NOTICE` (nowy, w repozytorium i paczce), `THIRD-PARTY-NOTICES.md`
+  (task `generateThirdPartyNotices`: 134 biblioteki z licencją z POM, teksty/NOTICE z JAR-ów, suplement z tekstami spoza
+  JAR-ów), `README.md` (D-7). Linki N-35 usunięte (start-scripty, `PickDeviceInteractor`, `SkiaFrameRenderer`, `ChatCommand`,
+  `BugReportCommand` → zgłoszenia forka, `WorkspaceExecutionPlanner`, `MaestroFlowParser`). D-5: ZIP-y sterownika iOS
+  i `buildIosDriver` usunięte; `IOSSimulatorDriver` buduje runner dla symulatora z `driver/ios` w JAR przy pierwszym użyciu
+  (cache w `~/.tapcue`, przebudowa po zmianie wersji lub źródła); JAR zawiera teraz też `MaestroDriverLib/` (brakowało go
+  także dla urządzeń fizycznych) i dołączony pakiet FlyingFox (`Vendor/`, `XCLocalSwiftPackageReference`) — build nie
+  pobiera niczego (N-36). `scripts/verify-dist.sh` + testy negatywne `scripts/fork/test-verify-dist.sh`; CI: job Linux
+  (archiwum, weryfikacja, testy negatywne, artefakt) i job `macos-dist` na `macos-26` arm64 (paczka pod `sandbox-exec` bez
+  sieci, build sterownika symulatora ze źródła, `hierarchy` na symulatorze). Wersja CLI pozostaje `2.11.0` (zmiana na
+  `0.1.0` — PR-08).
 
 ### STEP-06 — GitHub Actions CI i testy offline (PR-06)
 
@@ -341,11 +357,11 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
 | ID | Ryzyko | Wpływ | Mitigacja |
 |---|---|---|---|
 | R-1 | Licencja simulator-server (L-01) | bloker Release | STEP-00B/04, test zawartości |
-| R-2 | Frameworki Apple w prekompilowanych ZIP iOS (L-04) | bloker Release (iOS) | D-5: build lokalny z źródła |
+| R-2 | Frameworki Apple w prekompilowanych ZIP iOS (L-04) | bloker Release (iOS) | D-5: build lokalny ze źródła — zrealizowane w STEP-05 (ZIP-y usunięte, `verify-dist.sh`) |
 | R-3 | GraalJS `truffle-enterprise` GFTC (L-03) | bloker do decyzji | D-6: artefakty community — zrealizowane w STEP-03B |
 | R-4 | Brak urządzeń w CI → fałszywie zielone testy | jakość | jawne `skipped`, testy z `FakeDriver`, testy ręczne opisane w handover |
 | R-5 | Rozjazd z upstream (cherry-pick poprawek sterowników) | utrzymanie | baza = tag; przyszłe merge z upstream przez osobne PR „sync upstream vX.Y.Z” z ponownym audytem |
-| R-6 | Kolizja z oficjalną instalacją Maestro (`maestro`, `~/.maestro`) | UX/bezpieczeństwo | D-2: `tapcue`, `~/.tapcue`, `.tapcue/` — zrealizowane w STEP-04B (`TapCueNameTest`); pozostają nazwy archiwów `maestro.zip` (STEP-05) |
+| R-6 | Kolizja z oficjalną instalacją Maestro (`maestro`, `~/.maestro`) | UX/bezpieczeństwo | D-2: `tapcue`, `~/.tapcue`, `.tapcue/` — zrealizowane w STEP-04B (`TapCueNameTest`); archiwa `tapcue-*` — STEP-05 |
 | R-7 | Znak towarowy „Maestro” | prawny | D-1: nazwa TapCue |
 | R-8 | `debug.keystore` w repo — APK sterownika podpisane publicznie znanym kluczem debug (stan upstream) | bezpieczeństwo (niskie; APK testowe) | opisać w ograniczeniach; ewentualnie własny klucz po 0.1.0 |
 | R-9 | Środowisko sesji agenta bez dostępu do `dl.google.com` (Google Maven, Android SDK) | lokalna walidacja | testy pełne w GitHub Actions; lokalnie obejście analityczne (handover STEP-00) |

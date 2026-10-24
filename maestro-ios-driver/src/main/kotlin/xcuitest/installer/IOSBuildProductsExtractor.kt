@@ -76,13 +76,15 @@ class IOSBuildProductsExtractor(
     }
 
     private fun writeBuildProducts(sourceDirectory: String) {
+        // An absolute path is a directory of build products made on this machine: the CLI builds the runner from
+        // source for real devices and, since TapCue ships no prebuilt driver (D-5), for the simulator too.
         val uri = when  {
+            context == Context.CLI && (deviceType == IOSDeviceType.REAL || Paths.get(sourceDirectory).isAbsolute) -> {
+                Paths.get(sourceDirectory).toUri()
+            }
             deviceType == IOSDeviceType.SIMULATOR -> {
                 LocalXCTestInstaller::class.java.classLoader.getResource(sourceDirectory)?.toURI()
                     ?: throw IllegalArgumentException("Resource not found: $sourceDirectory")
-            }
-            context == Context.CLI && deviceType == IOSDeviceType.REAL -> {
-                Paths.get(sourceDirectory).toUri()
             }
             else ->  {
                 LocalXCTestInstaller::class.java.classLoader.getResource(sourceDirectory)?.toURI()

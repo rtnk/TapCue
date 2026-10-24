@@ -6,4 +6,3 @@ Invalid Command: invalidCommand at /tmp/WorkspaceExecutionPlannerErrorsTest_work
              ^
 
   `invalidCommand` is not a valid command.
-  See: https://docs.maestro.dev/api-reference/commands

@@ -11,4 +11,3 @@ Config Section Required at /tmp/WorkspaceExecutionPlannerErrorsTest_workspace/wo
   ---
   - launchApp
   ```
-  See: https://docs.maestro.dev/getting-started/writing-your-first-flow

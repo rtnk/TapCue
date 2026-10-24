@@ -1,14 +1,16 @@
 package maestro.cli.command
 
 import maestro.cli.driver.DriverBuilder
+import maestro.cli.driver.IOSSimulatorDriver
 import maestro.cli.driver.RealIOSDeviceDriver
+import maestro.cli.util.PrintUtils
 import picocli.CommandLine
 import java.util.concurrent.Callable
 
 @CommandLine.Command(
     name = "driver-setup",
     description = [
-        "Set up TapCue drivers on your devices. Right now works for real iOS devices"
+        "Build the TapCue iOS driver from source: for real iOS devices (--apple-team-id) or for the iOS Simulator (--simulator)"
     ],
     hidden = true
 )
@@ -28,8 +30,20 @@ class DriverCommand : Callable<Int> {
     )
     private var destination: String? = null
 
+    @CommandLine.Option(
+        names = ["--simulator"],
+        description = ["Build (or rebuild) the iOS Simulator driver now instead of on first use. Requires Xcode."],
+        hidden = true
+    )
+    private var simulator: Boolean = false
 
     override fun call(): Int {
+        if (simulator) {
+            val products = IOSSimulatorDriver().buildProducts(force = true)
+            PrintUtils.message("iOS Simulator driver built: $products")
+            return 0
+        }
+
         val teamId = requireNotNull(appleTeamId) { "Apple account team ID must be specified." }
         val destination = destination ?: "generic/platform=iphoneos"
 

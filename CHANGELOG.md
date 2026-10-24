@@ -94,6 +94,26 @@ TapCue bazuje na Maestro (Apache-2.0) i nie jest powiązany z mobile.dev. Zmiany
 - CLI (STEP-04B): usunięte kasowanie `analytics.json` Maestro (`LegacyAnalyticsState`, STEP-03) — TapCue nie dotyka już
   katalogów oficjalnego Maestro, także tych, które mogą należeć do jego równoległej instalacji.
 - MCP (STEP-04B): `serverInfo.name` to `tapcue`; instrukcje serwera i `cheat_sheet` mówią o TapCue i katalogu `.tapcue/`.
+- Dystrybucja (STEP-05, D-1, D-7): archiwum `tapcue-<wersja>-macos-arm64.zip` z `SHA256SUMS` (task
+  `:maestro-cli:macosArm64DistZip`) zamiast `maestro.zip`/`maestro.tar`: `bin/tapcue`, `lib/*.jar`, `LICENSE`, `NOTICE`
+  (atrybucja Maestro, „based on Maestro (Apache-2.0), not affiliated with mobile.dev”), `THIRD-PARTY-NOTICES.md`
+  (licencje wszystkich bibliotek, generowany przy buildzie) i `README.md` instalacji. Paczka wymaga systemowej Javy 17+
+  (launcher to sprawdza) i pomija biblioteki Skia innych platform oraz `tapcue.bat`. Ogólna `distZip` to teraz
+  `tapcue-<wersja>.zip`. `scripts/verify-dist.sh` sprawdza archiwum (zakazane artefakty, biblioteki natywne z listy
+  dozwolonych, kompletność not, start-scripty, sumy kontrolne) i jest uruchamiany w CI.
+- **Zmiana łamiąca — iOS Simulator (STEP-05, D-5):** TapCue nie zawiera już prekompilowanego sterownika iOS (ZIP-y
+  zawierały frameworki Apple). Przy pierwszym uruchomieniu na symulatorze CLI buduje runner XCTest ze źródła dołączonego
+  do JAR-a lokalnym Xcode (kilka minut, bez sieci) i trzyma go w `~/.tapcue/maestro-iphonesimulator-driver-build`;
+  przebudowuje go po zmianie wersji CLI lub źródła. `tapcue driver-setup --simulator` buduje go od razu. Wymagany Xcode.
+- iOS (STEP-05): pakiet Swift FlyingFox 0.22.0 (MIT) dołączony do źródeł runnera (`maestro-ios-xctest-runner/Vendor/`),
+  więc Xcode nie pobiera go z GitHuba; JAR CLI zawiera teraz pełne źródło sterownika (z `MaestroDriverLib`), czego
+  wymagał też istniejący build dla urządzeń fizycznych.
+- CLI (STEP-05): komunikaty i start-scripty bez linków do maestro.dev/mobile.dev: `bugreport` wskazuje zgłoszenia TapCue,
+  `chat` — `tapcue mcp`, błąd „Top-level directories do not contain any Flows” podaje przykład `flows:` w `config.yaml`,
+  błędy parsera flow nie mają już linii „See: docs.maestro.dev”, stopka nagrań `record` to „TapCue”.
+- Build (STEP-05): usunięte `jreleaser` (release i Homebrew upstream), `scripts/install.sh` upstream i publikacja do Maven
+  Central (`com.vanniktech.maven.publish`, metadane `POM_*`); usunięte task `buildIosDriver` i skrypty
+  `build-maestro-ios-runner*.sh`, które budowały prekompilowane ZIP-y.
 - Android (poprawka): pula wątków I/O klienta devtools (`newAdbIoExecutor`) nie odrzuca już wywołania jako
   „all 16 adb I/O workers are busy”, gdy wolny worker właśnie kończy poprzednie wywołanie; przy 15 workerach
   zawieszonych na urządzeniu zdarzało się to przy niemal każdym kolejnym wywołaniu. Usuwa też niestabilność

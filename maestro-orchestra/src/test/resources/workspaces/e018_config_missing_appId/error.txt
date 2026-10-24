@@ -20,4 +20,3 @@ Config Field Required at /tmp/WorkspaceExecutionPlannerErrorsTest_workspace/work
   ---
   - launchApp
   ```
-  See: https://docs.maestro.dev/getting-started/writing-your-first-flow

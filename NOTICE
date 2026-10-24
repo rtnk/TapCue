@@ -1,0 +1,12 @@
+TapCue
+Copyright 2026 TapCue contributors
+
+TapCue is based on Maestro (Apache-2.0), not affiliated with mobile.dev.
+
+This product is a modified version of Maestro (https://github.com/mobile-dev-inc/Maestro, tag v2.11.0),
+Copyright (c) 2022 mobile.dev inc., licensed under the Apache License, Version 2.0 (see LICENSE).
+Maestro did not ship a NOTICE file. TapCue removes Maestro Cloud, remote AI, telemetry, update checks
+and the closed-source simulator-server/Viewer; files changed by the fork are recorded in its git history.
+"Maestro" and "mobile.dev" are names of mobile.dev inc.; TapCue uses them only to describe its origin.
+
+Third-party components and their licenses are listed in THIRD-PARTY-NOTICES.md.

@@ -34,7 +34,7 @@ class SkiaFrameRenderer : FrameRenderer {
     private val footerHeight = 60f
     private val footerFont = Font(SkiaFonts.SANS_SERIF_TYPEFACE, 22f)
     private val footerTextColor = Color.makeARGB(200, 0, 0, 0)
-    private val footerText = "maestro.mobile.dev"
+    private val footerText = "TapCue"
 
     private val terminalBgColor = Color.makeARGB(220, 0, 0, 0)
     private val terminalContentPadding = 40f

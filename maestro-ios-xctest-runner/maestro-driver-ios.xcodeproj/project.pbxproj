@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 55;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -952,7 +952,7 @@
 			);
 			mainGroup = 52049BCA2935039F00807AA3;
 			packageReferences = (
-				52049C062935E04D00807AA3 /* XCRemoteSwiftPackageReference "FlyingFox" */,
+				52049C062935E04D00807AA3 /* XCLocalSwiftPackageReference "Vendor/FlyingFox" */,
 			);
 			productRefGroup = 52049BD42935039F00807AA3 /* Products */;
 			projectDirPath = "";
@@ -1603,21 +1603,17 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		52049C062935E04D00807AA3 /* XCRemoteSwiftPackageReference "FlyingFox" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/swhitty/FlyingFox";
-			requirement = {
-				kind = exactVersion;
-				version = 0.22.0;
-			};
+/* Begin XCLocalSwiftPackageReference section */
+		52049C062935E04D00807AA3 /* XCLocalSwiftPackageReference "Vendor/FlyingFox" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Vendor/FlyingFox;
 		};
-/* End XCRemoteSwiftPackageReference section */
+/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		5279BFD52935ECE20056C609 /* FlyingFox */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 52049C062935E04D00807AA3 /* XCRemoteSwiftPackageReference "FlyingFox" */;
+			package = 52049C062935E04D00807AA3 /* XCLocalSwiftPackageReference "Vendor/FlyingFox" */;
 			productName = FlyingFox;
 		};
 /* End XCSwiftPackageProductDependency section */

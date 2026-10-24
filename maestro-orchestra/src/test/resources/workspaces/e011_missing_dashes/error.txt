@@ -12,4 +12,3 @@ Commands Section Required at /tmp/WorkspaceExecutionPlannerErrorsTest_workspace/
   ---
   - launchApp
   ```
-  See: https://docs.maestro.dev/getting-started/writing-your-first-flow

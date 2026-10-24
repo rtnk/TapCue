@@ -3,8 +3,10 @@
 # Runs the unit test suite. Since STEP-00B the build has no tasks that fetch
 # or package simulator-server (docs/LICENSE-AUDIT.md L-01) or build the
 # Viewer frontend that drives it; the guard step below checks the outputs.
-# iOS Swift/XCTest jobs from upstream are not run here: they need macOS
-# runners (see docs/ROADMAP-0.1.md D-9).
+# Since STEP-05 it also builds the macOS arm64 archive and checks it with
+# scripts/verify-dist.sh, and the macos-dist job runs that archive on an
+# Apple silicon runner (D-9): offline, and with the iOS Simulator driver
+# built from source (D-5).
 name: CI baseline
 
 on:
@@ -48,6 +50,25 @@ jobs:
       - name: Unit tests
         run: ./gradlew test --continue
 
+      - name: Build distribution archive
+        run: ./gradlew :maestro-cli:macosArm64DistZip
+
+      - name: Verify distribution archive
+        run: scripts/verify-dist.sh --smoke maestro-cli/build/distributions/tapcue-*-macos-arm64.zip
+
+      - name: Negative tests for verify-dist.sh
+        run: scripts/fork/test-verify-dist.sh maestro-cli/build/distributions/tapcue-*-macos-arm64.zip
+
+      - name: Upload distribution archive
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tapcue-macos-arm64
+          path: |
+            maestro-cli/build/distributions/tapcue-*-macos-arm64.zip
+            maestro-cli/build/distributions/SHA256SUMS
+          retention-days: 7
+          if-no-files-found: error
+
       - name: Guard - no simulator-server or Viewer in build outputs
         if: always()
         run: scripts/fork/check-no-simulator-server.sh
@@ -62,3 +83,90 @@ jobs:
             **/build/test-results/test
           retention-days: 7
           if-no-files-found: warn
+
+  macos-dist:
+    name: macOS arm64 archive (offline run, iOS driver from source)
+    runs-on: macos-26
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Require Apple silicon
+        run: test "$(uname -m)" = arm64
+
+      - name: Set up Java
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: zulu
+          java-version: 17
+          cache: gradle
+
+      - name: Build and verify the archive
+        run: |
+          ./gradlew :maestro-cli:macosArm64DistZip
+          scripts/verify-dist.sh --smoke maestro-cli/build/distributions/tapcue-*-macos-arm64.zip
+          (cd maestro-cli/build/distributions && shasum -a 256 -c SHA256SUMS)
+
+      - name: Install the archive
+        run: |
+          mkdir -p "$RUNNER_TEMP/tapcue" "$RUNNER_TEMP/home"
+          unzip -q maestro-cli/build/distributions/tapcue-*-macos-arm64.zip -d "$RUNNER_TEMP/tapcue"
+          echo "TAPCUE=$(ls -d "$RUNNER_TEMP"/tapcue/tapcue-*/bin/tapcue)" >> "$GITHUB_ENV"
+
+      - name: Run without network access
+        # sandbox-exec denies every outbound connection except loopback (and the DNS resolver socket), so a command
+        # that needed the internet would fail here.
+        env:
+          HOME: ${{ runner.temp }}/home
+        run: |
+          cat > "$RUNNER_TEMP/offline.sb" <<'SB'
+          (version 1)
+          (allow default)
+          (deny network-outbound)
+          (allow network-outbound (remote ip "localhost:*"))
+          (allow network-outbound (remote unix-socket))
+          (deny network-outbound (remote unix-socket (path-literal "/private/var/run/mDNSResponder")))
+          SB
+          offline() { sandbox-exec -f "$RUNNER_TEMP/offline.sb" "$@"; }
+          offline curl -sS --max-time 10 https://example.com >/dev/null 2>&1 && { echo "sandbox does not block the network"; exit 1; }
+          mkdir -p "$RUNNER_TEMP/project/.tapcue"
+          printf 'appId: com.example\n---\n- launchApp\n' > "$RUNNER_TEMP/project/.tapcue/flow.yaml"
+          offline "$TAPCUE" --version
+          offline "$TAPCUE" --help > /dev/null
+          offline "$TAPCUE" check-syntax "$RUNNER_TEMP/project/.tapcue/flow.yaml"
+          reply="$(printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' \
+            | offline "$TAPCUE" mcp)"
+          echo "$reply"
+          grep -q '"name":"tapcue"' <<<"$reply"
+          test ! -e "$HOME/.maestro"
+
+      - name: Build the iOS Simulator driver from source, offline
+        env:
+          HOME: ${{ runner.temp }}/home
+        run: |
+          xcodebuild -version
+          sandbox-exec -f "$RUNNER_TEMP/offline.sb" "$TAPCUE" driver-setup --simulator
+          products="$HOME/.tapcue/maestro-iphonesimulator-driver-build/driver-iPhoneSimulator/Build/Products"
+          ls "$products"/*.xctestrun
+          test -d "$products/Debug-iphonesimulator/maestro-driver-iosUITests-Runner.app"
+          cat "$HOME/.tapcue/maestro-iphonesimulator-driver-build/version.properties"
+
+      - name: Drive a simulator with the driver built from source
+        env:
+          HOME: ${{ runner.temp }}/home
+          MAESTRO_DRIVER_STARTUP_TIMEOUT: 240000
+        run: |
+          udid="$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          ios = sorted((r for r in devices if "iOS" in r), key=lambda r: [int(x) for x in r.rsplit("iOS-", 1)[1].split("-")], reverse=True)
+          print(next(d["udid"] for r in ios for d in devices[r] if d["name"].startswith("iPhone")))')"
+          echo "simulator: $udid"
+          xcrun simctl bootstatus "$udid" -b
+          "$TAPCUE" --device "$udid" hierarchy > "$RUNNER_TEMP/hierarchy.json"
+          grep -q '"attributes"' "$RUNNER_TEMP/hierarchy.json"
+          echo "hierarchy: $(wc -c < "$RUNNER_TEMP/hierarchy.json") bytes"

@@ -80,7 +80,7 @@ object PickDeviceInteractor {
 
     private fun startDevice(platform: Platform?): Device {
         if (EnvUtils.isWSL()) {
-            throw CliError("No running emulator found. Start an emulator manually and try again.\nFor setup info checkout: https://maestro.mobile.dev/getting-started/installing-maestro/windows")
+            throw CliError("No running emulator found. Start an emulator manually and try again.")
         }
 
         PrintUtils.message("No running devices found. Launch a device manually or select a number from the options below:\n")

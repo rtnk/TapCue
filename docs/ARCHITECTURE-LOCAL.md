@@ -81,8 +81,13 @@ Zasady architektoniczne:
 - **STDIO MCP jest czyste.** `claimMcpStdout()` przekierowuje `System.out` na `stderr` przed
   inicjalizacją; po usunięciu analityki i update-checka znika najczęstsze źródło zanieczyszczeń. MCP używa
   wyłącznie STDIO (bez portu HTTP); `McpStdioTest` sprawdza, że stdout zawiera tylko ramki JSON-RPC.
-- **Dystrybucja bez zamkniętych binariów.** Lista zakazanych artefaktów (simulator-server, Viewer,
-  `truffle-enterprise` do czasu decyzji D-6) sprawdzana testem zawartości archiwum.
+- **Dystrybucja bez zamkniętych binariów.** Paczka `tapcue-<wersja>-macos-arm64.zip` (STEP-05): `bin/tapcue` (sprawdza
+  Javę 17+, D-7 — JRE nie jest dołączane), `lib/*.jar`, `LICENSE`, `NOTICE`, `THIRD-PARTY-NOTICES.md` (generowany
+  z `runtimeClasspath`), `README.md`. Bez prekompilowanego sterownika iOS (D-5): runner XCTest dla symulatora powstaje
+  przy pierwszym użyciu z kodu w JAR CLI (`driver/ios`, z dołączonym pakietem Swift FlyingFox) lokalnym Xcode, bez sieci.
+  `scripts/verify-dist.sh` odrzuca archiwum z zakazanym artefaktem (simulator-server, Viewer, `truffle-enterprise`,
+  sterownik iOS/frameworki Apple, PostHog, AI, Selenium), z binarium spoza listy dozwolonych, z niewymienioną biblioteką
+  albo linkiem producenta w start-scriptach.
 
 ## 4. Granica odpowiedzialności sieciowej
 
@@ -157,3 +162,18 @@ Zasady architektoniczne:
   odczytu. `LegacyAnalyticsState` usunięty — CLI nie dotyka `~/.maestro` ani `$XDG_STATE_HOME/maestro`. Bez zmian:
   pakiety `maestro.*`, moduły Gradle, format YAML flow, zmienne JS `maestro.*`, identyfikatory sterowników na urządzeniu
   (`dev.mobile.maestro*`), nazwy archiwów dystrybucji `maestro.zip`/`maestro.tar` i `jreleaser` (STEP-05).
+- STEP-05 (Dystrybucja lokalna i audyt licencji): archiwum `tapcue-<wersja>-macos-arm64.zip` (task
+  `:maestro-cli:macosArm64DistZip`, katalog główny `tapcue-<wersja>-macos-arm64/`, znaczniki czasu i kolejność plików
+  deterministyczne) z `SHA256SUMS`, bez Skia innych platform i `tapcue.bat`; ogólne `distZip`/`distTar` → `tapcue-<wersja>.zip/.tar`.
+  `NOTICE` w katalogu głównym repozytorium i paczki; `THIRD-PARTY-NOTICES.md` z taska `generateThirdPartyNotices` (licencje
+  z POM, teksty i NOTICE z JAR-ów, suplement `docs/audit/notices-supplement.md`; brak licencji → błąd builda); `README.md`
+  instalacji z `maestro-cli/src/dist/`. Usunięte: `jreleaser` (B-04), `scripts/install.sh` (B-05), publikacja Maven Central
+  (B-09), linki producenta w komunikatach i start-scriptach (N-35). iOS (D-5): prekompilowane ZIP-y sterownika i task
+  `buildIosDriver` usunięte; `maestro.cli.driver.IOSSimulatorDriver` buduje runner dla symulatora przez `DriverBuilder`
+  (`xcodebuild build-for-testing`, `generic/platform=iOS Simulator`, bez podpisu, architektura hosta) do
+  `~/.tapcue/maestro-iphonesimulator-driver-build`, z blokadą (wątki i procesy) i przebudową, gdy zmieni się wersja CLI
+  albo odcisk SHA-256 źródła w JAR (`version.properties`); `IOSBuildProductsExtractor` przyjmuje bezwzględną ścieżkę
+  produktów także dla symulatora; `tapcue driver-setup --simulator` wymusza build. JAR CLI zawiera teraz całe źródło schematu
+  `maestro-driver-ios` (z `MaestroDriverLib/` i `Vendor/FlyingFox/` — pakiet lokalny zamiast zdalnego, N-36). Bez zmian:
+  pakiety `maestro.*`, moduły Gradle, format flow, katalogi `~/.tapcue`/`.tapcue/`, identyfikatory `dev.mobile.maestro*`
+  na urządzeniu, sterownik Android (APK w `maestro-client`), wersja CLI (`2.11.0` do STEP-08).
