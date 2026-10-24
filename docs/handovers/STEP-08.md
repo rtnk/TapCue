@@ -48,6 +48,7 @@
 | `docs/assets/tapcue-logo.png` | logo TapCue od właściciela (PNG 1254×1254, 1,2 MB, SHA-256 `d76f6c3b…9c19df1`); tylko w repozytorium — **nie** w paczce (zawartość ZIP i `verify-dist.sh` bez zmian) |
 | `docs/audit/notices-supplement.md` | §3.2: L-05 zaakceptowane; nowa §3.6 — teksty licencji bibliotek APK spoza Apache-2.0: JUnit 4.13.2 (EPL-1.0), Hamcrest 1.3 (BSD-3), checker-qual 3.33.0 (MIT), SLF4J 1.7.36 (MIT, z repozytorium `v_1.7.36`), kotlin-retry 2.0.1 (ISC), `javax.annotation-api` 1.3.2 (CDDL+GPLv2-CPE); teksty z JAR-ów Maven Central (mirror) |
 | `scripts/fork/macos-offline-test.sh` (osobny commit) | sondy `curl` przed i po komendach TapCue, każda z oczekiwaniem na wpis w logu do `LOG_WAIT` (60 s, co 5 s) zamiast stałego `sleep 2`; odmowy `java` czytane dopiero, gdy log pokazał sondę końcową (znacznik nadrobienia logu). Wymaganie rejestru w `release.yml` bez zmian; `release.yml` i `ci.yml` bez zmian |
+| `maestro-client/src/test/.../AdbTestFixtures.kt`, `DadbChromeDevToolsClientTest.kt`, `maestro-cli/src/test/.../McpStdioTest.kt` (osobny commit, decyzja właściciela) | testy zależne od czasu, które padły w walidacji `release.yml` na gałęzi PR-08 (run 40116758695, próby 1 i 2, macos-26): (1) `awaitParkedIn` — test przerwania odczytu listy devtools czeka, aż wątek zaparkuje w odczycie `BoundedAdbSocket` (a nie na dowolnym krótkim parkowaniu, np. przy zapisie żądania — wtedy przerwanie trafiało w złe miejsce); (2) `McpStdioTest` — odpowiedź `list_devices` (na macOS `xcrun simctl`, pierwsze wywołanie startuje CoreSimulator; w logu został osierocony `simctl`) do 240 s zamiast 90 s, limit klasy 6 min. Kod produktu bez zmian |
 | Dokumenty | ROADMAP (STEP-07 MERGED, STEP-08 realizacja, gate'y ze statusem, D-9), handover STEP-07 (scalony, §4), RELEASING (korekty po faktach), LICENSE-AUDIT v9 (zamknięty), NETWORK-AUDIT v11, ARCHITECTURE-LOCAL §5, AGENTS.md, ten plik |
 
 **Bez zmian:** pakiety `maestro.*`, moduły Gradle, format flow, `~/.tapcue`/`.tapcue/`, `Vendor/`, `release.yml`, `ci.yml`,
@@ -75,8 +76,10 @@ i `google()`, mirror Maven Central jak w STEP-01 §2; niezatwierdzony). **Bez fl
 | Notatki 0.1.0 (G-8) | `python3 -I scripts/fork/release-notes.py 0.1.0 --require-section` | **PASS** — sekcja i „Znane ograniczenia” znalezione |
 | `macos-offline-test.sh` (po zmianie) | `bash -n` | składnia OK; działanie — tylko na macOS (job `macos` w `ci.yml` PR-08 i `release.yml` walidacja) |
 | `release.yml` walidacja na `main` (przed zmianami) | [run 40115219200](https://github.com/rtnk/TapCue/actions/runs/40115219200) | **FAIL** 2/2 — opis w §1 |
-| `release.yml` walidacja na gałęzi PR-08 | `workflow_dispatch` `--ref` gałąź PR-08 | patrz PR (uzupełniane po runie) |
-| CI `ci.yml` na PR-08 | checki PR | patrz PR |
+| `release.yml` walidacja na gałęzi PR-08, commit `6dcc7fa` | [run 40116758695](https://github.com/rtnk/TapCue/actions/runs/40116758695) | **FAIL** — `prepare` zielony (tryb validate, wersja 0.1.0); `build`: próba 1 — `DadbChromeDevToolsClientTest > an interrupt while reading a devtools listing…` (`InterruptedException` zamiast `InterruptedIOException`), próba 2 (jedyny re-run) — `McpStdioTest > mcp serves the local tools…` („No response to request” po 90 s, osierocony `simctl`). Do kroku offline nie doszło. Testy uodpornione (wiersz niżej) |
+| Testy po uodpornieniu (lokalnie) | `./gradlew :maestro-client:test --tests '…DadbChromeDevToolsClientTest' --rerun` ×5, ×3 pod obciążeniem CPU (`yes` ×8 na 4 CPU); `./gradlew :maestro-client:test :maestro-cli:test --tests 'maestro.cli.mcp.McpStdioTest' :maestro-client:detektMain` | **PASS** — 8/8 przebiegów klasy (26 testów), cały `maestro-client`, `McpStdioTest`, detekt |
+| `release.yml` walidacja na gałęzi PR-08 po uodpornieniu | `workflow_dispatch` | patrz PR (uzupełniane po runie) |
+| CI `ci.yml` na PR-08, commit `6dcc7fa` | [run 40116803886](https://github.com/rtnk/TapCue/actions/runs/40116803886) | **PASS** — `changes`, `build`, `egress`, `android`, `macos` (żaden krok nie pominięty) |
 | Tag, publish, instalacja z Release (AT-11, G-6), AT-01…AT-11 na pobranej paczce | — | **NOT RUN** — tag dopiero po scaleniu PR-08 i na polecenie właściciela |
 
 ## 3. Ryzyka, blokery, znane problemy
@@ -86,6 +89,9 @@ i `google()`, mirror Maven Central jak w STEP-01 §2; niezatwierdzony). **Bez fl
   `log show` na runnerze, nie wyłączać `REQUIRE_REGISTER`.
 - **Widoczność repozytorium** — rozbieżność deklaracji właściciela i API (`private`). W repozytorium prywatnym Release i
   `gh release download` z README wymagają dostępu; minuty macOS płatne.
+- **Obciążenie runnerów `macos-26`** (2026-10-24): migracja danych symulatora trwała w jobie `macos` 1:55 (wcześniej 0:44), a w
+  `release.yml` padały kolejno różne testy zależne od czasu. Dwa uodpornione w PR-08; jeśli padnie kolejny — ta sama ścieżka
+  (diagnoza, poprawka testu), nie wyłączanie testów.
 - **Pierwsza prawdziwa publikacja** — ścieżka `publish` (`gh release create --verify-tag`, pobranie zasobów) i kontrola tagu
   adnotowanego po `actions/checkout` nadal nieprzetestowane na GitHub (handover STEP-07 §3). Procedury awaryjne: `docs/RELEASING.md` §4.4.
 - **Data w sekcji CHANGELOG** (`2026-10-24`) — planowana data wydania; jeśli tag powstanie później, notatki pokażą tę datę
