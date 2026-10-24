@@ -4,7 +4,10 @@ name: Settings - launch, scroll, tap, input text, screenshot
 ---
 - launchApp:
     clearState: true
-- assertVisible: "Network & internet"
+# The first launch after a cold boot of the CI emulator (2 CPUs) can take longer than assertVisible waits by default.
+- extendedWaitUntil:
+    visible: "Network & internet"
+    timeout: 60000
 # Generous limits: the CI emulator is slow, and "System" is near the end of a long list on a small screen.
 - scrollUntilVisible:
     element:

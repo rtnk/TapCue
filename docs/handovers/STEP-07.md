@@ -115,6 +115,10 @@ gh workflow run release.yml --ref main
   gwarancja; `reproduce` wykryje różnicę).
 - **Notatki wymagają sekcji `### 0.1.0` z „Znanymi ograniczeniami”** — PR-08 musi ją dodać, inaczej tag `v0.1.0` padnie
   w `prepare` (zamierzone, G-8).
+- **Po scaleniu (2026-10-24):** pierwszy push `main` z PR #15 ([run 40110095189](https://github.com/rtnk/TapCue/actions/runs/40110095189))
+  — `android` czerwony: flow `settings` padł na pierwszym `assertVisible: "Network & internet"` zaraz po `launchApp`
+  (emulator po zimnym starcie, 2 CPU; ten sam flow trwał 108–133 s w zielonych runach). Pozostałe 7 scenariuszy i joby
+  `build`/`egress`/`macos` zielone. Poprawka w osobnym PR: `extendedWaitUntil` 60 s zamiast domyślnego oczekiwania.
 - Koszt: każdy run `release.yml` to ok. 6 min `macos-26` + ~6 min ubuntu (repozytorium prywatne, D-9).
 - Otwarte po stronie właściciela (bez zmian, blokują STEP-08/G-3): przegląd `THIRD-PARTY-NOTICES.md`/suplementu, ocena Google
   Play services i JUnit (EPL-1.0) w APK sterownika (L-05), akceptacja polityki `scripts/fork/allowed-licenses.tsv`,
