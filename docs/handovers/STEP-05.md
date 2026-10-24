@@ -2,12 +2,12 @@
 
 | Pole | Wartość |
 |---|---|
-| Krok | STEP-05 — w review |
+| Krok | STEP-05 — **scalony** 2026-10-24 (merge `40df271`) |
 | PR | PR-05: https://github.com/rtnk/TapCue/pull/13 |
 | Gałąź | `step-05-local-dist` |
 | Gałąź docelowa | `main` |
 | Baza | `main` @ `ad15449` (merge PR #12 — STEP-04B) |
-| Commit SHA | ostatni commit gałęzi `step-05-local-dist` (patrz PR) |
+| Commit SHA | `9cf9777` (ostatni commit gałęzi), merge do `main`: `40df271` |
 
 ## 1. Co zrobiono
 
@@ -121,6 +121,11 @@ PR-05 **scalony** do `main`, CI `ci-baseline.yml` zielone na `main` (oba joby, t
 **Stan (2026-10-24):** właściciel **zaakceptował dołączenie FlyingFox do repozytorium** (`maestro-ios-xctest-runner/Vendor/`,
 opcja A spośród: pakiet lokalny / pakiet zdalny / pakiet zdalny tylko przez `driver-setup` / submodule / własny serwer HTTP).
 Pozostaje: przegląd `THIRD-PARTY-NOTICES.md`/suplementu i L-05.
+
+**Spełnione (sprawdzone na starcie STEP-06, 2026-10-24):** PR-05 [#13](https://github.com/rtnk/TapCue/pull/13) scalony
+(`40df271`); `ci-baseline.yml` na `main` zielony — [run 40083499632](https://github.com/rtnk/TapCue/actions/runs/40083499632)
+(oba joby, także `macos-dist`). Przegląd `THIRD-PARTY-NOTICES.md`/suplementu i ocena `play-services-location` (L-05) — nadal
+po stronie właściciela; STEP-06 ich nie rozstrzyga (dostarcza pełną listę bibliotek APK z CI).
 
 ## 5. Następny krok
 

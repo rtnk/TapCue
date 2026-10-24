@@ -177,3 +177,13 @@ Zasady architektoniczne:
   `maestro-driver-ios` (z `MaestroDriverLib/` i `Vendor/FlyingFox/` — pakiet lokalny zamiast zdalnego, N-36). Bez zmian:
   pakiety `maestro.*`, moduły Gradle, format flow, katalogi `~/.tapcue`/`.tapcue/`, identyfikatory `dev.mobile.maestro*`
   na urządzeniu, sterownik Android (APK w `maestro-client`), wersja CLI (`2.11.0` do STEP-08).
+- STEP-06 (CI i testy offline): jedynym workflowem jest `.github/workflows/ci.yml` (joby `changes`, `build`, `egress`,
+  `android`, `macos`; akcje przypięte do SHA, `permissions: contents: read`); `ci-baseline.yml` i zaparkowane workflowy upstream
+  usunięte. Narzędzia CI w `scripts/fork/`: `egress-test.sh` (+ `egress-reap.sh`) — przestrzeń sieciowa z samym loopbackiem
+  i rejestr prób przez `strace`; `check-forbidden-deps.sh`, `check-licenses.py` z `allowed-licenses.tsv`, `test-ci-checks.sh`;
+  `android-integration.sh` z flow w `android-flows/`; `android-driver-deps.py` (L-05); `macos-sandbox-log.sh`;
+  `resolve-test-runtime.gradle`. Zmiana produktu: serwer MCP owija STDIN/STDOUT w `PendingRequests` — EOF na STDIN dociera
+  do transportu SDK dopiero, gdy każde odczytane żądanie ma odpowiedź (wcześniej SDK zamykał sesję i porzucał żądania
+  w toku). Usunięte: `maestro-cli/src/test/mcp/` (ewaluacje LLM upstream), `e2e/workspaces/web` z serwerem fixture'ów,
+  `e2e/update_samples`. Bez zmian: pakiety `maestro.*`, moduły Gradle, format flow, katalogi `~/.tapcue`/`.tapcue/`,
+  zawartość paczki, `Vendor/`, `verify-dist.sh`.

@@ -1,9 +1,10 @@
 # Audyt licencji — TapCue (repozytorium `rtnk/TapCue`)
 
-Wersja: **6 (STEP-05, dystrybucja lokalna i audyt licencji)**. Baseline: upstream `v2.11.0` (`c8c361be`); opisy źródeł odnoszą się do baseline.
-Status audytu: **OTWARTY — Release zablokowany** (gate G-3 w `ROADMAP-0.1.md`). Po STEP-05 otwarte zostają: pełna lista
-bibliotek w APK sterownika Android (L-05, wymaga Google Maven — CI), automatyczny skan licencji z listą dozwolonych (STEP-06)
-i przegląd właściciela (§5).
+Wersja: **7 (STEP-06, CI: skan licencji i lista bibliotek APK sterownika)**. Baseline: upstream `v2.11.0` (`c8c361be`); opisy źródeł odnoszą się do baseline.
+Status audytu: **OTWARTY — Release zablokowany** (gate G-3 w `ROADMAP-0.1.md`). Po STEP-06 otwarte zostają wyłącznie
+decyzje właściciela (§5): przegląd `THIRD-PARTY-NOTICES.md`/suplementu, ocena `play-services-location` w APK sterownika
+(L-05) i akceptacja polityki listy dozwolonych licencji (§3, `scripts/fork/allowed-licenses.tsv`). Pełna lista bibliotek APK
+sterownika (L-05) i automatyczny skan licencji działają w CI od STEP-06.
 
 Od STEP-05 paczka `tapcue-<wersja>-macos-arm64.zip` zawiera `LICENSE`, `NOTICE` (atrybucja upstream, dopisek
 „based on Maestro (Apache-2.0), not affiliated with mobile.dev”), `THIRD-PARTY-NOTICES.md` (generowany przez
@@ -11,6 +12,8 @@ Od STEP-05 paczka `tapcue-<wersja>-macos-arm64.zip` zawiera `LICENSE`, `NOTICE` 
 wszystkie teksty licencji i pliki NOTICE zawarte w tych JAR-ach, Apache-2.0 §4(d), oraz ręczny suplement
 [`audit/notices-supplement.md`](audit/notices-supplement.md)) i `README.md`. Task kończy build błędem, jeśli jakaś zależność
 nie deklaruje licencji (i nie ma wpisu w `thirdPartyLicenseOverrides`). `scripts/verify-dist.sh` sprawdza archiwum (§4).
+Od STEP-06 job CI `build` (`.github/workflows/ci.yml`) porównuje każdą licencję z tabeli `THIRD-PARTY-NOTICES.md` w paczce
+z listą dozwolonych (`scripts/fork/check-licenses.py`, §3) — nowa licencja kończy CI błędem.
 
 > Ten dokument jest analizą techniczną wykonaną na potrzeby projektu, a nie poradą prawną.
 > Pozycje oznaczone jako wymagające decyzji prawnej powinny zostać ocenione przez właściciela
@@ -58,6 +61,18 @@ Pełna, wygenerowana tabela baseline (186 artefaktów zewnętrznych): [`docs/aud
 `truffle-api` UPL/MIT), MIT (MCP Kotlin SDK, colormath, slf4j, i in.), BSD-2/BSD-3/FreeBSD (`apk-parser`, `jline`/`jansi`,
 `jcodec`, `HdrHistogram`), ISC (`kotlin-result`), Unicode/ICU (`icu4j`), CC0 (`LatencyUtils`), CDDL+GPLv2-CPE
 (`javax.annotation-api`), LGPL-2.1/Apache-2.0 (`jna`, `jna-platform` — wybieramy Apache-2.0). Bez GFTC/własnościowych w `lib/`.
+
+**Skan licencji (STEP-06).** `scripts/fork/check-licenses.py <archiwum>` czyta tabelę §1 `THIRD-PARTY-NOTICES.md` z paczki
+i porównuje każdą zadeklarowaną licencję (dokładny napis z POM: „nazwa (URL)”) z `scripts/fork/allowed-licenses.tsv`
+(36 wpisów: napis → identyfikator SPDX i polityka). Polityka: `allowed` — może być jedyną licencją biblioteki (Apache-2.0, MIT,
+BSD-2/3-Clause, BSD-2-Clause-FreeBSD, ISC, UPL-1.0, CC0-1.0, Unicode-3.0, CDDL-1.1 OR GPL-2.0-only WITH Classpath-exception-2.0);
+`alternative-only` — tylko jako jedna z licencji do wyboru obok dozwolonej (LGPL-2.1 przy JNA: TapCue korzysta z Apache-2.0).
+Napis spoza listy (nowa licencja albo znana licencja zapisana inaczej w POM nowej wersji) kończy CI błędem do czasu przeglądu
+i dopisania wpisu. Wynik dla paczki STEP-06 (134 biblioteki): Apache-2.0 101, UPL-1.0 10, MIT 9, BSD-3-Clause 4,
+BSD-2-Clause 2, BSD-2-Clause-FreeBSD 2, CC0-1.0 1, BSD-2-Clause/CC0-1.0 1, MIT/UPL-1.0 1, ISC 1, Unicode-3.0 1,
+CDDL-1.1/GPL-2.0-CPE 1 — wszystkie na liście. Testy negatywne (`scripts/fork/test-ci-checks.sh`): nowa licencja (GFTC),
+znana licencja zapisana inaczej, biblioteka tylko z licencją `alternative-only`, pusta tabela, niezgodna liczba wierszy —
+każde odrzucone. Polityka jest decyzją techniczną do akceptacji właściciela (§5).
 
 Podsumowanie licencji wg POM: Apache-2.0 (zdecydowana większość), MIT, UPL-1.0 (GraalVM community),
 BSD-2/BSD-3/FreeBSD (`jcodec`, `jline`, `HdrHistogram`), ISC (`kotlin-result`), Unicode/ICU (`icu4j` shadowed),
@@ -113,7 +128,7 @@ binarium/archiwum zagnieżdżone kończy weryfikację błędem):
 `verify-dist.sh` sprawdza ścieżki w archiwum i w każdym JAR-ze z `lib/` (wzorce poniżej), binaria natywne (lista dozwolonych
 w §3), kompletność `THIRD-PARTY-NOTICES.md` (każdy JAR z `lib/`), `NOTICE`/`LICENSE`/`README.md`, start-scripty (bez linków
 producenta, sprawdzenie Javy 17) i `SHA256SUMS`; z `--smoke` uruchamia `bin/tapcue --version` z rozpakowanego archiwum.
-Uruchamiany w CI (`ci-baseline.yml`: job Linux i job `macos-dist`).
+Uruchamiany w CI (`.github/workflows/ci.yml`: job `build` i job `macos`; do STEP-05 `ci-baseline.yml`).
 
 | Wzorzec | Powód | Od kroku |
 |---|---|---|
@@ -130,8 +145,10 @@ Uruchamiany w CI (`ci-baseline.yml`: job Linux i job `macos-dist`).
 1. ~~STEP-05: `THIRD-PARTY-NOTICES.md`~~ — **zrealizowane** (generowany przy buildzie; teksty z JAR-ów + suplement).
    Zostaje: artefakty, których JAR nie zawiera tekstu licencji (np. część MIT/BSD), mają w tabeli nazwę i URL licencji
    z POM, ale nie pełny tekst — przegląd właściciela przed STEP-08 (ewentualnie dopisanie tekstów do suplementu).
-2. STEP-05: drzewo zależności `maestro-android` (APK) i noty dla L-05 — **częściowo** (zależności bezpośrednie, §3.2
-   suplementu); pełna lista przechodnia i ocena `play-services-location` — STEP-06 (CI z Google Maven) / właściciel.
+2. STEP-05: drzewo zależności `maestro-android` (APK) i noty dla L-05 — **pełna lista przechodnia w STEP-06** (job CI `build`,
+   `scripts/fork/android-driver-deps.py`, §3.2 suplementu); **ocena `play-services-location` — właściciel** (otwarte).
 3. ~~STEP-05: SHA-256 `applesimutils` vs wydanie 0.9.10~~ — oficjalne wydanie to tylko źródła; porównanie niemożliwe (L-02).
 4. ~~D-5: implementacja z testami regresji~~ — **zrealizowane w STEP-05**. D-6 zrealizowana w STEP-03B.
-5. STEP-06: automatyczny skan licencji w CI (porównanie z listą dozwolonych licencji; nowa licencja → fail).
+5. ~~STEP-06: automatyczny skan licencji w CI~~ — **zrealizowane** (`scripts/fork/check-licenses.py`, §3). Do akceptacji
+   właściciela: polityka listy dozwolonych (w szczególności CDDL+GPLv2-CPE `javax.annotation-api` jako `allowed` i LGPL-2.1
+   jako `alternative-only`).

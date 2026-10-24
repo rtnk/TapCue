@@ -81,7 +81,7 @@ isolated() {
   shift
   local sudo=() as_user=()
   if [ "$uid" != 0 ]; then
-    sudo=(sudo)
+    sudo=(sudo --preserve-env)
     as_user=(-u "$user")
   fi
   # A PID namespace too, so that a daemon the command leaves behind (an adb server, a Gradle daemon) can be reaped and
@@ -90,7 +90,7 @@ isolated() {
     strace "${as_user[@]}" -f --seccomp-bpf -qq -o "$log" -e trace=connect,sendto,sendmsg,sendmmsg -- \
     env -u JAVA_TOOL_OPTIONS -u _JAVA_OPTIONS -u JDK_JAVA_OPTIONS \
       -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u NO_PROXY -u http_proxy -u https_proxy -u all_proxy -u no_proxy \
-      HOME="$HOME" PATH="$PATH" timeout --kill-after=10 "$limit" "$root/scripts/fork/egress-reap.sh" "$@"
+      HOME="$HOME" PATH="$PATH" ${JAVA_HOME:+JAVA_HOME="$JAVA_HOME"} timeout --kill-after=10 "$limit" "$root/scripts/fork/egress-reap.sh" "$@"
 }
 
 # Seconds one isolated command may take before it is killed (and fails): a hang must not stall CI silently.
