@@ -291,7 +291,7 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
   i `buildIosDriver` usunięte; `IOSSimulatorDriver` buduje runner dla symulatora z `driver/ios` w JAR przy pierwszym użyciu
   (cache w `~/.tapcue`, przebudowa po zmianie wersji lub źródła); JAR zawiera teraz też `MaestroDriverLib/` (brakowało go
   także dla urządzeń fizycznych) i dołączony pakiet FlyingFox (`Vendor/`, `XCLocalSwiftPackageReference`) — build nie
-  pobiera niczego (N-36). `scripts/verify-dist.sh` + testy negatywne `scripts/fork/test-verify-dist.sh`; CI: job Linux
+  pobiera niczego (N-36; **właściciel zaakceptował dołączenie FlyingFox w `Vendor/` 2026-10-24**). `scripts/verify-dist.sh` + testy negatywne `scripts/fork/test-verify-dist.sh`; CI: job Linux
   (archiwum, weryfikacja, testy negatywne, artefakt) i job `macos-dist` na `macos-26` arm64 (polecenia CLI/MCP z paczki pod `sandbox-exec` bez
   sieci, build sterownika symulatora ze źródła bez pobierania pakietów, `hierarchy` na symulatorze — zielone w PR #13). Wersja CLI pozostaje `2.11.0` (zmiana na
   `0.1.0` — PR-08).

@@ -91,6 +91,8 @@ tapcue-*/bin/tapcue driver-setup --simulator
   innych wersjach Xcode niż w CI build może się nie udać — błąd z logiem `~/.tapcue/maestro-iphonesimulator-driver-build/output.log`.
   `IOSBuildProductsExtractor` kopiuje produkty do katalogu tymczasowego tylko jako zwykłe pliki (dowiązania symboliczne
   pomija — jak dotąd dla urządzeń fizycznych); poprawność na prawdziwym symulatorze potwierdza tylko job `macos-dist`.
+- **FlyingFox w `Vendor/` (decyzja właściciela 2026-10-24):** aktualizacja = podmiana katalogu (`Vendor/README.md`), przy
+  synchronizacji z upstream (R-5) zmiany Maestro w zależnościach Swift trzeba przenosić ręcznie.
 - **Edycja `project.pbxproj` ręczna** (pakiet lokalny, `objectVersion` 60) — weryfikowana wyłącznie przez build w CI na Xcode
   z `macos-26`. Aktualizacja FlyingFox wymaga teraz podmiany katalogu `Vendor/` (opis w `Vendor/README.md`).
 - **Teksty licencji spoza JAR-ów** (suplement §3.5) pochodzą z repozytoriów źródłowych w wydanej wersji; dla `jcodec`
@@ -114,8 +116,11 @@ tapcue-*/bin/tapcue driver-setup --simulator
 ## 4. Warunek rozpoczęcia następnego kroku
 
 PR-05 **scalony** do `main`, CI `ci-baseline.yml` zielone na `main` (oba joby, także `macos-dist`). Właściciel przejrzał
-`THIRD-PARTY-NOTICES.md`/suplement i zaakceptował (albo odrzucił) dołączenie FlyingFox do repozytorium (`Vendor/`) oraz
-ocenę `play-services-location` w APK sterownika (L-05).
+`THIRD-PARTY-NOTICES.md`/suplement oraz ocenił `play-services-location` w APK sterownika (L-05).
+
+**Stan (2026-10-24):** właściciel **zaakceptował dołączenie FlyingFox do repozytorium** (`maestro-ios-xctest-runner/Vendor/`,
+opcja A spośród: pakiet lokalny / pakiet zdalny / pakiet zdalny tylko przez `driver-setup` / submodule / własny serwer HTTP).
+Pozostaje: przegląd `THIRD-PARTY-NOTICES.md`/suplementu i L-05.
 
 ## 5. Następny krok
 
