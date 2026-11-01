@@ -73,9 +73,9 @@ sealed class MaestroException(override val message: String, cause: Throwable? = 
 
     class NoRootAccess(message: String, cause: Throwable? = null) : MaestroException(message, cause)
 
-    /** The `web` platform (Chrome driven by Selenium on the host) is not part of TapCue 0.1.0 (decision D-4). */
+    /** The `web` platform (Chrome driven by Selenium on the host) is not part of TapCue (decision D-4). */
     class WebPlatformNotSupported : MaestroException(
-        "The web platform is not supported in TapCue 0.1.0. Web flows (flows with a `url:` header), " +
+        "The web platform is not supported in TapCue. Web flows (flows with a `url:` header), " +
             "`--platform web` and the `chromium` device are unavailable; run flows on an Android or iOS device instead."
     )
 

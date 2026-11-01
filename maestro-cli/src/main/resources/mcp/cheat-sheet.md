@@ -23,7 +23,7 @@ env:
 - assertVisible: "Welcome"
 ```
 
-Web flows (`url:` instead of `appId:`) are not supported in TapCue 0.1.0.
+Web flows (`url:` instead of `appId:`) are not supported in TapCue.
 
 Keep a project's flows in its `.tapcue/` directory (TapCue does not read `.maestro/`; rename it with
 `mv .maestro .tapcue`) and run them with `tapcue test .tapcue`.
