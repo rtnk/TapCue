@@ -48,11 +48,15 @@
 >   nothing. Notes come from the `### <version>` section of the TapCue part of `CHANGELOG.md`, which must have a
 >   `Known limitations`/`Znane ograniczenia` heading. Release scripts are tested by `scripts/fork/test-release.sh`. Never
 >   create `v*` tags or Releases unless the owner asks for that release (procedure: `docs/RELEASING.md`).
-> - Version (STEP-08): `CLI_VERSION=0.1.0` — TapCue's own numbering, lower than the upstream 2.11.0 the fork started from,
+> - Version (STEP-08/09): `CLI_VERSION=0.2.0` (0.1.0 released 2026-10-25) — TapCue's own numbering, lower than the upstream 2.11.0 the fork started from,
 >   so compare stored driver versions for equality, not order. The release notes of each version come from its
 >   `### <version>` section in the TapCue part of `CHANGELOG.md` (with `#### Znane ograniczenia`). The logo is
 >   `docs/assets/tapcue-logo.png` (repository README only, not in the archive). `docs/LICENSE-AUDIT.md` is closed for 0.1.0;
 >   a new license or a new library without a bundled license text needs a supplement entry (`notices-supplement.md` §3.5/§3.6).
+> - Upstream sync (STEP-09): the code is synced with upstream `v2.12.0` (`0df4cf3c`) by `git cherry-pick -x` of each upstream
+>   commit, re-audited for network access and licenses (`docs/handovers/STEP-09.md` lists what was taken, adapted and left out).
+>   Do the same for later upstream tags in a separate "sync upstream vX.Y.Z" PR (R-5); never take simulator-server, web/Selenium,
+>   Cloud or upstream release-process changes, and never bring back `sdkmanager --list` or system-image installs (N-24).
 > - No prebuilt iOS driver (STEP-05, D-5): the `driver-iPhoneSimulator`/`driver-iphoneos` ZIPs and the `buildIosDriver`
 >   task are gone. The CLI builds the simulator runner from the source in its JAR (`driver/ios`) with the local Xcode
 >   (`maestro.cli.driver.IOSSimulatorDriver`, `~/.tapcue/maestro-iphonesimulator-driver-build`). Swift dependencies are
@@ -140,6 +144,14 @@ Stack: **JUnit 5**, **Google Truth**, **WireMock JRE8** (HTTP fakes), plus the i
 ./gradlew :maestro-test:test
 ```
 
+### Simulator tests (opt-in, inside a module's unit tests)
+
+For driver code whose input is produced by the platform itself — a line in the simulator's log, a file macOS writes — and which a hand-written fixture therefore cannot keep honest. The test runs the real class against a booted simulator, with no CLI, flow or XCTest runner. It is skipped unless `MAESTRO_TEST_SIMULATOR_UDID` is set, so `./gradlew test` behaves the same everywhere else; the `test-ios` job of `test-e2e.yaml` sets it. Example: `IOSDriverCrashSimulatorTest`.
+
+```bash
+MAESTRO_TEST_SIMULATOR_UDID=<booted-udid> ./gradlew :maestro-client:test --tests '*SimulatorTest'
+```
+
 ### E2E tests (`e2e/`)
 
 Smoke-test every Maestro command across Android, iOS, and Web on real fixture apps. Maestro is its own dogfood harness: the CLI executes Maestro flow YAMLs against the fixtures, asserting both the framework's commands and the platform drivers behave correctly.
@@ -173,6 +185,7 @@ the archive without network (`egress`) and with an emulator (`android`).
 - Protobuf for the on-device wire format (`maestro-proto/`).
 - Coroutines with explicit dispatchers; `runBlocking` only at entry points.
 - Exposed exceptions classify failures (retryable vs terminal) — see `maestro-orchestra/src/main/java/maestro/orchestra/error/`.
+- **A run's files fall into three buckets.** *Inputs* (flow YAML, scripts, `assertScreenshot` references, `addMedia` files) are read from the workspace and never written to. *Outputs* — anything a user may want after the run — are allocated through `ArtifactsGenerator`, which places them in the artifacts bundle and lists them in `manifest.json`. *Scratch* files go through `TempFileHandler` (below). Callers decide what happens to those folders after the run and may keep only what the manifest lists, so an output written anywhere else — beside an input especially — can be silently lost. `RunOutputStaysInBundleTest` (`maestro-test/`) enforces this and makes every new command declare whether it creates files.
 - **Temp files and directories go through `maestro.utils.TempFileHandler`**, not `java.nio.file.Files.createTempFile/createTempDirectory` directly. `TempFileHandler` is a `Closeable` that recursively cleans up everything it allocated on `close()`. Direct `Files.createTempFile(...)` skips that lifecycle and leaks `/tmp` content (especially painful on long-lived JVMs like the cloud worker). Construct a `TempFileHandler` near the lifecycle owner, call its `createTempFile` / `createTempDirectory`, and `close()` it in a `finally`.
 
 ## Where Claude Code resources live

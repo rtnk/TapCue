@@ -67,7 +67,6 @@ dependencies {
     api(libs.square.okio.jvm)
     api(libs.image.comparison)
     api(libs.square.okhttp)
-    api(libs.jarchivelib)
     api(libs.jackson.core.databind)
     api(libs.jackson.module.kotlin)
     api(libs.jackson.dataformat.yaml)
@@ -113,4 +112,7 @@ tasks.named("compileKotlin", KotlinCompilationTask::class.java) {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
+    // Simulator tests (see AGENTS.md) depend on a device, not only on the sources: when one is
+    // named, always run them instead of reusing the last result.
+    outputs.upToDateWhen { System.getenv("MAESTRO_TEST_SIMULATOR_UDID").isNullOrEmpty() }
 }

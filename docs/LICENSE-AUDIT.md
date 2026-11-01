@@ -1,6 +1,6 @@
 # Audyt licencji — TapCue (repozytorium `rtnk/TapCue`)
 
-Wersja: **9 (STEP-08, wydanie 0.1.0: decyzje właściciela, pełne teksty licencji, audyt zamknięty)**. Baseline: upstream `v2.11.0` (`c8c361be`); opisy źródeł odnoszą się do baseline.
+Wersja: **10 (STEP-09, sync upstream `v2.12.0`, wydanie 0.2.0)**. Baseline: upstream `v2.11.0` (`c8c361be`); opisy źródeł odnoszą się do baseline; od STEP-09 kod zsynchronizowany z `v2.12.0` (`0df4cf3c`).
 Status audytu: **ZAMKNIĘTY dla 0.1.0 (STEP-08, 2026-10-24)** — gate G-3 spełniony. Decyzje właściciela z 2026-10-24 (§5):
 (1) noty — dopisać brakujące pełne teksty licencji (zrealizowane: suplement §3.6, teksty bibliotek APK sterownika; teksty
 bibliotek CLI bez tekstu w JAR-ze były już w §3.5 od STEP-05); (2) L-05 — Google Play services (Android SDK License)
@@ -19,6 +19,19 @@ z listą dozwolonych (`scripts/fork/check-licenses.py`, §3) — nowa licencja k
 (`verify-dist.sh --smoke`, `check-licenses.py`, `check-forbidden-deps.sh`, strażnik simulator-server) przechodzi archiwum
 wydania w jobie `build` workflowu `.github/workflows/release.yml` przed publikacją (gate G-4); Release zawiera wyłącznie to
 archiwum i `SHA256SUMS`.
+
+**STEP-09 (0.2.0) — przegląd zmian zależności po synchronizacji z upstream `v2.12.0`.** Audyt pozostaje zamknięty (G-3): żadna
+nowa licencja (skan `check-licenses.py` — 136 bibliotek, wszystkie na liście; bez zmian w `allowed-licenses.tsv`), żaden nowy
+plik natywny ani zagnieżdżone archiwum (`verify-dist.sh`). Zmiany w `lib/` względem 0.1.0: usunięty `org.rauschig:jarchivelib:1.2.0`
+(Apache-2.0); nowe `com.hominux:compress4j:5.1.0` (Apache-2.0, repozytorium `hominux/compress4j` `v5.1.0`: `LICENSE` = Apache-2.0,
+brak `NOTICE`), `org.jspecify:jspecify:1.0.1` (Apache-2.0, `jspecify/jspecify` `v1.0.1`: `LICENSE`, brak `NOTICE`) i
+`org.apache.commons:commons-lang3:3.21.0` (Apache-2.0, `LICENSE.txt`/`NOTICE.txt` w JAR-ze); podbite `commons-compress` 1.21 →
+1.28.0, `commons-io` 2.16.1 → 2.22.0, `commons-codec` 1.17.0 → 1.19.0 (Apache-2.0, teksty i NOTICE w JAR-ach) oraz `slf4j-api`
+2.0.17 → 2.0.20 (MIT, tekst w JAR-ze). JAR-y `compress4j` i `jspecify` nie zawierają tekstu licencji — tekst Apache-2.0 jest w §2
+`THIRD-PARTY-NOTICES.md` (z innych JAR-ów), a projekty nie mają pliku NOTICE (Apache-2.0 §4(d) nie wymaga dopisku), więc suplement
+§3.5 bez zmian. APK sterownika Android: nowy `maestro-server.apk` z CI upstream (`0e5fcfd7`) — źródło `maestro-android` z nowym
+`InputInjector`, bez nowych zależności (`maestro-android/build.gradle.kts` bez zmian, L-05 i §3.6 suplementu bez zmian).
+Nieprzeniesione: aktualizacje simulator-server (L-01), Selenium 4.51.0 (web usunięty, D-4).
 
 > Ten dokument jest analizą techniczną wykonaną na potrzeby projektu, a nie poradą prawną.
 > Pozycje oznaczone jako wymagające decyzji prawnej powinny zostać ocenione przez właściciela

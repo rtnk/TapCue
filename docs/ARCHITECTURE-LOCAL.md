@@ -202,3 +202,11 @@ Zasady architektoniczne:
   sterownika Android. README repozytorium opisuje TapCue (instalacja z Release, CLI, MCP, ograniczenia) z logo
   `docs/assets/tapcue-logo.png` — logo nie trafia do paczki (zawartość archiwum i `verify-dist.sh` bez zmian). Bez zmian:
   pakiety `maestro.*`, moduły Gradle, format flow, katalogi `~/.tapcue`/`.tapcue/`, `Vendor/`, `release.yml`, `ci.yml`.
+- STEP-09 (sync upstream `v2.12.0`, wydanie 0.2.0): kod upstream `v2.11.0..v2.12.0` przeniesiony `git cherry-pick -x` (szczegóły:
+  `docs/handovers/STEP-09.md`). Nowe w modułach: `maestro.device.AppCrashReport` i `xcuitest.crash.IOSAppTerminationFinder`
+  (crash iOS z logu symulatora, `XCUITestServerError.AppCrash` → `AppNotRunning`), `maestro.orchestra.util.NumericFields`
+  (walidacja `index`/`point`/`speed`), `DeviceService.runSdkManager` (limit czasu, wyjście do pliku; w TapCue tylko
+  `--list_installed`), log emulatora w `DebugLogStore`, `InputInjector` w `maestro-android` (nowy `maestro-server.apk` z CI
+  upstream), `ArtifactsGenerator` dla różnicy `assertScreenshot`. Zależność `jarchivelib` → `com.hominux:compress4j` 5.1.0
+  (`maestro-cli`, `maestro-ios-driver` jako `implementation`). `CLI_VERSION=0.2.0`. Bez zmian: pakiety `maestro.*`, moduły Gradle,
+  format flow, katalogi `~/.tapcue`/`.tapcue/`, `Vendor/`, `release.yml`, `ci.yml`, brak simulator-server, web i Cloud.

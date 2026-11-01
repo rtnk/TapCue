@@ -29,7 +29,9 @@ object Unpacker {
     }
 
     private fun sameContents(resource: URL, target: File): Boolean {
-        return DigestUtils.sha1Hex(resource.openStream()) == DigestUtils.sha1Hex(target.inputStream())
+        return resource.openStream().use { source ->
+            target.inputStream().use { DigestUtils.sha1Hex(source) == DigestUtils.sha1Hex(it) }
+        }
     }
 
     fun binaryDependency(name: String): File {

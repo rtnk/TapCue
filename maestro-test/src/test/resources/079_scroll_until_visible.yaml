@@ -6,4 +6,5 @@ appId: com.example.app
     speed: 100
     visibilityPercentage: 100
     direction: DOWN
-    timeout: 10
+    # Budget for the whole scroll loop, not per swipe: 10 ms was shorter than the first lookup and swipe on a busy CI runner.
+    timeout: 3000

@@ -1,6 +1,6 @@
 # Audyt ruchu sieciowego — TapCue (repozytorium `rtnk/TapCue`)
 
-Wersja: **11 (STEP-08, wydanie 0.1.0)**. Baseline: upstream `mobile-dev-inc/Maestro` tag `v2.11.0`
+Wersja: **12 (STEP-09, sync upstream `v2.12.0`, wydanie 0.2.0)**. Baseline: upstream `mobile-dev-inc/Maestro` tag `v2.11.0`
 (`c8c361be1cc89b2e742f185466a302a22778be6b`); numery linii w kolumnie „Źródło” odnoszą się do baseline.
 
 Historia zmian statusów:
@@ -71,6 +71,15 @@ Historia zmian statusów:
   iOS dla urządzeń fizycznych przy każdej innej wersji CLI (lokalny `xcodebuild`, bez sieci — jak dotąd). Dowód braku prób
   połączeń dla archiwum `0.1.0`: `egress-test.sh` (lokalnie i w jobie `egress`) oraz krok offline macOS w `release.yml`/`ci.yml`
   (handover STEP-08 §2). README wskazuje `gh release download` — ruch użytkownika do GitHub przy instalacji, nie TapCue.
+- **STEP-09** (sync upstream `v2.12.0`, wydanie 0.2.0) — bez nowych pozycji i bez zmian statusów. Ponowny audyt 22 commitów
+  `v2.11.0..v2.12.0` (diff dodanego kodu przeszukany pod kątem HTTP/URL/socketów/klientów sieciowych — brak nowych): nowe są tylko
+  lokalne procesy — `xcrun simctl spawn <udid> log show` (wykrywanie crashy iOS, `IOSAppTerminationFinder`), plik logu emulatora
+  i limit czasu `sdkmanager`. **N-24:** przeniesiony upstream `runSdkManager` jest używany wyłącznie z `--list_installed`; kod
+  upstream z `sdkmanager --list` (zdalny katalog Google) i `installAndroidSystemImage` nie został przywrócony
+  (`DeviceCreateUtilTest` nadal pilnuje braku instalacji). Nieprzeniesione: aktualizacje simulator-server (N-18, L-01), Selenium
+  i `launchApp` dla web (N-26…N-30, D-4), `--priority` Maestro Cloud (N-02/N-16). Nowa zależność `com.hominux:compress4j`
+  (archiwa ZIP, bez kodu sieciowego) zastępuje `jarchivelib`. Dowód braku prób połączeń dla archiwum `0.2.0`: `egress-test.sh`
+  (lokalnie i w jobie `egress`) oraz krok offline macOS w `release.yml`/`ci.yml` (handover STEP-09 §2).
 
 Dokument jest rejestrem *wszystkich* znanych ścieżek, którymi narzędzie (CLI, MCP, build) może
 nawiązać połączenie sieciowe. Każdy kolejny krok aktualizuje kolumnę **Status** i dopisuje dowody.

@@ -1,7 +1,8 @@
 # Wydawanie TapCue (repozytorium `rtnk/TapCue`)
 
-Status: **pipeline gotowy (STEP-07, `.github/workflows/release.yml`)**; pierwsze wydanie `v0.1.0` przygotowane w PR-08 (STEP-08); tag po scaleniu PR-08.
-Do scalenia PR-08 **nie tworzymy tagów `v*` ani GitHub Release** (tryb walidacji przez `workflow_dispatch` — bez ograniczeń).
+Status: **pipeline gotowy (STEP-07, `.github/workflows/release.yml`)**; `v0.1.0` wydane 2026-10-25 (STEP-08). Wydanie `v0.2.0`
+(sync upstream `v2.12.0`) przygotowane w PR-09 (STEP-09); tag po scaleniu PR-09, na polecenie właściciela. Przed scaleniem PR
+przygotowującego wydanie **nie tworzymy tagów `v*` ani GitHub Release** (tryb walidacji przez `workflow_dispatch` — bez ograniczeń).
 
 Plik `RELEASING.md` w katalogu głównym oraz skille `.claude/skills/release/` i `bump-android-version` opisują procesy
 **upstream** (mobile.dev: Maestro Cloud, Maven Central, Homebrew, GCS) i **nie dotyczą** tego forka. Build forka nie ma

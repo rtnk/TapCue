@@ -161,7 +161,7 @@ class TestCommand : Callable<Int> {
     )
     private var excludeTags: List<String> = emptyList()
 
-    // Web-only options. The web platform is not supported in TapCue 0.1.0; they are still accepted
+    // Web-only options. The web platform is not supported in TapCue; they are still accepted
     // (and ignored) so existing scripts that pass them for mobile runs keep working.
     @Suppress("unused")
     @Option(names = ["--headless"], hidden = true)

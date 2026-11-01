@@ -3,6 +3,9 @@ package maestro.device
 import maestro.DeviceConnectionException
 import maestro.MaestroException
 import maestro.android.AndroidDeviceConnection
+import maestro.android.boundedAdbCall
+import maestro.android.newAdbIoExecutor
+import maestro.debuglog.DebugLogStore
 import maestro.device.util.AndroidEnvUtils
 import maestro.device.util.AvdDevice
 import maestro.device.util.PrintUtils
@@ -28,6 +31,8 @@ object DeviceService {
 
     private val tempFileHandler = TempFileHandler()
     private val localSimulatorUtils = LocalSimulatorUtils(tempFileHandler)
+
+    private const val DEVICE_DISCOVERY_TIMEOUT_MS = 5000L
 
     fun startDevice(
         device: Device.AvailableForLaunch,
@@ -80,7 +85,16 @@ object DeviceService {
                     PrintUtils.message("Launching Emulator...")
                     val emulatorBinary = requireEmulatorBinary()
 
-                    ProcessBuilder(
+                    // The emulator is long-running and chatty on stdout/stderr (GPU backend
+                    // probing, boot logs); left as the default PIPE with nobody reading it, it
+                    // blocks writing once the OS pipe buffer fills, stalling the emulator mid-boot
+                    // before adb ever sees it. Same failure mode runSdkManager's comment
+                    // describes, fixed the same way: redirect to a file instead of a pipe.
+                    // A plain temp file won't do: it's marked deleteOnExit, and this CLI process
+                    // exits (triggering that delete) while the emulator still has it open — on
+                    // POSIX that unlink succeeds, leaving nothing at the path once the command
+                    // returns. DebugLogStore's run directory isn't cleaned up until the run ends.
+                    val emulatorProcess = ProcessBuilder(
                         emulatorBinary.absolutePath,
                         "-avd",
                         device.modelId,
@@ -88,22 +102,40 @@ object DeviceService {
                         "none",
                         "-netspeed",
                         "full"
-                    ).start().waitFor(10, TimeUnit.SECONDS)
+                    )
+                    DebugLogStore.logOutputOf(emulatorProcess)
+                    emulatorProcess.start().waitFor(10, TimeUnit.SECONDS)
 
                     var lastException: Exception? = null
 
-                    MaestroTimer.withTimeout(60000) {
-                        try {
-                            AndroidDeviceConnection.newestNotIn(
-                                connectedSerials = connectedDevices,
-                                driverHostPort = driverHostPort ?: AndroidDeviceConnection.DEFAULT_DRIVER_HOST_PORT,
-                            )
-                        } catch (ignored: Exception) {
-                            Thread.sleep(100)
-                            lastException = ignored
-                            null
-                        }
-                    } ?: throw DeviceError("Unable to start device: ${device.modelId}", lastException)
+                    // Dadb.list() (called via newestNotIn(), below) has no timeout and can block
+                    // forever against an offline/half-initialized device, which would otherwise
+                    // defeat this method's own 60s boot-wait budget. Same un-abortable-dadb-read
+                    // problem AdbSocketFactory already bounds for webview sockets; reuse its
+                    // worker-pool/timeout mechanism (boundedAdbCall) here too. Scoped per call,
+                    // not shared on DeviceService: a timed-out worker can't actually be
+                    // interrupted and stays parked forever, so a shared, long-lived pool would
+                    // let repeated failed starts in a long-running host (e.g. Maestro Studio)
+                    // saturate it and starve every later start.
+                    val deviceDiscoveryExecutor = newAdbIoExecutor()
+                    try {
+                        MaestroTimer.withTimeout(60000) {
+                            try {
+                                boundedAdbCall(deviceDiscoveryExecutor, DEVICE_DISCOVERY_TIMEOUT_MS, "Waiting for emulator to appear") {
+                                    AndroidDeviceConnection.newestNotIn(
+                                        connectedSerials = connectedDevices,
+                                        driverHostPort = driverHostPort ?: AndroidDeviceConnection.DEFAULT_DRIVER_HOST_PORT,
+                                    )
+                                }
+                            } catch (ignored: Exception) {
+                                Thread.sleep(100)
+                                lastException = ignored
+                                null
+                            }
+                        } ?: throw DeviceError("Unable to start device: ${device.modelId}. See the emulator log in ${DebugLogStore.logDirectory}", lastException)
+                    } finally {
+                        deviceDiscoveryExecutor.shutdown()
+                    }
                 }
 
                 // The boot/setup connection is only needed to install the driver app + set the locale;
@@ -567,26 +599,13 @@ object DeviceService {
      * @return true is Android system image is already installed
      */
     fun isAndroidSystemImageInstalled(image: String): Boolean {
-        val command = listOf(
-            requireSdkManagerBinary().absolutePath,
-            "--list_installed"
-        )
-        try {
-            val process = ProcessBuilder(*command.toTypedArray()).start()
-            if (!process.waitFor(1, TimeUnit.MINUTES)) {
-                throw TimeoutException()
-            }
-
-            if (process.exitValue() == 0) {
-                val output = String(process.inputStream.readBytes()).trim()
-
-                return output.contains(image)
-            }
+        return try {
+            val output = runSdkManager("--list_installed") ?: return false
+            image in parseSdkPackagePaths(output)
         } catch (e: Exception) {
             logger.error("Unable to detect if SDK package is installed", e)
+            false
         }
-
-        return false
     }
 
     /**
@@ -626,23 +645,59 @@ object DeviceService {
 
     private fun listInstalledSystemImagePackages(): List<String> {
         return try {
-            val command = listOf(
-                requireSdkManagerBinary().absolutePath,
-                "--list_installed",
-            )
-            val process = ProcessBuilder(*command.toTypedArray()).start()
-            if (!process.waitFor(1, TimeUnit.MINUTES)) throw TimeoutException()
-            if (process.exitValue() != 0) return emptyList()
-            String(process.inputStream.readBytes())
-                .lineSequence()
-                // rows: "  <path> | <version> | <desc>"
-                .map { it.trim().substringBefore(" ") }
+            val output = runSdkManager("--list_installed") ?: return emptyList()
+            parseSdkPackagePaths(output)
                 .filter { it.startsWith("system-images;") && it.split(";").size == 4 }
-                .toList()
         } catch (e: Exception) {
             logger.error("Unable to list Android system images", e)
             emptyList()
         }
+    }
+
+    /**
+     * Package paths from sdkmanager's listing, in the `;`-separated form sdkmanager takes as input.
+     * Rows are "  <path>  <version>  <desc>", with or without `|` separators. Command-line tools
+     * before 23.0 print paths with `;`; from 23.0 sdkmanager forwards to the Android CLI, which
+     * prints them with `/`.
+     */
+    internal fun parseSdkPackagePaths(output: String): List<String> {
+        return output.lineSequence()
+            .map { it.trim().substringBefore(" ").replace('/', ';') }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .toList()
+    }
+
+    /**
+     * Runs sdkmanager to completion and returns its stdout, or null if it exited non-zero. Throws
+     * [TimeoutException] if it does not finish in time.
+     *
+     * Stdout goes to a file rather than a pipe: a full listing is larger than the pipe buffer, and
+     * sdkmanager blocks writing to it while still holding the SDK lock, so any later sdkmanager
+     * call (an install, say) waits forever. On timeout the whole process tree is killed, because
+     * from 23.0 sdkmanager is a shell script and the lock is held by its child.
+     */
+    private fun runSdkManager(vararg args: String, timeoutMinutes: Long = 1): String? {
+        val output = tempFileHandler.createTempFile("sdkmanager", ".out")
+        try {
+            val process = ProcessBuilder(requireSdkManagerBinary().absolutePath, *args)
+                .redirectOutput(output)
+                .redirectError(ProcessBuilder.Redirect.DISCARD)
+                .start()
+            if (!process.waitFor(timeoutMinutes, TimeUnit.MINUTES)) {
+                destroyProcessTree(process)
+                throw TimeoutException("sdkmanager ${args.joinToString(" ")} did not finish in $timeoutMinutes minute(s)")
+            }
+            if (process.exitValue() != 0) return null
+            return output.readText()
+        } finally {
+            output.delete()
+        }
+    }
+
+    private fun destroyProcessTree(process: Process) {
+        process.descendants().forEach { it.destroyForcibly() }
+        process.destroyForcibly()
     }
 
     fun getAndroidSystemImageInstallCommand(pkg: String): String {

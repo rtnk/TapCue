@@ -183,7 +183,7 @@ dependencies {
     implementation(platform(libs.netty.bom))
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
-    implementation(libs.jarchivelib)
+    implementation(libs.compress4j)
     implementation(libs.commons.codec)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.html)

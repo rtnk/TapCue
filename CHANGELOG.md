@@ -3,7 +3,69 @@
 ## TapCue (fork `rtnk/TapCue`, roboczo „Maestro Local”)
 
 TapCue bazuje na Maestro (Apache-2.0) i nie jest powiązany z mobile.dev. Zmiany własne forka. Fork bazuje na upstream `mobile-dev-inc/Maestro` `v2.11.0`
-(`c8c361be1cc89b2e742f185466a302a22778be6b`); historia upstream znajduje się poniżej, bez zmian.
+(`c8c361be1cc89b2e742f185466a302a22778be6b`), od 0.2.0 zsynchronizowany z `v2.12.0`
+(`0df4cf3c8cad946e0494f462c6ce4987145cd36f`); historia upstream znajduje się poniżej, bez zmian.
+
+### 0.2.0 — 2026-11-01
+
+Synchronizacja z upstream Maestro `v2.12.0` (STEP-09): poprawki sterowników Android i iOS, orchestry i CLI z 22 commitów
+`v2.11.0..v2.12.0`, przeniesione pojedynczo (`git cherry-pick -x`) i sprawdzone pod kątem ruchu sieciowego. TapCue nadal działa
+w całości lokalnie: żadna przeniesiona zmiana nie wywołuje zewnętrznych adresów. Jedyny artefakt: `tapcue-0.2.0-macos-arm64.zip`
+(wymaga Javy 17+) z `SHA256SUMS`.
+
+- Flow (upstream 2.12.0): **zmiana niekompatybilna** — scroll `speed` spoza 0–100, procentowe `point` spoza 0–100% i ujemne
+  współrzędne `point` podane wprost kończą komendę błędem (wcześniej po cichu zastępowane wartością domyślną); nieprawidłowe
+  `index`/`point`/`speed` z JavaScript (np. `undefined`) kończą flow czytelnym błędem komendy zamiast `NumberFormatException`.
+- Flow (upstream): różnica obrazów `assertScreenshot` trafia do katalogu artefaktów przebiegu (i do `manifest.json`), a nie
+  obok obrazu wzorcowego w workspace.
+- Flow (upstream): raporty crashy są zbierane dla `appId` po interpolacji `${...}` (także w zagnieżdżonych flow).
+- Android (upstream): `inputText` i `tapOn` nie czekają na animacje okien (wolny splash screen nie kończy się „Device server
+  died”) — nowy `maestro-server.apk` zbudowany przez CI upstream ze źródła `maestro-android` przeniesionego w tym wydaniu;
+  `pressKey: Tab` przenosi fokus zamiast wpisywać spację.
+- Android (upstream): `start-device` nie zawiesza się — czas oczekiwania na start emulatora jest ograniczony, wyjście emulatora
+  trafia do pliku logu, a wywołania `sdkmanager` mają limit czasu i nie blokują się na pełnym potoku. TapCue nadal używa
+  wyłącznie `sdkmanager --list_installed` (lokalnie): przeniesiony upstream kod listowania zdalnego katalogu (`--list`) i instalacji
+  obrazów systemu nie został przywrócony (STEP-03).
+- iOS (upstream): crash aplikacji jest rozpoznawany po sposobie zakończenia procesu (log symulatora, `xcrun simctl spawn … log
+  show`) i raportowany także wtedy, gdy system nie zapisał raportu `.ips`; symulatory startują z Xcode 27 (bez Simulator.app —
+  symulator działa wtedy bez okna, z ostrzeżeniem).
+- CLI (upstream): katalogi artefaktów flow o nazwach dłuższych niż 255 bajtów są skracane (wcześniej „File name too long”);
+  odczyt i zapis bazy sesji przy zablokowanym pliku działa, a rozpakowywanie zasobów zamyka strumienie.
+- Zależności (upstream): `jarchivelib` (nieutrzymywany) zastąpiony przez `com.hominux:compress4j` 5.1.0 (Apache-2.0) — w paczce
+  także jego zależności (`THIRD-PARTY-NOTICES.md`). Pakowanie `.app` zachowuje dowiązania symboliczne i bit wykonywalności.
+- Komunikaty: błąd platformy web i opis w MCP/`cheat_sheet` nie podają numeru wersji („not supported in TapCue”).
+- **Nieprzeniesione z upstream 2.12.0** (świadomie): aktualizacje simulator-server (`#3666`, `#3674`, `#3714` — licencja L-01),
+  `launchApp` dla web i Selenium 4.51.0 (`#3649`, `#3683` — platforma web usunięta, D-4), `--priority` dla `maestro cloud`
+  i `run_on_cloud` (`#3695` — Maestro Cloud usunięty), wytyczne PR/issue upstream (`#3642`) i przygotowanie wydania upstream
+  (`#3713` — poza sekcją 2.12.0 w historii upstream poniżej). Z przeniesionych commitów pominięto części dotyczące usuniętych
+  plików (Cloud, `download-samples`, `test-e2e.yaml`, `unpackTree` dla simulator-server).
+
+#### Znane ograniczenia
+
+Przetestowane w 0.2.0: jak w 0.1.0 — archiwum macOS arm64 (CLI, MCP, build sterownika iOS Simulator ze źródła — bez sieci,
+runnery GitHub Actions `macos-26`), Android na emulatorze API 34 (CI) i CLI/MCP bez sieci na Linux (CI).
+
+- **Nieprzetestowane platformy:** Windows; Linux jako platforma uruchamiania TapCue (Linux służy tylko kontrolom CI, nie ma
+  archiwum dla Linux); macOS x64 (Intel — brak archiwum); fizyczne urządzenia iOS (`driver-setup --apple-team-id`); fizyczne
+  urządzenia Android.
+- **Web nie jest wspierany** (D-4): flow dla przeglądarki kończy się błędem „The web platform is not supported in TapCue”.
+- Poprawki z upstream 2.12.0 dla Xcode 27, crashy iOS i startu emulatora (`start-device`) nie są pokryte w CI TapCue (CI nie
+  uruchamia flow na iOS ani `start-device`); testy jednostkowe upstream przechodzą, test na symulatorze
+  (`IOSDriverCrashSimulatorTest`) wymaga `MAESTRO_TEST_SIMULATOR_UDID` i nie jest uruchamiany.
+- Pokrycie iOS Simulator: CI buduje sterownik ze źródła i odczytuje hierarchię UI symulatora; flow na iOS nie są uruchamiane
+  w CI. Pierwsze uruchomienie na iOS wymaga Xcode i trwa kilka minut.
+- Pokrycie Android w CI: jeden obraz emulatora (API 34) i aplikacja Ustawienia (`launchApp`, `tapOn`, `assertVisible`,
+  `scroll`, `inputText`, `takeScreenshot`, hierarchia, MCP z urządzeniem, ścieżki błędów).
+- Suita E2E upstream (`e2e/`, aplikacja demo) nie jest uruchamiana; ewaluacje LLM serwera MCP upstream usunięte.
+- JavaScript `http.*` we flow łączy się tylko z loopback, sieciami prywatnymi i link-local (D-3); `openLink`/`launchApp`
+  z adresem URL wykonuje urządzenie, nie TapCue.
+- Usunięte względem Maestro: Maestro Cloud, Maestro Studio, komendy AI, Maestro Viewer, `download-samples`, automatyczne
+  pobieranie obrazów systemu Android, prekompilowany sterownik iOS.
+- APK sterownika Android są podpisane publicznie znanym kluczem debug z repozytorium (jak w upstream, R-8); `maestro-server.apk`
+  pochodzi z CI upstream (commit `0e5fcfd7`, źródło `7b0d53fb`) — CI TapCue go nie przebudowuje.
+- Java nie jest dołączona (wymagana 17+); archiwum nie jest podpisane ani notaryzowane przez Apple (`xattr -dr
+  com.apple.quarantine …` po pobraniu, jeśli macOS je blokuje).
+- Zsynchronizowane z upstream do `v2.12.0`; zmiany upstream po tym tagu nie są zawarte.
 
 ### 0.1.0 — 2026-10-24
 
@@ -170,6 +232,29 @@ GitHub Actions `macos-26`), Android na emulatorze API 34 (CI) i CLI/MCP bez siec
 ## Upstream Maestro
 
 ## Unreleased
+
+## 2.12.0
+
+- Core: **Breaking:** reject out-of-range scroll `speed` (must be 0–100) - fail on out-of-range values instead of silently falling back to the default
+- Core: report invalid `index`/`point`/scroll `speed` values as test errors (improving reporting, removing unnecessary retries in Maestro Cloud)
+- Core: write the `assertScreenshot` diff into the run's artifacts instead of beside the reference image
+- Core: fix collecting crash reports when the `appId` is interpolated using `${...}`
+- Android: fix `pressKey: Tab` inputting the wrong character
+- Android: fix type and tap waiting for window animations, so slow splash-screen handoffs no longer cause "Device server died"
+- Android: bound the emulator boot-wait so `start-device` can't hang forever
+- Android: stop `sdkmanager` calls hanging `start-device`
+- iOS: start simulators on Xcode 27, which ships without Simulator.app
+- iOS: detect app crashes from how the app's process ended, and report a crash even when the system writes no crash report
+- Web: `launchApp` waits for the page it opens, so the next command no longer fails or hangs
+- Web: update Selenium to 4.51.0 for current Chrome DevTools Protocol support (supporting Chrome v153-155)
+- CLI: add `--priority low|normal|high` to `maestro cloud` (and `priority` to the `run_on_cloud` MCP tool) to set an upload's queue priority within the organization
+- CLI: shorten per-flow artifact directory names over 255 bytes instead of failing with "File name too long"
+- CLI: fix session database reads and writes while the file is locked, and close leaked streams when unpacking archives
+- CLI: replace the unmaintained jarchivelib with compress4j for zipping apps and unpacking archives
+- CLI: update the MCP's simulator-server to prevent a frozen mirror of the Android device on Windows
+
+
+Thanks to @cestercian, @Arthur031221, @austek and @YevheniiKotyrlo who contributed changes included in this release ❤️
 
 ## 2.11.0
 
