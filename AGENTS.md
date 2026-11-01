@@ -48,11 +48,15 @@
 >   nothing. Notes come from the `### <version>` section of the TapCue part of `CHANGELOG.md`, which must have a
 >   `Known limitations`/`Znane ograniczenia` heading. Release scripts are tested by `scripts/fork/test-release.sh`. Never
 >   create `v*` tags or Releases unless the owner asks for that release (procedure: `docs/RELEASING.md`).
-> - Version (STEP-08): `CLI_VERSION=0.1.0` — TapCue's own numbering, lower than the upstream 2.11.0 the fork started from,
+> - Version (STEP-08/09): `CLI_VERSION=0.2.0` (0.1.0 released 2026-10-25) — TapCue's own numbering, lower than the upstream 2.11.0 the fork started from,
 >   so compare stored driver versions for equality, not order. The release notes of each version come from its
 >   `### <version>` section in the TapCue part of `CHANGELOG.md` (with `#### Znane ograniczenia`). The logo is
 >   `docs/assets/tapcue-logo.png` (repository README only, not in the archive). `docs/LICENSE-AUDIT.md` is closed for 0.1.0;
 >   a new license or a new library without a bundled license text needs a supplement entry (`notices-supplement.md` §3.5/§3.6).
+> - Upstream sync (STEP-09): the code is synced with upstream `v2.12.0` (`0df4cf3c`) by `git cherry-pick -x` of each upstream
+>   commit, re-audited for network access and licenses (`docs/handovers/STEP-09.md` lists what was taken, adapted and left out).
+>   Do the same for later upstream tags in a separate "sync upstream vX.Y.Z" PR (R-5); never take simulator-server, web/Selenium,
+>   Cloud or upstream release-process changes, and never bring back `sdkmanager --list` or system-image installs (N-24).
 > - No prebuilt iOS driver (STEP-05, D-5): the `driver-iPhoneSimulator`/`driver-iphoneos` ZIPs and the `buildIosDriver`
 >   task are gone. The CLI builds the simulator runner from the source in its JAR (`driver/ios`) with the local Xcode
 >   (`maestro.cli.driver.IOSSimulatorDriver`, `~/.tapcue/maestro-iphonesimulator-driver-build`). Swift dependencies are
