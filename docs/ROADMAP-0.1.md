@@ -1,6 +1,6 @@
 # ROADMAP 0.1.0 — Maestro Local (repozytorium `rtnk/TapCue`)
 
-Status dokumentu: **STEP-08 w realizacji (PR-08 „STEP-08: Release candidate 0.1.0”); tag `v0.1.0` — po scaleniu PR-08, na polecenie właściciela**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23, STEP-03B ([#8](https://github.com/rtnk/TapCue/pull/8)), STEP-04 ([#9](https://github.com/rtnk/TapCue/pull/9)) STEP-04B ([#12](https://github.com/rtnk/TapCue/pull/12)) STEP-05 ([#13](https://github.com/rtnk/TapCue/pull/13)) STEP-06 ([#14](https://github.com/rtnk/TapCue/pull/14)) i STEP-07 ([#15](https://github.com/rtnk/TapCue/pull/15) + poprawka CI [#16](https://github.com/rtnk/TapCue/pull/16)) — 2026-10-24. Ostatnia aktualizacja: 2026-10-24.
+Status dokumentu: **0.1.0 wydane (tag `v0.1.0`, Release 2026-10-25); STEP-09 w realizacji (PR-09 „STEP-09: sync upstream v2.12.0 and release 0.2.0”); tag `v0.2.0` — po scaleniu PR-09, na polecenie właściciela**. STEP-00 ([#1](https://github.com/rtnk/TapCue/pull/1)), STEP-01 ([#2](https://github.com/rtnk/TapCue/pull/2)), STEP-00B ([#3](https://github.com/rtnk/TapCue/pull/3)), STEP-02 ([#4](https://github.com/rtnk/TapCue/pull/4)) i STEP-03 ([#6](https://github.com/rtnk/TapCue/pull/6) + uzupełnienie [#7](https://github.com/rtnk/TapCue/pull/7)) scalone 2026-10-23, STEP-03B ([#8](https://github.com/rtnk/TapCue/pull/8)), STEP-04 ([#9](https://github.com/rtnk/TapCue/pull/9)) STEP-04B ([#12](https://github.com/rtnk/TapCue/pull/12)) STEP-05 ([#13](https://github.com/rtnk/TapCue/pull/13)) STEP-06 ([#14](https://github.com/rtnk/TapCue/pull/14)) i STEP-07 ([#15](https://github.com/rtnk/TapCue/pull/15) + poprawka CI [#16](https://github.com/rtnk/TapCue/pull/16)) — 2026-10-24. STEP-08 ([#18](https://github.com/rtnk/TapCue/pull/18) + [#17](https://github.com/rtnk/TapCue/pull/17)) — 2026-10-24. Ostatnia aktualizacja: 2026-11-01.
 
 ## 0. Punkt wyjścia
 
@@ -69,7 +69,8 @@ Legenda statusu: `TODO` · `IN PROGRESS` · `IN REVIEW` · `MERGED` · `BLOCKED`
 | STEP-05 | PR-05 | Dystrybucja lokalna macOS arm64 + audyt licencji | PR-04B, D-5, D-7 | MERGED ([#13](https://github.com/rtnk/TapCue/pull/13)) | 2 sesje |
 | STEP-06 | PR-06 | GitHub Actions CI + testy offline | PR-05 | MERGED ([#14](https://github.com/rtnk/TapCue/pull/14)) | 2 sesje |
 | STEP-07 | PR-07 | Release pipeline | PR-06 | MERGED ([#15](https://github.com/rtnk/TapCue/pull/15), poprawka CI [#16](https://github.com/rtnk/TapCue/pull/16)) | 1 sesja |
-| STEP-08 | PR-08 + tag | Release candidate i publikacja v0.1.0 | PR-07, wszystkie gate'y | IN REVIEW (PR-08); tag i publikacja — TODO (właściciel) | 1 sesja + operacja release |
+| STEP-08 | PR-08 + tag | Release candidate i publikacja v0.1.0 | PR-07, wszystkie gate'y | MERGED ([#18](https://github.com/rtnk/TapCue/pull/18), [#17](https://github.com/rtnk/TapCue/pull/17)); `v0.1.0` wydane 2026-10-25 | 1 sesja + operacja release |
+| STEP-09 | PR-09 + tag | Sync upstream `v2.12.0` (R-5) i wydanie 0.2.0 | STEP-08, gate'y §4 dla 0.2.0 | IN REVIEW (PR-09); tag `v0.2.0` — TODO (po scaleniu, właściciel) | 1 sesja + operacja release |
 
 Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki dodane w wyniku audytu, STEP-04B — w wyniku decyzji D-1/D-2
 (zostały wydzielone, żeby nie mieszać zakresów i nie powiększać PR-ów).
@@ -362,6 +363,18 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
   `release.yml` na gałęzi PR-08 ([run 40118756237](https://github.com/rtnk/TapCue/actions/runs/40118756237)) zielona, `reproduce`
   IDENTICAL, SHA-256 archiwum `e8dd01b0…ddab6ec1`.
 
+### STEP-09 — Sync upstream v2.12.0 i wydanie 0.2.0 (PR-09 + operacja release)
+
+- Zakres: zmiany upstream `v2.11.0..v2.12.0` (22 commity, `0df4cf3c`) przeniesione `git cherry-pick -x` — każdy oceniony pod kątem
+  ruchu sieciowego (N-xx), licencji (L-xx) i usuniętych funkcji; `CLI_VERSION=0.2.0`, sekcja `### 0.2.0` w `CHANGELOG.md`
+  z „Znane ograniczenia”, README. Zgodnie z R-5: osobny PR „sync upstream” z ponownym audytem (sieć: `NETWORK-AUDIT.md` v12,
+  licencje: `LICENSE-AUDIT.md` v10).
+- Główne wymaganie bez zmian: narzędzie działa offline i nie wywołuje zewnętrznych endpointów (egress — job `egress`, krok offline
+  macOS z rejestrem odmów w `release.yml`).
+- Nieprzeniesione: simulator-server (L-01), web/Selenium (D-4), Maestro Cloud `--priority`, dokumenty procesowe i przygotowanie
+  wydania upstream. Szczegóły i adaptacje: `docs/handovers/STEP-09.md`.
+- Po merge: tag `v0.2.0` na commicie scalenia → `release.yml` (publish) → weryfikacja Release (`docs/RELEASING.md` §4.3).
+
 ## 4. Gate'y blokujące publikację v0.1.0
 
 | Gate | Warunek | Weryfikacja | Status (STEP-08, przed tagiem) |
@@ -374,6 +387,11 @@ Numeracja kroków 00–08 jest zgodna z kontraktem; STEP-00B i STEP-03B to kroki
 | G-6 | Paczka zainstalowana i uruchomiona z pliku pobranego z Release | handover STEP-08 | **NOT RUN** — po publikacji |
 | G-7 | Decyzje D-1, D-2, D-5, D-6, D-7 rozstrzygnięte (2026-10-23) i zrealizowane | ten plik | **PASS** |
 | G-8 | Release notes wymieniają braki pokrycia i nieprzetestowane platformy | Release | **PASS** — `release-notes.py 0.1.0 --require-section` lokalnie, `prepare` bez ostrzeżeń o sekcji; w Release — po publikacji |
+
+Gate'y dla 0.2.0 (STEP-09) — te same warunki, sprawdzane dla PR-09: G-1 (PR-08 scalony, `v0.1.0` wydane), G-2 (`ci.yml` zielony na
+PR-09 i na commicie scalenia), G-3 (nowe zależności z licencją na liście `allowed-licenses.tsv`, noty kompletne), G-4/G-5/AT-09/AT-10
+(`verify-dist.sh`, egress Linux, krok offline macOS w `release.yml`), G-6 (instalacja z Release — po publikacji), G-8
+(`release-notes.py 0.2.0 --require-section`). Status — `docs/handovers/STEP-09.md` §2.
 
 ## 5. Testy akceptacyjne produktu
 
