@@ -42,6 +42,7 @@ usunięte funkcje (Cloud, AI, web, simulator-server).
 | `da0f0f2b` #3695 | `--priority` dla `maestro cloud`/`run_on_cloud` | **pominięty** | Maestro Cloud usunięty (STEP-01) |
 | `0df4cf3c` #3713 | przygotowanie wydania upstream (`VERSION_NAME`, `CLI_VERSION=2.12.0`) | **pominięty** | wersjonowanie TapCue; sekcja `## 2.12.0` przeniesiona dosłownie do części upstream `CHANGELOG.md` |
 | fork `1ba19a41` | `KeyValueStoreTest` (nowy test upstream) czytał stdout+stderr sondy | poprawka testu | JVM wypisuje „Picked up JAVA_TOOL_OPTIONS” na stderr (środowisko sesji agenta; może też u użytkowników/w CI) — sonda czytana tylko ze stdout |
+| fork (po walidacji `release.yml` run 41309244100) | `IntegrationTest` Case 079-2 padł na macos-26: flow `079_scroll_until_visible.yaml` miał `timeout: 10` ms na całą pętlę `scrollUntilVisible` (plik niezmieniony od baseline; lokalnie i w `ci.yml` zielony) | uodpornienie testu | budżet 3000 ms; oczekiwane zdarzenia bez zmian (jeden swipe), „no view” pętli 3 s na `FakeDriver`. Kod produktu bez zmian |
 | fork `33e20c0f` | `RunOutputStaysInBundleTest` (nowy test upstream) wymieniał komendy AI | adaptacja testu | komendy AI usunięte w STEP-02 |
 
 ### Zmiany forka
@@ -94,7 +95,9 @@ bez `maestro-android` i `google()`, niezatwierdzona). **Bez flag `-x`.**
 | Notatki 0.2.0 (G-8) | `python3 -I scripts/fork/release-notes.py 0.2.0 --require-section` | **PASS** — sekcja i „Znane ograniczenia” znalezione |
 | `maestro-android` (APK, `InputInjector`), Android emulator, iOS Simulator, krok offline macOS | — | **NOT RUN lokalnie** (brak Google Maven/SDK/Maca) — w CI PR-09 (`build`, `android`, `macos`) i walidacji `release.yml` |
 | `IOSDriverCrashSimulatorTest` | — | **NOT RUN** — wymaga `MAESTRO_TEST_SIMULATOR_UDID` (pomijany w `./gradlew test`, także w CI forka) |
-| CI `ci.yml` na PR-09, walidacja `release.yml` na gałęzi PR-09 | — | wyniki — w PR (uzupełnić tu przed scaleniem) |
+| CI `ci.yml` na PR-09, commit `208cd6c5` | [run 41309245542](https://github.com/rtnk/TapCue/actions/runs/41309245542) | **PASS** — wszystkie joby |
+| `release.yml` walidacja na gałęzi PR-09, commit `208cd6c5` | [run 41309244100](https://github.com/rtnk/TapCue/actions/runs/41309244100) | **FAIL** — `build` (macos-26): `IntegrationTest > Case 079-2` (`ElementNotFound`, budżet 10 ms) — test uodporniony (§1) |
+| `release.yml` walidacja po uodpornieniu | — | wynik — w PR (uzupełnić przed scaleniem) |
 | Tag, publish, instalacja z Release (G-6), AT-01…AT-11 na pobranej paczce | — | **NOT RUN** — po scaleniu PR-09, na polecenie właściciela |
 
 ## 3. Ryzyka, blokery, znane problemy
