@@ -132,7 +132,8 @@ class KeyValueStoreTest {
         val java = Path.of(System.getProperty("java.home"), "bin", "java").toString()
         val classes = Path.of(LockProbe::class.java.protectionDomain.codeSource.location.toURI()).toString()
         val process = ProcessBuilder(java, "-cp", classes, LockProbe::class.java.name, file.absolutePath)
-            .redirectErrorStream(true)
+            // Only stdout carries the answer: the JVM writes notices such as "Picked up JAVA_TOOL_OPTIONS" to stderr.
+            .redirectError(ProcessBuilder.Redirect.INHERIT)
             .start()
         try {
             assertThat(process.waitFor(10, TimeUnit.SECONDS)).isTrue()
