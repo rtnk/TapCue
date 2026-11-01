@@ -12,9 +12,7 @@ import maestro.orchestra.AssertCommand
 import maestro.orchestra.AssertConditionCommand
 import maestro.orchestra.AssertDarkModeCommand
 import maestro.orchestra.AssertLightModeCommand
-import maestro.orchestra.AssertNoDefectsWithAICommand
 import maestro.orchestra.AssertScreenshotCommand
-import maestro.orchestra.AssertWithAICommand
 import maestro.orchestra.BackPressCommand
 import maestro.orchestra.ClearKeychainCommand
 import maestro.orchestra.ClearStateCommand
@@ -23,7 +21,6 @@ import maestro.orchestra.CopyTextFromCommand
 import maestro.orchestra.DefineVariablesCommand
 import maestro.orchestra.EraseTextCommand
 import maestro.orchestra.EvalScriptCommand
-import maestro.orchestra.ExtractTextWithAICommand
 import maestro.orchestra.HideKeyboardCommand
 import maestro.orchestra.InputRandomCommand
 import maestro.orchestra.InputTextCommand
@@ -181,8 +178,7 @@ class RunOutputStaysInBundleTest {
         )
 
         /**
-         * Reviewed: they create no file themselves. The AI commands are here on purpose — they hand
-         * image bytes to the bundle writer, which registers the file.
+         * Reviewed: they create no file themselves. (Upstream also lists its AI commands here; TapCue has none, STEP-02.)
          */
         private val CREATES_NO_FILES: Set<KClass<*>> = setOf(
             AddMediaCommand::class,
@@ -191,8 +187,6 @@ class RunOutputStaysInBundleTest {
             AssertConditionCommand::class,
             AssertDarkModeCommand::class,
             AssertLightModeCommand::class,
-            AssertNoDefectsWithAICommand::class,
-            AssertWithAICommand::class,
             BackPressCommand::class,
             ClearKeychainCommand::class,
             ClearStateCommand::class,
@@ -200,7 +194,6 @@ class RunOutputStaysInBundleTest {
             DefineVariablesCommand::class,
             EraseTextCommand::class,
             EvalScriptCommand::class,
-            ExtractTextWithAICommand::class,
             HideKeyboardCommand::class,
             InputRandomCommand::class,
             InputTextCommand::class,
