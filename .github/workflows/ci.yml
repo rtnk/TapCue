@@ -152,7 +152,7 @@ jobs:
             **/build/reports/tests/test
             **/build/test-results/test
             build/reports/fork
-          retention-days: 14
+          retention-days: 7
           if-no-files-found: warn
 
   egress:
@@ -250,7 +250,7 @@ jobs:
           path: |
             reports
             **/build/test-results/test
-          retention-days: 14
+          retention-days: 7
           if-no-files-found: warn
 
   android:
@@ -329,7 +329,7 @@ jobs:
         with:
           name: android-reports
           path: reports
-          retention-days: 14
+          retention-days: 7
           if-no-files-found: warn
 
   macos:
@@ -443,5 +443,5 @@ jobs:
         with:
           name: macos-reports
           path: reports
-          retention-days: 14
+          retention-days: 7
           if-no-files-found: warn

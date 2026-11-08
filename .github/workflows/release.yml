@@ -207,7 +207,7 @@ jobs:
           path: |
             maestro-cli/build/distributions/tapcue-${{ env.VERSION }}-macos-arm64.zip
             maestro-cli/build/distributions/SHA256SUMS
-          retention-days: 30
+          retention-days: 7
           if-no-files-found: error
 
       - name: Upload the release notes
@@ -215,7 +215,7 @@ jobs:
         with:
           name: release-notes
           path: release
-          retention-days: 30
+          retention-days: 7
           if-no-files-found: error
 
       - name: Upload reports
@@ -228,7 +228,7 @@ jobs:
             build/reports/fork
             **/build/reports/tests/test
             **/build/test-results/test
-          retention-days: 30
+          retention-days: 7
           if-no-files-found: warn
 
   egress:
@@ -286,7 +286,7 @@ jobs:
         with:
           name: release-egress-reports
           path: reports
-          retention-days: 30
+          retention-days: 7
           if-no-files-found: warn
 
   reproduce:
