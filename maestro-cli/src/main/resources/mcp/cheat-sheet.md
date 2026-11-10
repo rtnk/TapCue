@@ -215,6 +215,71 @@ onFlowComplete:
 - launchApp
 ```
 
+## Optional screens and repeatable flows
+
+A screen that may or may not appear (onboarding, consent, a system dialog) must not decide whether the
+flow passes. Handle it with `runFlow` + `when`, not with `optional: true` on the commands that follow.
+
+A `when: visible` condition looks for the element for up to about 7 seconds counted from the last
+interaction with the device, not from the moment the condition is reached. After a long wait it is
+checked only once, so a screen that appears a moment later is missed. Wait first until either the
+optional screen or the next screen is there (selectors are regular expressions, so `a|b` matches
+either), then branch:
+
+```yaml
+appId: com.example.app
+---
+- launchApp:
+    clearState: true                # a known start state; the result does not depend on earlier runs
+- extendedWaitUntil:
+    visible:
+      id: "onboarding_skip|home_title"
+    timeout: 30000
+- runFlow:
+    when:
+      visible:
+        id: "onboarding_skip"
+    label: "Optional: skip onboarding"
+    commands:
+      - tapOn:
+          id: "onboarding_skip"
+- assertVisible:
+    id: "home_title"
+```
+
+For several optional screens in an unknown order, loop until the target is visible. `times` bounds the
+loop; assert the target afterwards, because the loop also ends when `times` runs out:
+
+```yaml
+appId: com.example.app
+---
+- repeat:
+    times: 5
+    while:
+      notVisible:
+        id: "home_title"
+    commands:
+      - runFlow:
+          when:
+            visible: "Not now"
+          commands:
+            - tapOn: "Not now"
+      - runFlow:
+          when:
+            visible:
+              id: "whats_new_close"
+          commands:
+            - tapOn:
+                id: "whats_new_close"
+- assertVisible:
+    id: "home_title"
+```
+
+In the run's `commands.json` a branch whose condition was false has status `SKIPPED`, and a failed
+`optional: true` command has `WARNED`; neither fails the flow.
+`tapcue test --test-output-dir <dir>` writes one run's `commands.json`, `takeScreenshot/` and
+`startRecording/` files into `<dir>`; add `--format junit --output report.xml` for a report.
+
 ## JavaScript
 
 ```yaml
